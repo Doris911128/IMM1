@@ -33,23 +33,23 @@ struct SignupView: View
         }
         else
         {
-            //Authentication
-            Authentication().signup(account: self.information.0, password: self.information.1)
-            {(_, error) in
-                if let error=error //註冊失敗
-                {
-                    self.result.1=error.localizedDescription
-                    self.result.0.toggle()
-                    
-                } else //註冊成功
-                {
-                    //Realtime Database
-                    RealTime().signup(account: self.information.0, password: self.information.1, name: self.information.3,gender: self.information.4,birthday:self.information.5, height: String(self.information.6),weight: String(self.information.7), like1: String(self.information.8),like2: String(self.information.9),like3: String(self.information.10),like4: String(self.information.11))
-                    self.result.1="註冊成功!"
-                    self.result.0.toggle()
-                    self.dismiss()
-                }
-            }
+//            //Authentication
+//            Authentication().signup(account: self.information.0, password: self.information.1)
+//            {(_, error) in
+//                if let error=error //註冊失敗
+//                {
+//                    self.result.1=error.localizedDescription
+//                    self.result.0.toggle()
+//                    
+//                } else //註冊成功
+//                {
+//                    //Realtime Database
+//                    RealTime().signup(account: self.information.0, password: self.information.1, name: self.information.3,gender: self.information.4,birthday:self.information.5, height: String(self.information.6),weight: String(self.information.7), like1: String(self.information.8),like2: String(self.information.9),like3: String(self.information.10),like4: String(self.information.11))
+//                    self.result.1="註冊成功!"
+//                    self.result.0.toggle()
+//                    self.dismiss()
+//                }
+//            }
         }
     }
     

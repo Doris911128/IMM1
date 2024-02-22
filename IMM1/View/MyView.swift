@@ -17,7 +17,6 @@ struct MyView: View
     
     @Binding var select: Int
     
-    @State private var realTime: RealTime = RealTime() //創建 RealTime 對象
     @State private var pickImage: PhotosPickerItem?
     @State var isDarkMode: Bool = false
     @State private var isNameSheetPresented = false //更新名字完後會自動關掉ＳＨＥＥＴ
@@ -175,7 +174,7 @@ struct MyView: View
                                     .cornerRadius(8) //可選：添加圓角
                                 }
                                 .sheet(isPresented: $isNameSheetPresented) {
-                                    NameSheetView(name: $user.name, isPresented: $isNameSheetPresented, realTime: realTime)
+                                    NameSheetView(name: $user.name, isPresented: $isNameSheetPresented)
                                 }
                                 //                            NavigationLink(destination: MenuView())
                                 //                            {
@@ -284,20 +283,20 @@ struct MyView: View
                         newValue in
                         self.isDarkMode = !self.colorScheme
                     }
-                    .onAppear {
-                        // MARK: 從 RealTime 獲取用戶信息
-                        realTime.getUser(account: "用户的帳號") { userInfo, error in
-                            if let userInfo = userInfo {
-                                //更新 MyView 中的用戶信息
-                                self.user.name = userInfo[3]
-                                self.user.gender=userInfo[4]
-                                self.user.birthday=userInfo[5] //請根據實際情況修改索引
-                                // MARK: 更新其他用戶信息，根據需要
-                            } else if let error = error {
-                                print("Error getting user information: \(error.localizedDescription)")
-                            }
-                        }
-                    }
+//                    .onAppear {
+//                        // MARK: 從 RealTime 獲取用戶信息
+//                        realTime.getUser(account: "用户的帳號") { userInfo, error in
+//                            if let userInfo = userInfo {
+//                                //更新 MyView 中的用戶信息
+//                                self.user.name = userInfo[3]
+//                                self.user.gender=userInfo[4]
+//                                self.user.birthday=userInfo[5] //請根據實際情況修改索引
+//                                // MARK: 更新其他用戶信息，根據需要
+//                            } else if let error = error {
+//                                print("Error getting user information: \(error.localizedDescription)")
+//                            }
+//                        }
+//                    }
                 }
             }
         }
@@ -311,8 +310,6 @@ struct NameSheetView: View
     
     @State private var newName = ""
     
-    var realTime: RealTime //添加 RealTime 屬性
-
     var body: some View 
     {
         NavigationStack 
@@ -331,11 +328,11 @@ struct NameSheetView: View
                 },
                 trailing: Button("保存") 
                 {
-                    //保存新的姓名到 RealTime，並刪除舊信息
-                    realTime.updateUserNameAndDelete(id:"", name: newName)
-                    {
-                        self.name=self.newName
-                    }
+//                    //保存新的姓名到 RealTime，並刪除舊信息
+//                    realTime.updateUserNameAndDelete(id:"", name: newName)
+//                    {
+//                        self.name=self.newName
+//                    }
                 }
             )
         }
