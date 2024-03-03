@@ -172,9 +172,9 @@
 			children = (
 				0447AF8C2B872C520080D222 /* Dynamic.swift */,
 				0447AF8D2B872C520080D222 /* FoodOption.swift */,
-				0447AF8E2B872C520080D222 /* User.swift */,
 				0447AF8F2B872C520080D222 /* Forum.swift */,
 				0447AF912B872C520080D222 /* Information.swift */,
+				0447AF8E2B872C520080D222 /* User.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -182,26 +182,26 @@
 		0447AFA12B872C980080D222 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				0447AFA22B872C980080D222 /* ShopView.swift */,
-				0447AFA32B872C980080D222 /* FavoriteView.swift */,
-				0447AFA42B872C980080D222 /* MyView.swift */,
-				0447AFA52B872C980080D222 /* HyperlipidemiaView.swift */,
-				0447AFA62B872C980080D222 /* SpinnerView.swift */,
-				0447AFA72B872C980080D222 /* HomeView.swift */,
-				0447AFA82B872C980080D222 /* DynamicView.swift */,
-				0447AFA92B872C980080D222 /* PlanView.swift */,
-				0447AFAA2B872C980080D222 /* SigninView.swift */,
-				0447AFAB2B872C980080D222 /* CookView.swift */,
-				0447AFAC2B872C980080D222 /* HypertensionView.swift */,
 				0447AFAD2B872C980080D222 /* AdjustedView.swift */,
-				0447AFAE2B872C980080D222 /* NowView.swift */,
-				0447AFAF2B872C980080D222 /* ForgePasswordView.swift */,
-				0447AFB02B872C980080D222 /* StockView.swift */,
-				0447AFB12B872C980080D222 /* SignupView.swift */,
-				0447AFB22B872C980080D222 /* HyperglycemiaView.swift */,
 				0447AFB32B872C980080D222 /* BMIView.swift */,
+				0447AFAB2B872C980080D222 /* CookView.swift */,
 				0447AFB42B872C980080D222 /* ContentView.swift */,
+				0447AFA82B872C980080D222 /* DynamicView.swift */,
+				0447AFA32B872C980080D222 /* FavoriteView.swift */,
+				0447AFAF2B872C980080D222 /* ForgePasswordView.swift */,
+				0447AFA72B872C980080D222 /* HomeView.swift */,
+				0447AFA52B872C980080D222 /* HyperlipidemiaView.swift */,
+				0447AFAC2B872C980080D222 /* HypertensionView.swift */,
+				0447AFB22B872C980080D222 /* HyperglycemiaView.swift */,
+				0447AFA42B872C980080D222 /* MyView.swift */,
 				0447AFB52B872C980080D222 /* MenuView.swift */,
+				0447AFA92B872C980080D222 /* PlanView.swift */,
+				0447AFAE2B872C980080D222 /* NowView.swift */,
+				0447AFB02B872C980080D222 /* StockView.swift */,
+				0447AFAA2B872C980080D222 /* SigninView.swift */,
+				0447AFB12B872C980080D222 /* SignupView.swift */,
+				0447AFA22B872C980080D222 /* ShopView.swift */,
+				0447AFA62B872C980080D222 /* SpinnerView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -209,12 +209,12 @@
 		0447AFCA2B872D110080D222 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
-				0447AFCB2B872D110080D222 /* MemberButton.swift */,
 				0447AFCC2B872D110080D222 /* CustomButton.swift */,
-				0447AFCD2B872D110080D222 /* TagButton.swift */,
-				0447AFCE2B872D110080D222 /* FoodSelectionView.swift */,
-				0447AFCF2B872D110080D222 /* InformationLabel.swift */,
 				0447AFD02B872D110080D222 /* EditPlanView.swift */,
+				0447AFCE2B872D110080D222 /* FoodSelectionView.swift */,
+				0447AFCB2B872D110080D222 /* MemberButton.swift */,
+				0447AFCD2B872D110080D222 /* TagButton.swift */,
+				0447AFCF2B872D110080D222 /* InformationLabel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";

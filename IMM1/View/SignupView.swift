@@ -7,6 +7,7 @@ struct SignupView: View
     
     @Binding var textselect: Int
     
+    @State private var method: String = "GET"
     @State private var information: (String, String, String, String, String, String, String, String,Double , Double ,Double ,Double)=("", "", "", "", "", "", "" , "" ,0.0,0.0,0.0,0.0)
     @State private var result : (Bool,String)=(false,"") //執行結果Alert
     @State private var show: Bool=false //生日顯示
@@ -24,33 +25,54 @@ struct SignupView: View
     }
     
     // MARK: 註冊使用者
-    private func signup() async
+    private func sendRequest()
     {
-        if(self.information.0.isEmpty || self.information.1.isEmpty || self.information.1 != self.information.2) //輸入框有空 || 密碼不相同
+        var urlComponents = URLComponents(string: "http://163.17.9.107/food/Signin.php")!
+        
+        // 根据所选的方法，设置URL参数
+        if method == "GET" 
         {
-            self.result.1="1.請確保沒有空白字段。\n2. 請確保您的密碼相同。"
-            self.result.0.toggle()
+            urlComponents.queryItems = [
+                URLQueryItem(name: "U_Acc", value: information.0),
+                URLQueryItem(name: "U_Pas", value: information.1),
+                URLQueryItem(name: "確認密碼", value: information.2), // 將 "密碼a" 改為 "確認密碼"
+                URLQueryItem(name: "U_Name", value: information.3), // 名稱改為 U_Name
+                URLQueryItem(name: "U_Gen", value: information.4), // 性別改為 U_Gen
+                URLQueryItem(name: "U_Bir", value: information.5), // 生日改為 U_Bir
+                URLQueryItem(name: "H", value: information.6), // 身高改為 H
+                URLQueryItem(name: "W", value: information.7), // 體重改為 W
+                URLQueryItem(name: "acid", value: String(information.8)), // 酸
+                URLQueryItem(name: "sweet", value: String(information.9)), // 甜
+                URLQueryItem(name: "bitter", value: String(information.10)), // 苦
+                URLQueryItem(name: "hot", value: String(information.11)) // 辣
+            ]
         }
-        else
-        {
-//            //Authentication
-//            Authentication().signup(account: self.information.0, password: self.information.1)
-//            {(_, error) in
-//                if let error=error //註冊失敗
-//                {
-//                    self.result.1=error.localizedDescription
-//                    self.result.0.toggle()
-//                    
-//                } else //註冊成功
-//                {
-//                    //Realtime Database
-//                    RealTime().signup(account: self.information.0, password: self.information.1, name: self.information.3,gender: self.information.4,birthday:self.information.5, height: String(self.information.6),weight: String(self.information.7), like1: String(self.information.8),like2: String(self.information.9),like3: String(self.information.10),like4: String(self.information.11))
-//                    self.result.1="註冊成功!"
-//                    self.result.0.toggle()
-//                    self.dismiss()
-//                }
-//            }
-        }
+
+
+        guard let url = urlComponents.url else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+
+        // 使用 URLSession 发送请求
+                URLSession.shared.dataTask(with: request) { (data, response, error) in
+                    if let error = error 
+                    {
+                        print("Error: \(error)")
+                        self.result = (true, "Error: \(error.localizedDescription)")
+                    } else if let data = data 
+                    {
+                        if let responseString = String(data: data, encoding: .utf8) 
+                        {
+                            print("Response: \(responseString)")
+                            self.result = (true, "Response: \(responseString)")
+                        } else 
+                        {
+                            self.result = (true, "Unable to decode response data")
+                        }
+                    }
+                }
+        .resume()
     }
     
     // MARK: InformationLabel記得要搬
@@ -60,7 +82,7 @@ struct SignupView: View
         InformationLabel(image: "", label: ""),
         InformationLabel(image: "person.fill", label: "名稱"),
         InformationLabel(image: "figure.arms.open", label: "性別"),
-        InformationLabel(image: "birthday.cake.fill", label: "生日"),
+        InformationLabel(image: "birthday.cake", label: "生日"),
         InformationLabel(image: "ruler", label: "身高"),
         InformationLabel(image: "dumbbell", label: "體重"),
         InformationLabel(system: false, image: "acid", label: "酸"),
@@ -121,7 +143,6 @@ struct SignupView: View
         }
         else
         {
-            
             return true
         }
     }
@@ -163,7 +184,6 @@ struct SignupView: View
                     {
                         Button
                         {
-                            
                             selectedTab = 1
                         }
                         
@@ -275,7 +295,8 @@ struct SignupView: View
                     }
                 } else
                 {
-                    HStack{
+                    HStack
+                    {
                         Text("請輸入您的生日")
                             .font(.title2)
                             .foregroundColor(Color(red: 0.828, green: 0.249, blue: 0.115))
@@ -309,7 +330,6 @@ struct SignupView: View
                             .frame(width: 300, height: 60)
                             .background(Color(red: 0.828, green: 0.249, blue: 0.115))
                             .clipShape(Capsule())
-                        
                     }
                 }
             }
@@ -325,7 +345,6 @@ struct SignupView: View
                 // MARK: 身高
                 VStack
                 {
-                    
                     TextField("輸入您的身高", text: self.$information.6)
                         .padding()
                         .background(Color.gray.opacity(0.1))
@@ -512,6 +531,7 @@ struct SignupView: View
                 }
             }
             .tag(8)
+            
             // MARK: 所有資料
             VStack
             {
@@ -545,7 +565,7 @@ struct SignupView: View
                     {
                         Task
                         {
-                            await self.signup() //註冊
+                            await self.sendRequest() //註冊
                         }
                     }
                 label:
@@ -564,7 +584,7 @@ struct SignupView: View
         }
         .tabViewStyle(.page(indexDisplayMode: self.selectedTab<9 ? .always:.never))
         .animation(.smooth, value: self.selectedTab)
-        .onTapGesture 
+        .onTapGesture
         {
             self.dismissKeyboard()
         }

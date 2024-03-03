@@ -27,7 +27,7 @@ struct MyView: View
     private let label: [InformationLabel]=[
         InformationLabel(image: "person.fill", label: "名稱"),
         InformationLabel(image: "figure.arms.open", label: "性別"),
-        InformationLabel(image: "birthday.cake.fill", label: "生日"),
+        InformationLabel(image: "U_Bir.cake.fill", label: "生日"),
     ]
     
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]
@@ -130,7 +130,7 @@ struct MyView: View
                     //                        {index in
                     //                            Capsule()
                     //                                .fill(Color("tagcolor"))
-                    //                                .frame(width: 100, height: 30)
+                    //                                .frame(width: 100, H: 30)
                     //                                .shadow(color: .gray, radius: 3, y: 3)
                     //                                .overlay(Text(self.tag[index]))
                     //                        }
@@ -142,7 +142,7 @@ struct MyView: View
                     //                        {index in
                     //                            Capsule()
                     //                                .fill(Color("tagcolor"))
-                    //                                .frame(width: 100, height: 30)
+                    //                                .frame(width: 100, H: 30)
                     //                                .shadow(color: .gray, radius: 3, y: 3)
                     //                                .overlay(Text(self.tag[index]))
                     //                        }
@@ -288,9 +288,9 @@ struct MyView: View
 //                        realTime.getUser(account: "用户的帳號") { userInfo, error in
 //                            if let userInfo = userInfo {
 //                                //更新 MyView 中的用戶信息
-//                                self.user.name = userInfo[3]
-//                                self.user.gender=userInfo[4]
-//                                self.user.birthday=userInfo[5] //請根據實際情況修改索引
+//                                self.user.U_Name = userInfo[3]
+//                                self.user.U_Gen=userInfo[4]
+//                                self.user.U_Bir=userInfo[5] //請根據實際情況修改索引
 //                                // MARK: 更新其他用戶信息，根據需要
 //                            } else if let error = error {
 //                                print("Error getting user information: \(error.localizedDescription)")
@@ -329,9 +329,9 @@ struct NameSheetView: View
                 trailing: Button("保存") 
                 {
 //                    //保存新的姓名到 RealTime，並刪除舊信息
-//                    realTime.updateUserNameAndDelete(id:"", name: newName)
+//                    realTime.updateUserNameAndDelete(id:"", U_Name: newName)
 //                    {
-//                        self.name=self.newName
+//                        self.U_Name=self.newName
 //                    }
                 }
             )
@@ -341,7 +341,7 @@ struct NameSheetView: View
 
 //struct NameSheetView: View
 //{
-//    @Binding var name: String
+//    @Binding var U_Name: String
 //    @Binding var isPresented: Bool
 //    @State private var newName = ""
 //
@@ -363,7 +363,7 @@ struct NameSheetView: View
 //                },
 //                trailing: Button("保存")
 //                {
-//                    name = newName
+//                    U_Name = newName
 //                    isPresented = false
 //                }
 //            )

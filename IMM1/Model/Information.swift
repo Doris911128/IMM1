@@ -10,14 +10,16 @@ import Foundation
 
 struct Information
 {
-    var name: String
-    var gender: String
-    var birthday: Date=Date()
-    var height: String
-    var weight: String
+    var U_Name: String
+    var U_Gen: String
+    var U_Bir: Date=Date()
+    var H: String
+    var W: String
     var BMI: Double
-    var like1: String
-    var like2: String
-    var like3: String
-    var like4: String
+
+    var acid: Double // 酸
+    var sweet: Double // 甜
+    var bitter: Double // 苦
+    var hot: Double // 辣
+
 }

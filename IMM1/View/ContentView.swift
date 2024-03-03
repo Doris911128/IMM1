@@ -11,11 +11,13 @@ import SwiftUI
 struct ContentView: View 
 {
     @AppStorage("signin") private var signin: Bool=false //存取登入狀態
-    
     @State var isDarkMode: Bool = false //切換深淺模式
     @State private var showSide: Bool = false //TabView選擇的頁面
     @State private var select: Int = 0 //跟蹤標籤頁
-    @State private var information: Information = Information(name: "vc", gender: "女性", birthday:Date(), height: "161", weight: "50", BMI: 19.68, like1: "0",like2: "0",like3: "0",like4: "0")
+    @State private var information: Information = Information(U_Name: "vc", U_Gen: "女性", U_Bir:Date(), H: "161", W: "50", BMI: 19.68, acid: 0.0, sweet: 0.0, bitter: 0.0, hot: 0.0)
+
+//    @State private var information: Information = Information(U_Name: "vc", U_Gen: "女性", U_Bir:Date(), H: "161", W: "50", BMI: 19.68, like1: "0",like2: "0",like3: "0",like4: "0")
+    
 
     //    @StateObject private var cameraManagerViewModel = CameraManagerViewModel()
         
@@ -85,7 +87,8 @@ struct ContentView_Previews: PreviewProvider
 {
     static var previews: some View
     {
-        NavigationStack {
+        NavigationStack 
+        {
             ContentView()
         }
     }
