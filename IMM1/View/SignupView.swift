@@ -274,7 +274,7 @@ struct SignupView: View
                     {
                         Text("0")
                             .padding()
-                        Slider(value: $information.8, in: 1...5, step: 1)
+                        Slider(value: $information.8, in: 0...5, step: 1)
                             .padding()
                             .accentColor(.blue)
                         Text("5")
@@ -290,7 +290,7 @@ struct SignupView: View
                     {
                         Text("0")
                             .padding()
-                        Slider(value: $information.9, in: 1...5, step: 1)
+                        Slider(value: $information.9, in: 0...5, step: 1)
                             .padding()
                             .accentColor(.blue)
                         Text("5")
@@ -307,7 +307,7 @@ struct SignupView: View
                     {
                         Text("0")
                             .padding()
-                        Slider(value: $information.10, in: 1...5, step: 1)
+                        Slider(value: $information.10, in: 0...5, step: 1)
                             .padding()
                             .accentColor(.blue)
                         Text("5")
@@ -324,7 +324,7 @@ struct SignupView: View
                     {
                         Text("0")
                             .padding()
-                        Slider(value: $information.11, in: 1...5, step: 1)
+                        Slider(value: $information.11, in: 0...5, step: 1)
                             .padding()
                             .accentColor(.blue)
                         Text("5")
