@@ -12,13 +12,13 @@ struct FoodSelectionView: View {
     @Binding var editedPlan: String
     var foodOptions: [FoodOption]
     @Environment(\.presentationMode) var presentationMode
+
     var body: some View {
-        
         VStack {
             Text("選擇一個食物：")
                 .font(.title)
                 .padding()
-            
+
             ScrollView {
                 ForEach(foodOptions, id: \.name) { foodOption in
                     Button(action: {
@@ -28,40 +28,44 @@ struct FoodSelectionView: View {
                     }) {
                         ZStack {
                             Rectangle()
-                                .fill(Color.orange) // 背景色，你可以根據需要更改
+                                .fill(Color.orange)
                                 .frame(width: UIScreen.main.bounds.width - 40, height: 150)
                                 .cornerRadius(10)
                                 .opacity(0.8)
                                 .offset(y: 40)
                                 .font(.title)
-                            
-                            Image(foodOption.backgroundImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: UIScreen.main.bounds.width - 40, height: 150)
-                                .cornerRadius(10)
-                            
-                            
+
+                            AsyncImage(url: foodOption.backgroundImage) { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: UIScreen.main.bounds.width - 40, height: 150)
+                                        .cornerRadius(10)
+                                case .failure:
+                                    Text("Failed to load image")
+                                }
+                            }
+
                             VStack {
                                 Spacer()
                                 Label(foodOption.name, systemImage: "")
                                     .font(.headline)
                                     .foregroundColor(.primary)
                                     .padding()
-                                    .offset(y: 45) //向下移動10個點，你可以根據需要調整這個值
+                                    .offset(y: 45)
                             }
                         }
-                        
                     }
                     .buttonStyle(BorderlessButtonStyle())
-                    
                     .padding(.bottom, 60)
                 }
-                
             }
             .scrollIndicators(.hidden)
         }
         .padding(20)
-        
     }
 }

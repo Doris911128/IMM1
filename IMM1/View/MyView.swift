@@ -27,7 +27,7 @@ struct MyView: View
     private let label: [InformationLabel]=[
         InformationLabel(image: "person.fill", label: "名稱"),
         InformationLabel(image: "figure.arms.open", label: "性別"),
-        InformationLabel(image: "U_Bir.cake.fill", label: "生日"),
+        InformationLabel(image: "birthday.cake.fill", label: "生日"),
     ]
     
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]

@@ -1,20 +1,43 @@
-//
-//  EditPlanView.swift
-//  IM110CYUT
-//
-//  Created by Ｍac on 2023/12/10.
-//
+// EditPlanView.swift
 
 import SwiftUI
+import Foundation
 
+// 定義從服務器中獲取的食物數據結構
+struct FoodData: Codable {
+    let Dis_Name: String
+    let D_image: String
+    // 添加其他屬性，如果需要的話
+}
 
+// 定義函式，從指定的 URL 加載食物數據
+func fetchFoodData(from url: URL, completion: @escaping ([FoodData]?, Error?) -> Void) {
+    URLSession.shared.dataTask(with: url) { data, response, error in
+        if let error = error {
+            completion(nil, error)
+            return
+        }
+        
+        guard let data = data else {
+            completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
+            return
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            let foodData = try decoder.decode([FoodData].self, from: data)
+            completion(foodData, nil)
+        } catch {
+            completion(nil, error)
+        }
+    }.resume()
+}
 
-struct EditPlanView: View
-{
+struct EditPlanView: View {
     
     var day: String
     var planIndex: Int
-   
+    
     @State private var show1: [Bool] = [false, false, false, false, false, false, false]
     @State private var searchText: String = ""
     @State private var editedPlan = ""
@@ -23,66 +46,59 @@ struct EditPlanView: View
     @Binding var plans: [String: [String]]
     
     @Environment(\.presentationMode) var presentationMode
-
+    
     // MARK: 懶人選項
     let foodOptions1: [FoodOption] = [
-        FoodOption(name: "泡麵", backgroundImage: "泡麵"),
-        FoodOption(name: "蔥油餅", backgroundImage: "蔥油餅"),
-        FoodOption(name: "炒菜豆", backgroundImage: "炒菜豆"),
-        FoodOption(name: "番茄炒蛋", backgroundImage: "番茄炒蛋")
+        FoodOption(name: "番茄炒蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/1.jpg")!),
+        FoodOption(name: "荷包蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/2.jpg")!),
+        FoodOption(name: "炒高麗菜", backgroundImage: URL(string: "http://163.17.9.107/food/images/3.jpg")!)
         // 添加更多食物選項及其相應的背景圖片
     ]
     // MARK: 減肥選項
     let foodOptions2: [FoodOption] = [
-        FoodOption(name: "青江菜", backgroundImage: "青江菜"),
-        FoodOption(name: "炒蛋", backgroundImage: "炒蛋"),
-        FoodOption(name: "雞胸肉", backgroundImage: "雞胸肉"),
-        FoodOption(name: "花椰菜", backgroundImage: "花椰菜")
+        FoodOption(name: "番茄炒蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/1.jpg")!),
+        FoodOption(name: "荷包蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/2.jpg")!),
+        FoodOption(name: "炒高麗菜", backgroundImage: URL(string: "http://163.17.9.107/food/images/3.jpg")!)
         // 添加更多食物選項及其相應的背景圖片
     ]
     // MARK: 省錢選項
     let foodOptions3: [FoodOption] = [
-        FoodOption(name: "白菜滷", backgroundImage: "白菜滷"),
-        FoodOption(name: "炒菠菜", backgroundImage: "炒菠菜"),
-        FoodOption(name: "白蘿蔔排骨湯", backgroundImage: "白蘿蔔排骨湯"),
-        FoodOption(name: "炒高麗菜", backgroundImage: "炒高麗菜")
+        FoodOption(name: "番茄炒蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/1.jpg")!),
+        FoodOption(name: "荷包蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/2.jpg")!),
+        FoodOption(name: "炒高麗菜", backgroundImage: URL(string: "http://163.17.9.107/food/images/3.jpg")!)
         // 添加更多食物選項及其相應的背景圖片
     ]
     // MARK: 放縱選項
     let foodOptions4: [FoodOption] = [
-        FoodOption(name: "炸鮮蚵", backgroundImage: "炸鮮蚵"),
-        FoodOption(name: "脆皮烤鴨", backgroundImage: "脆皮烤鴨"),
-        FoodOption(name: "鹽酥雞", backgroundImage: "鹽酥雞"),
-        FoodOption(name: "炸薯條", backgroundImage: "炸薯條")
+        FoodOption(name: "番茄炒蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/1.jpg")!),
+        FoodOption(name: "荷包蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/2.jpg")!),
+        FoodOption(name: "炒高麗菜", backgroundImage: URL(string: "http://163.17.9.107/food/images/3.jpg")!)
         // 添加更多食物選項及其相應的背景圖片
     ]
     // MARK: 養生選項
     let foodOptions5: [FoodOption] = [
-        FoodOption(name: "四神湯", backgroundImage: "四神湯"),
-        FoodOption(name: "蔬果汁", backgroundImage: "蔬果汁"),
-        FoodOption(name: "白木耳湯", backgroundImage: "白木耳湯"),
-        FoodOption(name: "香菇瘦肉養生粥", backgroundImage: "香菇瘦肉養生粥")
+        FoodOption(name: "番茄炒蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/1.jpg")!),
+        FoodOption(name: "荷包蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/2.jpg")!),
+        FoodOption(name: "炒高麗菜", backgroundImage: URL(string: "http://163.17.9.107/food/images/3.jpg")!)
         // 添加更多食物選項及其相應的背景圖片
     ]
     // MARK: 今日推薦選項
     let foodOptions6: [FoodOption] = [
-        FoodOption(name: "牛肉湯", backgroundImage: "牛肉湯"),
-        FoodOption(name: "山藥排骨湯", backgroundImage: "山藥排骨湯"),
-        FoodOption(name: "薑母鴨", backgroundImage: "薑母鴨"),
-        FoodOption(name: "清燉羊肉", backgroundImage: "清燉羊肉")
+        FoodOption(name: "番茄炒蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/1.jpg")!),
+        FoodOption(name: "荷包蛋", backgroundImage: URL(string: "http://163.17.9.107/food/images/2.jpg")!),
+        FoodOption(name: "炒高麗菜", backgroundImage: URL(string: "http://163.17.9.107/food/images/3.jpg")!)
         // 添加更多食物選項及其相應的背景圖片
     ]
-
-
+    
     @State private var isShowingDetail7 = false
-
+    
     // MARK: 聽天由命選項的View
     private var fateButton: some View {
-        CustomButton(imageName: "聽天由命", buttonText: "聽天由命") 
+        CustomButton(imageName: "聽天由命", buttonText: "聽天由命")
         {
             isShowingDetail7.toggle()
         }
-        .sheet(isPresented: $isShowingDetail7) 
+        .sheet(isPresented: $isShowingDetail7)
         {
             VStack {
                 Spacer()
@@ -92,9 +108,9 @@ struct EditPlanView: View
             }
             .edgesIgnoringSafeArea(.all)
         }
-  
+        
     }
-
+    
     @ViewBuilder
     private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [FoodOption]) -> some View {
         CustomButton(imageName: imageName, buttonText: buttonText) {
@@ -105,48 +121,45 @@ struct EditPlanView: View
         }
     }
     
-    var body: some View
-    {
-        VStack
-        {
+    var body: some View {
+        VStack {
             Text("選擇的食物: \(editedPlan)")
                 .font(.title)
                 .padding(.top,30)
                 .opacity(editedPlan.isEmpty ? 0 : 1)
                 .offset(y: -18)
-            HStack
-            {
-            }
+            HStack {}
         }
-        .navigationBarItems(trailing: Button("保存")
-                            {
-            if var dayPlans = plans[day]
-            {
+        .navigationBarItems(trailing: Button("保存") {
+            if var dayPlans = plans[day] {
                 dayPlans[planIndex] = editedPlan
                 plans[day] = dayPlans
+                
+                // 在保存成功後調用 fetchFoodData 以獲取食物數據
+                if let url = URL(string: "http://163.17.9.107/food/Dishes.php") {
+                    fetchFoodData(from: url) { foodData, error in
+                        if let error = error {
+                            print("發生錯誤：", error)
+                        } else if let foodData = foodData {
+                            print("獲取的食物數據：", foodData)
+                        }
+                    }
+                } else {
+                    print("無效的 URL")
+                }
             }
-            
-            // 保存編輯計畫
             self.presentationMode.wrappedValue.dismiss()
         })
-        NavigationStack
-        {
-            ScrollView
-            {
-                VStack(spacing:5)
-                {
-                    HStack(spacing:-20)
-                    {
+        NavigationView {
+            ScrollView {
+                VStack(spacing:5) {
+                    HStack(spacing:-20) {
                         TextField("搜尋食譜.....", text: $searchText)
                             .padding()
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                        
-                        
-                        Button(action:
-                                {
+                        Button(action: {
                             // 執行搜尋操作
-                        })
-                        {
+                        }) {
                             Image(systemName: "magnifyingglass") // 放大鏡圖標
                                 .padding()
                         }

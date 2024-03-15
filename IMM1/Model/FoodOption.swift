@@ -8,8 +8,12 @@
 // MARK: 食譜的個別名稱及圖片
 import SwiftUI
 
-struct FoodOption
-{
+//struct FoodOption
+//{
+//    var name: String
+//    var backgroundImage: String
+//}
+struct FoodOption {
     var name: String
-    var backgroundImage: String
+    var backgroundImage: URL
 }
