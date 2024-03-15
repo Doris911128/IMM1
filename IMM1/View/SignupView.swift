@@ -272,7 +272,7 @@ struct SignupView: View
                 {
                     HStack
                     {
-                        Text("1")
+                        Text("0")
                             .padding()
                         Slider(value: $information.8, in: 1...5, step: 1)
                             .padding()
@@ -288,7 +288,7 @@ struct SignupView: View
                 {
                     HStack
                     {
-                        Text("1")
+                        Text("0")
                             .padding()
                         Slider(value: $information.9, in: 1...5, step: 1)
                             .padding()
@@ -305,7 +305,7 @@ struct SignupView: View
                 {
                     HStack
                     {
-                        Text("1")
+                        Text("0")
                             .padding()
                         Slider(value: $information.10, in: 1...5, step: 1)
                             .padding()
@@ -322,7 +322,7 @@ struct SignupView: View
                 {
                     HStack
                     {
-                        Text("1")
+                        Text("0")
                             .padding()
                         Slider(value: $information.11, in: 1...5, step: 1)
                             .padding()
