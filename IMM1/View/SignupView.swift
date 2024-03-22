@@ -157,19 +157,20 @@ struct SignupView: View
                             .background(Color.gray.opacity(0.1))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
-                        
+                            .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
                         SecureField("輸入您的密碼", text: self.$information.1)
                             .padding()
                             .background(Color.gray.opacity(0.1))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
                             .lineLimit(10)
-                        
+                            .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
                         SecureField("再次輸入密碼", text: self.$information.2)
                             .padding()
                             .background(Color.gray.opacity(0.1))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
+                            .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
                     }
                     
                     //.ignoresSafeArea(.keyboard)

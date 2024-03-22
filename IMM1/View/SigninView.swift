@@ -83,12 +83,13 @@ struct SigninView: View
                             .padding()
                             .background(Color(.systemGray5))
                             .clipShape(Capsule())
-                        
+                            .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
                         SecureField("密碼...",text: $U_Pas)
                             .scrollContentBackground(.hidden)
                             .padding()
                             .background(Color(.systemGray5))
                             .clipShape(Capsule())
+                            .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
                     }
                     .font(.title3)
                     
@@ -153,22 +154,6 @@ struct SigninView: View
                             .frame(maxWidth: .infinity)
                             .background(Color(red: 0.828, green: 0.249, blue: 0.115))
                             .clipShape(Capsule())
-                    }
-                    
-                    HStack 
-                    {
-                        ForEach(0..<3) 
-                        { index in
-                            Circle()
-                                .fill(Color(.systemGray3))
-                                .scaledToFit()
-                                .frame(height: 50)
-                            
-                            if index < 2 
-                            {
-                                Spacer()
-                            }
-                        }
                     }
                 }
                 .onTapGesture 
