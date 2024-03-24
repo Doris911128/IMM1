@@ -1,79 +1,70 @@
 // MARK: 註冊View
 import SwiftUI
 
-struct SignupView: View
-{
+struct SignupView: View {
     @Binding var textselect: Int
-    
     @Environment(\.dismiss) private var dismiss
+    @State private var show: Bool = false
+    @State private var selectedTab: Int = 0
+    @State private var description: String = ""
+    @State private var method: String = "GET"
+    @State private var date: Date = Date()
+    @State private var result: (Bool, String) = (false, "")
+    @State private var information: (String, String, String, String, String, String, String, String, Double, Double, Double, Double) = ("", "", "", "", "", "", "", "", 0.0, 0.0, 0.0, 0.0)
+    private let title: [String] = ["請輸入您的帳號 密碼", "請輸入您的名稱", "請選擇您的性別", "請輸入您的生日", "請輸入您的身高(CM)體重(KG)", "請調整您的偏好  酸", "請調整您的偏好  甜", "請調整您的偏好  苦", "請調整您的偏好  辣", "個人資訊"]
     
-    @State private var show: Bool=false
-    @State private var selectedTab: Int=0
-    @State private var description: String=""
-    @State private var method: String="GET"
-    @State private var date: Date=Date()
-    @State private var result : (Bool,String)=(false, "")
-    @State private var information: (String, String, String, String, String, String, String, String,Double , Double ,Double ,Double)=("", "", "", "", "", "", "" , "" ,0.0,0.0,0.0,0.0)
-    private let title: [String]=["請輸入您的帳號 密碼", "請輸入您的名稱", "請選擇您的性別","請輸入您的生日","請輸入您的身高(CM)體重(KG)","請調整您的偏好  酸","請調整您的偏好  甜","請調整您的偏好  苦","請調整您的偏好  辣","個人資訊",]
-    
-    init(textselect: Binding<Int>)
-    {
-        self._textselect=textselect
-        UIPageControl.appearance().currentPageIndicatorTintColor=UIColor.orange
-        UIPageControl.appearance().pageIndicatorTintColor=UIColor.gray
+    init(textselect: Binding<Int>) {
+        self._textselect = textselect
+        UIPageControl.appearance().currentPageIndicatorTintColor = UIColor.orange
+        UIPageControl.appearance().pageIndicatorTintColor = UIColor.gray
     }
-    
-    // MARK: 註冊使用者
-    private func sendRequest()
-    {
-        var urlComponents=URLComponents(string: "http://163.17.9.107/food/Signin.php")!
-        
-        // 根据所选的方法，设置URL参数
-        if(self.method=="GET")
-        {
-            urlComponents.queryItems = [
-                URLQueryItem(name: "U_Acc", value: information.0),
-                URLQueryItem(name: "U_Pas", value: information.1),
-                URLQueryItem(name: "確認密碼", value: information.2), // 將 "密碼a" 改為 "確認密碼"
-                URLQueryItem(name: "U_Name", value: information.3), // 名稱改為 U_Name
-                URLQueryItem(name: "U_Gen", value: information.4), // 性別改為 U_Gen
-                URLQueryItem(name: "U_Bir", value: information.5), // 生日改為 U_Bir
-                URLQueryItem(name: "H", value: information.6), // 身高改為 H
-                URLQueryItem(name: "W", value: information.7), // 體重改為 W
-                URLQueryItem(name: "acid", value: String(information.8)), // 酸
-                URLQueryItem(name: "sweet", value: String(information.9)), // 甜
-                URLQueryItem(name: "bitter", value: String(information.10)), // 苦
-                URLQueryItem(name: "hot", value: String(information.11)) // 辣
+
+    private func sendRequest() {
+            guard let url = URL(string: "http://163.17.9.107/food/Signin.php") else { return }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            let birthDate = dateFormatter.string(from: date) // 格式化日期
+
+            // 构建application/x-www-form-urlencoded兼容的参数字符串
+            let parameters: [String: Any] = [
+                "U_Acc": information.0,
+                "U_Pas": information.1,
+//                "U_Name": information.3,
+//                "U_Gen": information.4,
+//                "U_Bir": birthDate,
+//                "H": information.6,
+//                "W": information.7,
+//                "acid": information.8,
+//                "sweet": information.9,
+//                "bitter": information.10,
+//                "hot": information.11
             ]
-        }
-        
-        
-        guard let url=urlComponents.url else { return }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        
-        // 使用 URLSession 发送请求
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error
-            {
-                print("Error: \(error)")
-                self.result = (true, "Error: \(error.localizedDescription)")
-            } else if let data = data
-            {
-                print(data)
-                if let responseString = String(data: data, encoding: .utf8)
-                {
-                    print("Response: \(responseString)")
-                    self.result = (true, "Response: \(responseString)")
-                } else
-                {
-                    self.result = (true, "Unable to decode response data")
-                }
+            
+            let parameterArray = parameters.map { (key, value) -> String in
+                "\(key)=\(value)"
             }
+            let parameterString = parameterArray.joined(separator: "&").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+            
+            request.httpBody = parameterString?.data(using: .utf8)
+            
+            // 发送请求
+            URLSession.shared.dataTask(with: request) { (data, response, error) in
+                // 处理响应...
+            }.resume()
         }
-        .resume()
+
+    // MARK: DatePicker View Section
+    private var datePickerSection: some View {
+        DatePicker("選擇您的生日", selection: $date, displayedComponents: .date)
+            .onChange(of: date) { newDate in
+                // 這裡不再需要轉換日期格式，因為我們在發送請求時轉換
+            }
     }
+
     
     // MARK: InformationLabel記得要搬
     private let label: [InformationLabel]=[
