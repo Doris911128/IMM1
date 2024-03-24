@@ -22,7 +22,7 @@ struct AddIngredients: View
 {
     @State private var newIngredientName: String = ""
     @State private var newIngredientQuantity: String = ""
-    
+    @State private var showAlert = false
     var onAdd: (StockIngredient) -> Void
     
     @Binding var isSheetPresented: Bool
@@ -34,15 +34,21 @@ struct AddIngredients: View
             // MARK: 採購食材的清單
             Form
             {
-                Section(header: Text("新增食材內容"))
+                VStack
                 {
+                    Text("新增食材")
+                        .font(.title)
+                        .padding(.top)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    
                     TextField("請輸入食材名稱", text: $newIngredientName)
+                        .padding()
+                    
                     TextField("請輸入食材數量", text: $newIngredientQuantity)
                         .keyboardType(.numberPad)
+                        .padding()
                 }
             }
-            .navigationTitle("新增食材")
-            // MARK: 開啟新增食材後的新增
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing)
                 {
@@ -53,9 +59,22 @@ struct AddIngredients: View
                             let newIngredient = StockIngredient(name: newIngredientName, quantity: quantity)
                             onAdd(newIngredient)
                             isSheetPresented = false
+                        } else {
+                            // 显示警告
+                            showAlert = true
                         }
                     }
                 }
+            }
+            .alert(isPresented: $showAlert)
+            {
+                Alert(title: Text("輸入無效字元"),message: Text("請確保輸入的數量是有效的"),dismissButton: .default(Text("好的"))
+                      {
+                    // 清空文本框
+                    newIngredientName = ""
+                    newIngredientQuantity = ""
+                }
+                )
             }
         }
     }

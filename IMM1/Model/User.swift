@@ -1,4 +1,3 @@
-//
 //  User.swift
 //
 //
@@ -6,75 +5,80 @@
 //
 import Foundation
 
-// MARK: 提供所有View使用的User結構
-class User: ObservableObject
-{
+class User: ObservableObject, Decodable {
     
-    @Published var id: String //ID
-    
-    @Published var account: String //帳號
-    @Published var password: String //密碼
-    
-    @Published var name: String //名字
-    @Published var gender: String //性別
-    @Published var birthday: String //生日
-    
-    @Published var height: String //身高
-    @Published var weight: String //體重
-    
-    @Published var like1 : String //偏好1
-    @Published var like2 : String //偏好2
-    @Published var like3 : String //偏好3
-    @Published var like4 : String //偏好4
-
+    @Published var id: String
+    @Published var account: String
+    @Published var password: String
+    @Published var name: String
+    @Published var gender: String
+    @Published var birthday: String
+    @Published var height: String
+    @Published var weight: String
+    @Published var like1: String
+    @Published var like2: String
+    @Published var like3: String
+    @Published var like4: String
 
     // MARK: 初始化
-    init()
-    {
-        self.id=""
-        self.account=""
-        self.password=""
-        self.name=""
-        self.gender=""
-        self.birthday=""
-        self.height="0.0"
-        self.weight="0.0"
-        self.like1="0.0"
-        self.like2="0.0"
-        self.like3="0.0"
-        self.like4="0.0"
+    init(id: String = "",
+         account: String = "",
+         password: String = "",
+         name: String = "",
+         gender: String = "",
+         birthday: String = "",
+         height: String = "0.0",
+         weight: String = "0.0",
+         like1: String = "0.0",
+         like2: String = "0.0",
+         like3: String = "0.0",
+         like4: String = "0.0") {
+        
+        self.id = id
+        self.account = account
+        self.password = password
+        self.name = name
+        self.gender = gender
+        self.birthday = birthday
+        self.height = height
+        self.weight = weight
+        self.like1 = like1
+        self.like2 = like2
+        self.like3 = like3
+        self.like4 = like4
     }
-
-    // MARK: 刪除
-    func deleteUser()
-    {
-        self.id=""
-        self.account=""
-        self.password=""
-        self.name=""
-        self.gender=""
-        self.birthday=""
-        self.height="0.0"
-        self.weight="0.0"
-        self.like1="0.0"
-        self.like2="0.0"
-        self.like3="0.0"
-        self.like4="0.0"
+    
+    // MARK: 可失败的初始化方法
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        self.id = try container.decode(String.self, forKey: .id)
+        self.account = try container.decode(String.self, forKey: .account)
+        self.password = try container.decode(String.self, forKey: .password)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.gender = try container.decode(String.self, forKey: .gender)
+        self.birthday = try container.decode(String.self, forKey: .birthday)
+        self.height = try container.decode(String.self, forKey: .height)
+        self.weight = try container.decode(String.self, forKey: .weight)
+        self.like1 = try container.decode(String.self, forKey: .like1)
+        self.like2 = try container.decode(String.self, forKey: .like2)
+        self.like3 = try container.decode(String.self, forKey: .like3)
+        self.like4 = try container.decode(String.self, forKey: .like4)
     }
-    // MARK: 更新
-    func setUser(id: String, account: String, password: String, name: String, gender: String, birthday: String, height: String, weight: String ,like1: String,like2: String,like3: String,like4: String)
-    {
-        self.id=id
-        self.account=account
-        self.password=password
-        self.name=name
-        self.gender=gender
-        self.birthday=birthday
-        self.height=height
-        self.weight=weight
-        self.like1=like1
-        self.like2=like2
-        self.like3=like3
-        self.like4=like4
+    
+    // MARK: 枚举定义编码键
+    enum CodingKeys: String, CodingKey {
+        case id
+        case account
+        case password
+        case name
+        case gender
+        case birthday
+        case height
+        case weight
+        case like1
+        case like2
+        case like3
+        case like4
     }
 }

@@ -1,4 +1,3 @@
-//
 //  MyView.swift
 //  Graduation_Project
 //
@@ -29,7 +28,36 @@ struct MyView: View
         InformationLabel(image: "figure.arms.open", label: "性別"),
         InformationLabel(image: "birthday.cake.fill", label: "生日"),
     ]
-    
+    // MARK: 從後端獲取用戶信息並更新 user 物件
+    private func fetchUserInfo() {
+        // 發送獲取用戶信息的請求到後端
+        // 解析後端返回的 JSON 數據，將用戶信息設置到 user 物件中
+        // 這裡需要使用適合你應用程序的網絡庫來發送請求，例如 URLSession、Alamofire 等
+        // 以下僅是一個示例
+        guard let url = URL(string: "http://163.17.9.107/food/Login.php") else {
+            print("Invalid URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data else {
+                print("No data received: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            
+            do {
+                let userInfo = try JSONDecoder().decode(User.self, from: data)
+                DispatchQueue.main.async {
+                    // 將獲取的用戶信息設置到 user 物件中
+                    self.user.name = userInfo.name
+                    self.user.gender = userInfo.gender
+                    self.user.birthday = userInfo.birthday
+                }
+            } catch {
+                print("Error decoding user info: \(error.localizedDescription)")
+            }
+        }.resume()
+    }
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]
     
     // MARK: 設定顯示資訊
@@ -47,6 +75,7 @@ struct MyView: View
             return ""
         }
     }
+
     
     var body: some View
     {
@@ -300,33 +329,36 @@ struct MyView: View
                 }
             }
         }
+        .onAppear {
+            fetchUserInfo()
+        }
     }
 }
 
-struct NameSheetView: View 
+struct NameSheetView: View
 {
     @Binding var name: String
     @Binding var isPresented: Bool
     
     @State private var newName = ""
     
-    var body: some View 
+    var body: some View
     {
-        NavigationStack 
+        NavigationStack
         {
-            Form 
+            Form
             {
-                Section(header: Text("更改姓名")) 
+                Section(header: Text("更改姓名"))
                 {
                     TextField("新的姓名", text: $newName)
                 }
             }
             .navigationBarItems(
-                leading: Button("取消") 
+                leading: Button("取消")
                 {
                     isPresented = false
                 },
-                trailing: Button("保存") 
+                trailing: Button("保存")
                 {
 //                    //保存新的姓名到 RealTime，並刪除舊信息
 //                    realTime.updateUserNameAndDelete(id:"", U_Name: newName)
@@ -339,48 +371,10 @@ struct NameSheetView: View
     }
 }
 
-//struct NameSheetView: View
-//{
-//    @Binding var U_Name: String
-//    @Binding var isPresented: Bool
-//    @State private var newName = ""
-//
-//    var body: some View
-//    {
-//        NavigationStack
-//        {
-//            Form
-//            {
-//                Section(header: Text("更改姓名"))
-//                {
-//                    TextField("新的姓名", text: $newName)
-//                }
-//            }
-//            .navigationBarItems(
-//                leading: Button("取消")
-//                {
-//                    isPresented = false
-//                },
-//                trailing: Button("保存")
-//                {
-//                    U_Name = newName
-//                    isPresented = false
-//                }
-//            )
-//        }
-//    }
-//}
-
-struct MyView_Previews: PreviewProvider
-{
-    static var previews: some View
-    {
-        NavigationStack
-        {
-            MyView(
-                select: .constant(2)
-            )
+struct MyView_Previews: PreviewProvider {
+    static var previews: some View {
+        NavigationStack {
+            MyView(select: .constant(0)) // 在这里将常数改为变量，或者根据实际需要传递一个值
         }
     }
 }
-
