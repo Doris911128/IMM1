@@ -1,4 +1,3 @@
-
 // MARK: 計畫View
 import SwiftUI
 
@@ -89,3 +88,42 @@ struct PlanView_Previews: PreviewProvider
         PlanView()
     }
 }
+func savePlanToServer(P_ID: String,U_ID: String,Dis_ID: String, P_DT: String,P_Bought:String) {
+    guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
+        print("Invalid URL")
+        return
+    }
+    
+    let data: [String: Any] = [
+        "P_ID":P_ID,
+        "U_ID":U_ID,
+        "Dis_ID": Dis_ID,
+        "P_DT": P_DT,
+        "P_Bought": P_Bought
+        
+    ]
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+    
+    do {
+        request.httpBody = try JSONSerialization.data(withJSONObject: data)
+    } catch {
+        print("Error serializing JSON: \(error)")
+    }
+    
+    URLSession.shared.dataTask(with: request) { (data, response, error) in
+        if let error = error {
+            print("Error saving plan: \(error)")
+        } else if let data = data {
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("Response from server: \(responseString)")
+            }
+        }
+    }.resume()
+}
+
+
+// Call this function to save a plan
+//savePlanToServer(pID: "your_pID", uID: "your_uID", pDT: "your_pDT", pBought: 1)

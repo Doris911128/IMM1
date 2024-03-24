@@ -7,10 +7,17 @@
 
 import SwiftUI
 
+extension FoodData {
+    func toFoodOption() -> FoodOption {
+        return FoodOption(name: self.Dis_Name, backgroundImage: URL(string: self.D_image)!)
+    }
+}
+
 struct FoodSelectionView: View {
+    
     @Binding var isShowingDetail: Bool
     @Binding var editedPlan: String
-    var foodOptions: [FoodOption]
+    var foodOptions: [FoodOption] = []
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
@@ -68,4 +75,5 @@ struct FoodSelectionView: View {
         }
         .padding(20)
     }
+  
 }
