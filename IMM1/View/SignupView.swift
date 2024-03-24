@@ -20,42 +20,48 @@ struct SignupView: View {
     }
 
     private func sendRequest() {
-            guard let url = URL(string: "http://163.17.9.107/food/Signin.php") else { return }
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        guard let url = URL(string: "http://163.17.9.107/food/Signin.php") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            let birthDate = dateFormatter.string(from: date) // 格式化日期
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let birthDate = dateFormatter.string(from: date) // 格式化日期
 
-            // 构建application/x-www-form-urlencoded兼容的参数字符串
-            let parameters: [String: Any] = [
-                "U_Acc": information.0,
-                "U_Pas": information.1,
-//                "U_Name": information.3,
-//                "U_Gen": information.4,
-//                "U_Bir": birthDate,
-//                "H": information.6,
-//                "W": information.7,
-//                "acid": information.8,
-//                "sweet": information.9,
-//                "bitter": information.10,
-//                "hot": information.11
-            ]
-            
-            let parameterArray = parameters.map { (key, value) -> String in
-                "\(key)=\(value)"
-            }
-            let parameterString = parameterArray.joined(separator: "&").addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
-            
-            request.httpBody = parameterString?.data(using: .utf8)
-            
-            // 发送请求
-            URLSession.shared.dataTask(with: request) { (data, response, error) in
-                // 处理响应...
-            }.resume()
+        let parameters: [String: Any] = [
+            "U_Acc": information.0,
+            "U_Pas": information.1,
+            "U_Name": information.3,
+            "U_Gen": information.4,
+            "U_Bir": birthDate, // 使用格式化後的生日
+//            "H":information.6,
+//            "W":information.7,
+            "acid": information.8,
+            "sweet": information.9,
+            "bitter": information.10,
+            "hot": information.11
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: parameters, options: [])
+        } catch {
+            print("Error: cannot create JSON from parameters")
+            return
         }
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.result = (true, "Error: \(error.localizedDescription)")
+                }
+            } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                DispatchQueue.main.async {
+                    self.result = (true, "Response: \(responseString)")
+                }
+            }
+        }.resume()
+    }
 
     // MARK: DatePicker View Section
     private var datePickerSection: some View {
