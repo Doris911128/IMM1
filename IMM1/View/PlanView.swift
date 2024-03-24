@@ -1,24 +1,34 @@
+
 // MARK: 計畫View
 import SwiftUI
 
-struct PlanView: View
-{
-    @State private var plans: [String: [String]] =
-    {
-        var initialPlans: [String: [String]] = [:]
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MM/dd"
+struct PlanView: View {
+    // DateFormatter for formatting dates
+    private let dateFormatter: DateFormatter
+    
+    @State private var plans: [String: [String]] = PlanManager.shared.loadPlans()
+    
+    // DateFormatter for displaying dates in MM/DD format
+    private var displayDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd"
+        return formatter
+    }()
+    
+    init() {
+        dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
         
-        for i in 0..<7
-        {
-            if let date = Calendar.current.date(byAdding: .day, value: i, to: Date())
-            {
+        var initialPlans: [String: [String]] = [:]
+        for i in 0..<7 {
+            if let date = Calendar.current.date(byAdding: .day, value: i, to: Date()) {
                 let formattedDate = dateFormatter.string(from: date)
                 initialPlans[formattedDate] = []
             }
         }
-        return initialPlans
-    }()
+        _plans = State(initialValue: initialPlans)
+    }
+    
     
     var body: some View
     {
@@ -33,7 +43,8 @@ struct PlanView: View
                         Section(header:
                                     HStack
                                 {
-                            Text(day).font(.title)
+                           
+                            Text(self.displayDateFormatter.string(from: dateFormatter.date(from: day)!)).font(.title)
                             Text(getDayLabelText(for: day)) // 顯示 "第一天" 到 "第七天" 的文本
                             Spacer()
                             Button(action:
@@ -123,7 +134,54 @@ func savePlanToServer(P_ID: String,U_ID: String,Dis_ID: String, P_DT: String,P_B
         }
     }.resume()
 }
+func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: String, P_DT: String, P_Bought: String, plans: [String: [String]]) {
+
+}
+
+func fetchPlansFromServer(completion: @escaping ([String: [String]]?, Error?) -> Void) {
+    guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
+        print("Invalid URL")
+        return
+    }
+    
+    URLSession.shared.dataTask(with: url) { (data, response, error) in
+        if let error = error {
+            completion(nil, error)
+            return
+        }
+        
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            print("Error: Invalid HTTP response")
+            completion(nil, NSError(domain: "HTTPError", code: 0, userInfo: nil))
+            return
+        }
+        
+        guard let jsonData = data else {
+            print("Error: No data received")
+            completion(nil, NSError(domain: "NoDataError", code: 0, userInfo: nil))
+            return
+        }
+        
+        do {
+            let decodedData = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            if let plansDict = decodedData as? [String: [String]] {
+                completion(plansDict, nil)
+            } else {
+                print("Error: Unable to parse JSON")
+                completion(nil, NSError(domain: "JSONParsingError", code: 0, userInfo: nil))
+            }
+        } catch {
+            print("Error: \(error)")
+            completion(nil, error)
+        }
+    }.resume()
+}
+
+
+
 
 
 // Call this function to save a plan
 //savePlanToServer(pID: "your_pID", uID: "your_uID", pDT: "your_pDT", pBought: 1)
+
+

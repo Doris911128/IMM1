@@ -48,6 +48,7 @@
 		0447AFDA2B872F7C0080D222 /* BMI.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0447AFD82B872F7C0080D222 /* BMI.xcassets */; };
 		0447AFDB2B872F7C0080D222 /* Userlike.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0447AFD92B872F7C0080D222 /* Userlike.xcassets */; };
 		0447AFDD2B8730F60080D222 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0447AFDC2B8730F60080D222 /* Assets.xcassets */; };
+		0459852F2BB0285E006D8807 /* PlanManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0459852E2BB0285E006D8807 /* PlanManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -94,6 +95,7 @@
 		0447AFD92B872F7C0080D222 /* Userlike.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Userlike.xcassets; sourceTree = "<group>"; };
 		0447AFDC2B8730F60080D222 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0447AFDE2B8731430080D222 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		0459852E2BB0285E006D8807 /* PlanManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -215,6 +217,7 @@
 				0447AFCB2B872D110080D222 /* MemberButton.swift */,
 				0447AFCD2B872D110080D222 /* TagButton.swift */,
 				0447AFCF2B872D110080D222 /* InformationLabel.swift */,
+				0459852E2BB0285E006D8807 /* PlanManager.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -310,6 +313,7 @@
 				0447AF982B872C520080D222 /* User.swift in Sources */,
 				0447AFB82B872C980080D222 /* MyView.swift in Sources */,
 				0447AFD32B872D110080D222 /* TagButton.swift in Sources */,
+				0459852F2BB0285E006D8807 /* PlanManager.swift in Sources */,
 				0447AFBD2B872C980080D222 /* PlanView.swift in Sources */,
 				0447AFBF2B872C980080D222 /* CookView.swift in Sources */,
 				0447AFC62B872C980080D222 /* HyperglycemiaView.swift in Sources */,

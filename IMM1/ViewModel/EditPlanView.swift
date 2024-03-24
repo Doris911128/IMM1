@@ -1,3 +1,4 @@
+
 // EditPlanView.swift
 
 import SwiftUI
@@ -42,11 +43,24 @@ func fetchFoodData(from url: URL, completion: @escaping ([FoodData]?, Error?) ->
 }
 
 // Define a function to save a plan to the server
-func savePlanToServer(P_ID: String, U_ID: String,Dis_ID: String, P_DT: String,P_Bought:String,completion: @escaping (Bool, String?) -> Void) {
+func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: String, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
     // Implement the logic to save the plan to the server here
     // If the save is successful, call completion(true, nil)
     // If the save fails, call completion(false, "Error message")
 }
+
+func updatePlanToServer(P_ID: String, newPlan: String, completion: @escaping (Bool, String?) -> Void) {
+    // 實現更新計畫至伺服器的邏輯
+    // 如果更新成功，調用 completion(true, nil)
+    // 如果更新失敗，調用 completion(false, "錯誤訊息")
+}
+
+func deletePlanFromServer(P_ID: String, completion: @escaping (Bool, String?) -> Void) {
+    // 實現從伺服器刪除計畫的邏輯
+    // 如果刪除成功，調用 completion(true, nil)
+    // 如果刪除失敗，調用 completion(false, "錯誤訊息")
+}
+
 
 // Define the EditPlanView SwiftUI view
 struct EditPlanView: View {
@@ -86,6 +100,9 @@ struct EditPlanView: View {
             print("Invalid URL")
         }
     }
+
+
+    
      // MARK: 懶人選項
      @State private var foodOptions1: [FoodData] = []
 
@@ -136,7 +153,8 @@ struct EditPlanView: View {
          }
          
      }
-     
+    
+    
      @ViewBuilder
      private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [FoodData]) -> some View {
          CustomButton(imageName: imageName, buttonText: buttonText) {
@@ -184,11 +202,6 @@ struct EditPlanView: View {
         }.resume()
     }
 
-
-
-
-
-       
      var body: some View {
          VStack {
              Text("選擇的食物: \(editedPlan)")
@@ -209,12 +222,12 @@ struct EditPlanView: View {
                         dateFormatter.dateFormat = "yyyy-MM-dd"
                         let dateString = dateFormatter.string(from: Date())
                         
-                        savePlanToServer(P_ID: "", U_ID: "", Dis_ID: selectedFoodData.Dis_ID, P_DT: dateString, P_Bought: "") { success, errorMessage in
+                        savePlanToServer(P_ID: "", U_ID: "", Dis_ID: selectedFoodData.Dis_ID, P_DT: day, P_Bought: "") { success, errorMessage in
                             if success {
                                 print("計畫成功保存到伺服器")
                             } else {
                                 print("保存計畫的結果：\(errorMessage ?? "出問題")")
-                                
+                            
                         
                             }
                         }
