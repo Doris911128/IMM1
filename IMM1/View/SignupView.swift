@@ -20,55 +20,71 @@ struct SignupView: View {
     }
 
     private func sendRequest() {
-        guard let url = URL(string: "http://163.17.9.107/food/Signin.php") else { return }
+        guard let url = URL(string: "http://163.17.9.107/food/Signin.php") else {
+            print("錯誤: 無效的URL")
+            return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd"
-        let birthDate = dateFormatter.string(from: date) // 格式化日期
 
+
+
+        let gender: Int
+        switch information.4 {
+        case "男性":
+            gender = 0
+        case "女性":
+            gender = 1
+        case "隱私":
+            gender = 2
+        default:
+            gender = 2 // 或者其他默认值
+        }
+        
         let parameters: [String: Any] = [
             "U_Acc": information.0,
             "U_Pas": information.1,
             "U_Name": information.3,
-            "U_Gen": information.4,
-            "U_Bir": birthDate, // 使用格式化後的生日
-//            "H":information.6,
-//            "W":information.7,
-            "acid": information.8,
-            "sweet": information.9,
-            "bitter": information.10,
-            "hot": information.11
+            "U_Gen": gender ,
+            "U_Bir":information.5,
+            "H":Float(information.6),
+            "W":Float(information.7),
+            "acid": String(information.8),
+            "sweet": String(information.9),
+            "bitter": String(information.10),
+            "hot": String(information.11)
         ]
         
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: parameters, options: [])
-        } catch {
-            print("Error: cannot create JSON from parameters")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                DispatchQueue.main.async {
-                    self.result = (true, "Error: \(error.localizedDescription)")
-                }
-            } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async {
-                    self.result = (true, "Response: \(responseString)")
-                }
-            }
-        }.resume()
-    }
+               let jsonData = try JSONSerialization.data(withJSONObject: parameters, options: [])
+               request.httpBody = jsonData
+               print("發送的JSON數據: \(String(data: jsonData, encoding: .utf8) ?? "無法將數據轉化為字符串")")
+           } catch {
+               print("錯誤: 無法從參數創建JSON")
+               return
+           }
 
-    // MARK: DatePicker View Section
-    private var datePickerSection: some View {
-        DatePicker("選擇您的生日", selection: $date, displayedComponents: .date)
-            .onChange(of: date) { newDate in
-                // 這裡不再需要轉換日期格式，因為我們在發送請求時轉換
-            }
+           URLSession.shared.dataTask(with: request) { (data, response, error) in
+               if let error = error {
+                   print("網絡請求錯誤: \(error.localizedDescription)")
+                   DispatchQueue.main.async {
+                       self.result = (true, "錯誤: \(error.localizedDescription)")
+                   }
+               } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                   print("網絡請求響應: \(responseString)")
+                   DispatchQueue.main.async {
+                       self.result = (true, "響應: \(responseString)")
+                   }
+               }
+           }.resume()
+       }
+
+    // 辅助方法来格式化日期字符串
+    func formatDate(date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd" // 设定目标格式
+        return formatter.string(from: date)
     }
 
     
@@ -98,7 +114,7 @@ struct SignupView: View {
         case 2: return self.information.2 //密碼a
         case 3: return self.information.3 //名稱
         case 4: return self.information.4 //性別
-        case 5: return self.information.5//生日
+        case 5: return  self.information.5//生日
         case 6: return String(self.information.6) //身高
         case 7: return String(self.information.7) //體重
         case 8: return String(self.information.8) //酸
@@ -229,8 +245,8 @@ struct SignupView: View {
                             {
                                 
                             }
-                            .onChange(of: self.date) {(_, new) in
-                                self.information.5=new.formatted(date: .numeric, time: .omitted)
+                            .onChange(of: self.date) { newDate in
+                                self.information.5 = formatDate(date: newDate)
                             }
                         }
                         .labelsHidden()
