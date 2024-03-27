@@ -16,12 +16,13 @@ struct MyView: View
     
     @Binding var select: Int
     
+    @State private var shouldRefreshView = false // 添加一个属性来存储是否需要刷新视图
     @State private var pickImage: PhotosPickerItem?
     @State var isDarkMode: Bool = false
     @State private var isNameSheetPresented = false //更新名字完後會自動關掉ＳＨＥＥＴ
     
     @Environment(\.presentationMode) private var presentationMode
-    @EnvironmentObject private var user: User //提供所有View使用的User結構
+    @EnvironmentObject var user: User // 从环境中获取用户信息
     
     private let label: [InformationLabel]=[
         InformationLabel(image: "person.fill", label: "名稱"),
@@ -29,35 +30,37 @@ struct MyView: View
         InformationLabel(image: "birthday.cake.fill", label: "生日"),
     ]
     // MARK: 從後端獲取用戶信息並更新 user 物件
-    private func fetchUserInfo() {
-        // 發送獲取用戶信息的請求到後端
-        // 解析後端返回的 JSON 數據，將用戶信息設置到 user 物件中
-        // 這裡需要使用適合你應用程序的網絡庫來發送請求，例如 URLSession、Alamofire 等
-        // 以下僅是一個示例
-        guard let url = URL(string: "http://163.17.9.107/food/Login.php") else {
+    private func fetchUserInfo()
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/Login.php")
+        else {
             print("Invalid URL")
             return
         }
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data else {
+        URLSession.shared.dataTask(with: url)
+        { data, response, error in
+            guard let data = data else
+            {
                 print("No data received: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
-            
             do {
-                let userInfo = try JSONDecoder().decode(User.self, from: data)
-                DispatchQueue.main.async {
+                let decoder = JSONDecoder()
+                // 設置日期解碼器的格式
+                decoder.dateDecodingStrategy = .iso8601
+                let userInfo = try decoder.decode(User.self, from: data)
+                DispatchQueue.main.async
+                {
                     // 將獲取的用戶信息設置到 user 物件中
-                    self.user.name = userInfo.name
-                    self.user.gender = userInfo.gender
-                    self.user.birthday = userInfo.birthday
+                    self.user.update(with: userInfo)
                 }
-            } catch {
-                print("Error decoding user info: \(error.localizedDescription)")
+            } catch let error {
+                print("Error decoding user info: \(error)")
             }
         }.resume()
     }
+
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]
     
     // MARK: 設定顯示資訊
@@ -76,7 +79,6 @@ struct MyView: View
         }
     }
 
-    
     var body: some View
     {
         NavigationStack
@@ -194,7 +196,7 @@ struct MyView: View
                                         HStack
                                         {
                                             InformationLabel(image: "person.fill", label: "姓名")
-                                            Text(self.user.name) //傳遞0或1作為參數，根據需要的索引
+                                            Text(user.name) //傳遞0或1作為參數，根據需要的索引
                                                 .foregroundColor(.gray)
                                             
                                         }
@@ -217,7 +219,8 @@ struct MyView: View
                                 HStack
                                 {
                                     self.label[index]
-                                    Text(self.setInformation(index: index)).foregroundColor(.gray)
+                                    Text(self.setInformation(index:index))
+                                    .foregroundColor(.gray)
                                 }
                                 .frame(height: 30)
                             }
@@ -312,26 +315,12 @@ struct MyView: View
                         newValue in
                         self.isDarkMode = !self.colorScheme
                     }
-//                    .onAppear {
-//                        // MARK: 從 RealTime 獲取用戶信息
-//                        realTime.getUser(account: "用户的帳號") { userInfo, error in
-//                            if let userInfo = userInfo {
-//                                //更新 MyView 中的用戶信息
-//                                self.user.U_Name = userInfo[3]
-//                                self.user.U_Gen=userInfo[4]
-//                                self.user.U_Bir=userInfo[5] //請根據實際情況修改索引
-//                                // MARK: 更新其他用戶信息，根據需要
-//                            } else if let error = error {
-//                                print("Error getting user information: \(error.localizedDescription)")
-//                            }
-//                        }
-//                    }
                 }
             }
         }
         .onAppear {
-            fetchUserInfo()
-        }
+                fetchUserInfo()
+            }
     }
 }
 
