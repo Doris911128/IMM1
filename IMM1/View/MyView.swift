@@ -61,6 +61,40 @@ struct MyView: View
             }
         }.resume()
     }
+    
+    // 登出操作
+    func logout() {
+        guard var urlComponents = URLComponents(string: "http://163.17.9.107/food/Login.php") else {
+            print("Invalid URL")
+            return
+        }
+        // 添加参数以指示登出操作
+        urlComponents.queryItems = [
+            URLQueryItem(name: "logout", value: "true")
+        ]
+        
+        guard let url = urlComponents.url else {
+            print("Failed to construct URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            guard let _ = data, error == nil else {
+                print("Error: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+
+            // 清除本地会话中的用户信息
+            DispatchQueue.main.async {
+                self.signin = false
+                // 清除存储的用户 ID
+                UserDefaults.standard.removeObject(forKey: "userID")
+            }
+        }.resume()
+    }
 
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]
     
@@ -290,8 +324,8 @@ struct MyView: View
                                     .offset(x: 30)
                             }
                             // MARK: 登出
-                            Button(action:
-                                    {
+                            Button(action:{
+                                logout() // 調用登出函數
                                 withAnimation(.easeInOut)
                                 {
                                     self.signin = false
