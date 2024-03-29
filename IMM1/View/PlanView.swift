@@ -1,6 +1,14 @@
-
 // MARK: 計畫View
 import SwiftUI
+import Foundation
+
+struct Plan: Codable {
+    let P_ID: String
+    let U_ID: String
+    let Dis_ID: Int
+    let P_DT: Date
+    let P_Bought: Bool
+}
 
 struct PlanView: View {
     // DateFormatter for formatting dates
@@ -28,8 +36,7 @@ struct PlanView: View {
         }
         _plans = State(initialValue: initialPlans)
     }
-    
-    
+
     var body: some View
     {
         NavigationStack
@@ -99,48 +106,41 @@ struct PlanView_Previews: PreviewProvider
         PlanView()
     }
 }
-func savePlanToServer(P_ID: String,U_ID: String,Dis_ID: String, P_DT: String,P_Bought:String) {
+func savePlanToServer(plan: Plan) {
     guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
         print("Invalid URL")
         return
     }
     
-    let data: [String: Any] = [
-        "P_ID":P_ID,
-        "U_ID":U_ID,
-        "Dis_ID": Dis_ID,
-        "P_DT": P_DT,
-        "P_Bought": P_Bought
-        
-    ]
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    
+    let encoder = JSONEncoder()
+    encoder.dateEncodingStrategy = .iso8601
+
     do {
-        request.httpBody = try JSONSerialization.data(withJSONObject: data)
-    } catch {
-        print("Error serializing JSON: \(error)")
-    }
-    
-    URLSession.shared.dataTask(with: request) { (data, response, error) in
-        if let error = error {
-            print("Error saving plan: \(error)")
-        } else if let data = data {
-            if let responseString = String(data: data, encoding: .utf8) {
-                print("Response from server: \(responseString)")
+        let jsonData = try encoder.encode(plan)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                print("Error saving plan: \(error)")
+            } else if let data = data {
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("Response from server: \(responseString)")
+                }
             }
-        }
-    }.resume()
+        }.resume()
+    } catch {
+        print("Error encoding JSON: \(error)")
+    }
 }
-func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: String, P_DT: String, P_Bought: String, plans: [String: [String]]) {
 
-}
-
-func fetchPlansFromServer(completion: @escaping ([String: [String]]?, Error?) -> Void) {
+func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) {
     guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
         print("Invalid URL")
+        completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
     }
     
@@ -163,25 +163,16 @@ func fetchPlansFromServer(completion: @escaping ([String: [String]]?, Error?) ->
         }
         
         do {
-            let decodedData = try JSONSerialization.jsonObject(with: jsonData, options: [])
-            if let plansDict = decodedData as? [String: [String]] {
-                completion(plansDict, nil)
-            } else {
-                print("Error: Unable to parse JSON")
-                completion(nil, NSError(domain: "JSONParsingError", code: 0, userInfo: nil))
-            }
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let plans = try decoder.decode([Plan].self, from: jsonData)
+            completion(plans, nil)
         } catch {
-            print("Error: \(error)")
+            print("Error decoding JSON: \(error)")
             completion(nil, error)
         }
     }.resume()
 }
 
-
-
-
-
 // Call this function to save a plan
 //savePlanToServer(pID: "your_pID", uID: "your_uID", pDT: "your_pDT", pBought: 1)
-
-
