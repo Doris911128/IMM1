@@ -38,6 +38,7 @@ struct MyView: View
             return
         }
         
+        
         URLSession.shared.dataTask(with: url)
         { data, response, error in
             guard let data = data else
@@ -64,14 +65,23 @@ struct MyView: View
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]
     
     // MARK: 設定顯示資訊
-    private func setInformation(index: Int) -> String
-    {
-        switch(index)
-        {
+    private func setInformation(index: Int) -> String {
+        switch(index) {
         case 0:
             return self.user.name
         case 1:
-            return self.user.gender
+            if let genderInt = Int(self.user.gender) {
+                switch genderInt {
+                case 0:
+                    return "男性"
+                case 1:
+                    return "女性"
+                default:
+                    return "隱私"
+                }
+            } else {
+                return "隱私" // 如果无法转换为整数，则返回隐私
+            }
         case 2:
             return self.user.birthday
         default:

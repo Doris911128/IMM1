@@ -74,7 +74,7 @@ struct SignupView: View {
                } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
                    print("網絡請求響應: \(responseString)")
                    DispatchQueue.main.async {
-                       self.result = (true, "響應: \(responseString)")
+                       self.result = (true, " \(responseString)")
                    }
                }
            }.resume()
@@ -404,7 +404,9 @@ struct SignupView: View {
                     {
                         if(self.selectedTab==self.title.count-1)
                         {
+                            self.dismiss()
                             self.sendRequest()
+                           // self.dismiss()
                         }
                         self.selectedTab=self.selectedTab<self.title.count-1 ? self.selectedTab+1:self.selectedTab
                     }
@@ -422,8 +424,7 @@ struct SignupView: View {
                     if(self.result.1.contains("success"))
                     {
                         self.dismissKeyboard()
-                        
-                    }
+                        }
                 }
             }
             
