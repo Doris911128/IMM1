@@ -16,7 +16,7 @@ class User: ObservableObject, Decodable {
     @Published var acid: String
     @Published var sweet: String
     @Published var bitter: String
-    @Published var spicy: String
+    @Published var hot: String
 
     // MARK: 初始化
     init(id: String = "",
@@ -30,7 +30,7 @@ class User: ObservableObject, Decodable {
          acid: String = "0.0",
          sweet: String = "0.0",
          bitter: String = "0.0",
-         spicy: String = "0.0")
+         hot: String = "0.0")
     {
         self.id = id
         self.account = account
@@ -43,7 +43,7 @@ class User: ObservableObject, Decodable {
         self.acid = acid
         self.sweet = sweet
         self.bitter = bitter
-        self.spicy = spicy
+        self.hot = hot
     }
     
     // MARK: 可失败的初始化方法
@@ -62,7 +62,7 @@ class User: ObservableObject, Decodable {
         self.acid = try container.decodeIfPresent(String.self, forKey: .acid) ?? "" // 酸度字段可为空
         self.sweet = try container.decodeIfPresent(String.self, forKey: .sweet) ?? "" // 甜度字段可为空
         self.bitter = try container.decodeIfPresent(String.self, forKey: .bitter) ?? "" // 苦度字段可为空
-        self.spicy = try container.decodeIfPresent(String.self, forKey: .spicy) ?? "" // 辣度字段可为空
+        self.hot = try container.decodeIfPresent(String.self, forKey: .hot) ?? "" // 辣度字段可为空
     }
 
     
@@ -79,7 +79,7 @@ class User: ObservableObject, Decodable {
         case acid = "acid"
         case sweet = "sweet"
         case bitter = "bitter"
-        case spicy = "spicy"
+        case hot = "hot"
     }
     
     // 更新用户信息的方法
