@@ -110,7 +110,7 @@ struct BMIView: View
                     DispatchQueue.main.async {
                         // 解析 JSON 字串並將記錄添加到 ViewModel
                         self.bmiRecordViewModel.parseAndAddRecords(from: responseString)
-                        self.isShowingList = true // 顯示列表，如果需要
+                        //self.isShowingList = true // 顯示列表，如果需要
                     }
                 }
             } else if let error = error {
@@ -137,7 +137,7 @@ struct BMIView: View
                     
                     Button(action:
                             {
-                        self.connect(name: "Dynamics")
+                        //self.connect(name: "Dynamics")
                         isShowingList.toggle()
                     }) {
                         Image(systemName: "list.dash")
@@ -150,46 +150,32 @@ struct BMIView: View
                     }
                     .offset(x:10)
                 }
-                ScrollView(.horizontal)
-                {
-                    HStack(spacing: 30)
-                    {
-                        Chart(temperatureSensorViewModel.allSensors)
-                        {
-                            sensor in
-                            let groupedRecords = Dictionary(grouping: sensor.records, by: { formattedDate($0.date) })
-                            let latestRecords = groupedRecords.mapValues { $0.last! }
-                            
-                            ForEach(latestRecords.sorted(by: { $0.key < $1.key }), id: \.key)
-                            {
-                                date, record in
-                                LineMark(
-                                    x: .value("Day", date),
-                                    y: .value("Value", record.bmi)
-                                )
-                                .lineStyle(.init(lineWidth: 5))
-                                
-                                PointMark(
-                                    x: .value("Day", date),
-                                    y: .value("Value", record.bmi)
-                                )
-                                .annotation(position: .top)
-                                {
-                                    Text("\(record.bmi, specifier: "%.2f")")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(Color("textcolor"))
-                                }
+                ScrollView(.horizontal) {
+                    HStack(spacing: 30) {
+                        Chart(bmiRecordViewModel.bmiRecords) { record in
+                            LineMark(
+                                x: .value("Date", formattedDate(record.date)),
+                                y: .value("BMI", record.bmi)
+                            )
+                            .lineStyle(.init(lineWidth: 2))
+                            .foregroundStyle(.blue)
+
+                            PointMark(
+                                x: .value("Date", formattedDate(record.date)),
+                                y: .value("BMI", record.bmi)
+                            )
+                            .annotation(position: .top) {
+                                Text("\(record.bmi, specifier: "%.2f")")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color("textcolor"))
                             }
-                            
-                            .foregroundStyle(by: .value("Location", sensor.id))
-                            .symbol(by: .value("Sensor Location", sensor.id))
-                            .symbolSize(100)
                         }
                         .chartForegroundStyleScale(["BMI": .orange])
                         .frame(width: 350, height: 200)
                     }
                     .padding()
                 }
+
                 
                 VStack(spacing: 10)
                 {
@@ -286,6 +272,8 @@ struct BMIView: View
                             BMIRecordDetailView(record: bmiRecordViewModel.bmiRecords.last ?? BMIRecord(height: 0, weight: 0, date: Date()))
                         }
                     }
+                }.onAppear{
+                    self.connect(name: "Dynamics")
                 }
                 .onTapGesture
                 {

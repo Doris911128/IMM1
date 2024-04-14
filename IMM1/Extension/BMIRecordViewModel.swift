@@ -36,25 +36,18 @@ extension Date
 
 extension BMIRecordViewModel 
 {
-    func parseAndAddRecords(from jsonString: String) 
-    {
-        let jsonData = Data(jsonString.utf8)
+    func parseAndAddRecords(from jsonString: String) {
         let decoder = JSONDecoder()
-        
-        do {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            decoder.dateDecodingStrategy = .formatted(dateFormatter)
-            
-            let records = try decoder.decode([BMIRecord].self, from: jsonData)
-            for record in records 
-            {
-                self.addOrUpdateRecord(newRecord: record)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        decoder.dateDecodingStrategy = .formatted(dateFormatter)
+
+        if let jsonData = jsonString.data(using: .utf8),
+           let records = try? decoder.decode([BMIRecord].self, from: jsonData) {
+            DispatchQueue.main.async {
+                self.bmiRecords.append(contentsOf: records)
             }
-        } 
-        catch
-        {
-            print("Error decoding JSON: \(error)")
         }
     }
+
 }
