@@ -4,59 +4,90 @@
 import SwiftUI
 import Charts
 
-class BMIRecordViewModel: ObservableObject 
+class BMIRecordViewModel: ObservableObject
 {
     @Published var bmiRecords: [BMIRecord]
     
-    init(bmiRecords: [BMIRecord] = []) 
+    init(bmiRecords: [BMIRecord] = [])
     {
         self.bmiRecords = bmiRecords
     }
 }
 
-class TemperatureSensorViewModel: ObservableObject 
+class TemperatureSensorViewModel: ObservableObject
 {
     @Published var allSensors: [TemperatureSensor]
     
-    init(allSensors: [TemperatureSensor] = []) 
+    init(allSensors: [TemperatureSensor] = [])
     {
         self.allSensors = allSensors
     }
 }
 
-struct BMIRecord: Identifiable 
-{
+import Foundation
+
+struct BMIRecord: Identifiable, Decodable {
     var id = UUID()
-    var height: Double
-    var weight: Double
+    var H: Double
+    var W: Double
     var bmi: Double
     var date: Date
     
-    init(height: Double, weight: Double) 
-    {
-        self.height = height
-        self.weight = weight
+    enum CodingKeys: String, CodingKey {
+        case H, W, date = "BMI_DT"
+    }
+    
+    init(height: Double, weight: Double, date: Date) {
+        self.H = height
+        self.W = weight
         self.bmi = weight / ((height / 100) * (height / 100))
-        self.date = Date()
+        self.date = date
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let H = try container.decode(String.self, forKey: .H)
+        let W = try container.decode(String.self, forKey: .W)
+        let dateString = try container.decode(String.self, forKey: .date)
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        if let height = Double(H), let weight = Double(W), let date = dateFormatter.date(from: dateString) {
+            self.init(height: height, weight: weight, date: date)
+        } else {
+            // Constructing the correct error if the date or numbers are not valid
+            var errorDescription = ""
+            if Double(H) == nil || Double(W) == nil {
+                errorDescription += "Height or weight is not a valid number. "
+            }
+            if dateFormatter.date(from: dateString) == nil {
+                errorDescription += "Date string does not match format yyyy-MM-dd."
+            }
+            
+            // Correctly constructing and throwing a DecodingError
+            let context = DecodingError.Context(codingPath: container.codingPath, debugDescription: errorDescription)
+            throw DecodingError.dataCorrupted(context)
+        }
     }
 }
 
-struct TemperatureSensor: Identifiable 
+struct TemperatureSensor: Identifiable
 {
     var id: String
     var records: [BMIRecord]
 }
 
-private func formattedDate(_ date: Date) -> String 
+private func formattedDate(_ date: Date) -> String
 {
     let formatter = DateFormatter()
-    formatter.dateFormat = "MM-dd"
+    formatter.dateFormat = "YYYY-MM-dd"
     return formatter.string(from: date)
 }
 
 
-struct BMIView: View 
+struct BMIView: View
 {
+    @EnvironmentObject private var user: User
     @State private var height: String = ""
     @State private var weight: String = ""
     
@@ -66,12 +97,35 @@ struct BMIView: View
     @State private var isShowingList: Bool = false
     @State private var isShowingDetailSheet: Bool = false
     
+    func connect(name: String)
+    {
+        let url: URL = URL(string: "http://163.17.9.107/food/\(name).php")!
+        var request: URLRequest = URLRequest(url: url)
+        
+        request.httpMethod = "POST"
+        URLSession.shared.dataTask(with: request) { (data, _, error) in
+            if let data = data
+            {
+                if let responseString = String(data: data, encoding: .utf8) {
+                    DispatchQueue.main.async {
+                        // 解析 JSON 字串並將記錄添加到 ViewModel
+                        self.bmiRecordViewModel.parseAndAddRecords(from: responseString)
+                        self.isShowingList = true // 顯示列表，如果需要
+                    }
+                }
+            } else if let error = error {
+                print("Error: \(error)")
+            }
+        }.resume()
+    }
     
-    var body: some View 
+    
+    
+    var body: some View
     {
         NavigationStack
         {
-            VStack 
+            VStack
             {
                 HStack
                 {
@@ -81,8 +135,9 @@ struct BMIView: View
                         .font(.system(size: 33, weight: .bold))
                         .offset(x:-60)
                     
-                    Button(action: 
+                    Button(action:
                             {
+                        self.connect(name: "Dynamics")
                         isShowingList.toggle()
                     }) {
                         Image(systemName: "list.dash")
@@ -95,17 +150,17 @@ struct BMIView: View
                     }
                     .offset(x:10)
                 }
-                ScrollView(.horizontal) 
+                ScrollView(.horizontal)
                 {
-                    HStack(spacing: 30) 
+                    HStack(spacing: 30)
                     {
-                        Chart(temperatureSensorViewModel.allSensors) 
+                        Chart(temperatureSensorViewModel.allSensors)
                         {
                             sensor in
                             let groupedRecords = Dictionary(grouping: sensor.records, by: { formattedDate($0.date) })
                             let latestRecords = groupedRecords.mapValues { $0.last! }
                             
-                            ForEach(latestRecords.sorted(by: { $0.key < $1.key }), id: \.key) 
+                            ForEach(latestRecords.sorted(by: { $0.key < $1.key }), id: \.key)
                             {
                                 date, record in
                                 LineMark(
@@ -118,7 +173,7 @@ struct BMIView: View
                                     x: .value("Day", date),
                                     y: .value("Value", record.bmi)
                                 )
-                                .annotation(position: .top) 
+                                .annotation(position: .top)
                                 {
                                     Text("\(record.bmi, specifier: "%.2f")")
                                         .font(.system(size: 12))
@@ -131,13 +186,12 @@ struct BMIView: View
                             .symbolSize(100)
                         }
                         .chartForegroundStyleScale(["BMI": .orange])
-                        
                         .frame(width: 350, height: 200)
                     }
                     .padding()
                 }
                 
-                VStack(spacing: 10) 
+                VStack(spacing: 10)
                 {
                     Text("BMI計算")
                         .font(.system(size: 20, weight: .semibold))
@@ -145,7 +199,7 @@ struct BMIView: View
                         .padding(.leading, 20)
                         .foregroundColor(Color("textcolor"))
                     
-                    VStack(spacing: -5) 
+                    VStack(spacing: -5)
                     {
                         TextField("請輸入身高（公分）", text: $height)
                             .padding()
@@ -173,31 +227,31 @@ struct BMIView: View
                         {
                             if let existingRecordIndex = bmiRecordViewModel.bmiRecords.firstIndex(where:
                                                                                                     { formattedDate($0.date) == formattedDate(Date()) }) {
-                                bmiRecordViewModel.bmiRecords[existingRecordIndex].height = heightValue
-                                bmiRecordViewModel.bmiRecords[existingRecordIndex].weight = weightValue
+                                bmiRecordViewModel.bmiRecords[existingRecordIndex].H = heightValue
+                                bmiRecordViewModel.bmiRecords[existingRecordIndex].W = weightValue
                                 bmiRecordViewModel.bmiRecords[existingRecordIndex].bmi = weightValue / ((heightValue / 100) * (heightValue / 100))
                             }
                             else
                             {
-                                let newRecord = BMIRecord(height: heightValue, weight: weightValue)
+                                let newRecord = BMIRecord(height: heightValue, weight: weightValue,date: Date())
                                 bmiRecordViewModel.bmiRecords.append(newRecord)
                             }
                             
                             if let existingSensorIndex = temperatureSensorViewModel.allSensors.firstIndex(where: { $0.id == "BMI" }) {
                                 if let existingRecordIndex = temperatureSensorViewModel.allSensors[existingSensorIndex].records.firstIndex(where: { formattedDate($0.date) == formattedDate(Date()) }) {
-                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].height = heightValue
-                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].weight = weightValue
+                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].H = heightValue
+                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].W = weightValue
                                     temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].bmi = weightValue / ((heightValue / 100) * (heightValue / 100))
                                 }
                                 else
                                 {
-                                    let newRecord = BMIRecord(height: heightValue, weight: weightValue)
+                                    let newRecord = BMIRecord(height: heightValue, weight: weightValue,date: Date())
                                     temperatureSensorViewModel.allSensors[existingSensorIndex].records.append(newRecord)
                                 }
                             }
                             else
                             {
-                                let newSensor = TemperatureSensor(id: "BMI", records: [BMIRecord(height: heightValue, weight: weightValue)])
+                                let newSensor = TemperatureSensor(id: "BMI", records: [BMIRecord(height: heightValue, weight: weightValue,date: Date())])
                                 temperatureSensorViewModel.allSensors.append(newSensor)
                             }
                             
@@ -218,22 +272,22 @@ struct BMIView: View
                     }
                     .padding()
                     .offset(y: -20)
-                    .sheet(isPresented: $isShowingList) 
+                    .sheet(isPresented: $isShowingList)
                     {
                         NavigationStack
                         {
                             BMIRecordsListView(records: $bmiRecordViewModel.bmiRecords, temperatureSensorViewModel: temperatureSensorViewModel)
                         }
                     }
-                    .sheet(isPresented: $isShowingDetailSheet) 
+                    .sheet(isPresented: $isShowingDetailSheet)
                     {
                         NavigationStack
                         {
-                            BMIRecordDetailView(record: bmiRecordViewModel.bmiRecords.last ?? BMIRecord(height: 0, weight: 0))
+                            BMIRecordDetailView(record: bmiRecordViewModel.bmiRecords.last ?? BMIRecord(height: 0, weight: 0, date: Date()))
                         }
                     }
                 }
-                .onTapGesture 
+                .onTapGesture
                 {
                     self.dismissKeyboard()
                 }
@@ -243,27 +297,27 @@ struct BMIView: View
     }
 }
 
-struct BMIRecordsListView: View 
+struct BMIRecordsListView: View
 {
     @Binding var records: [BMIRecord]
     @ObservedObject var temperatureSensorViewModel: TemperatureSensorViewModel
     
-    init(records: Binding<[BMIRecord]>, temperatureSensorViewModel: TemperatureSensorViewModel) 
+    init(records: Binding<[BMIRecord]>, temperatureSensorViewModel: TemperatureSensorViewModel)
     {
         self._records = records
         self.temperatureSensorViewModel = temperatureSensorViewModel
     }
     
-    var body: some View 
+    var body: some View
     {
         NavigationStack
         {
-            List 
+            List
             {
-                ForEach(records) 
+                ForEach(records)
                 {
                     record in
-                    NavigationLink(destination: BMIRecordDetailView(record: record)) 
+                    NavigationLink(destination: BMIRecordDetailView(record: record))
                     {
                         Text("\(formattedDate(record.date)): \(record.bmi, specifier: "%.2f")")
                     }
@@ -271,9 +325,9 @@ struct BMIRecordsListView: View
                 .onDelete(perform: deleteRecord)
             }
             .navigationTitle("BMI紀錄列表")
-            .toolbar 
+            .toolbar
             {
-                ToolbarItem(placement: .navigationBarTrailing) 
+                ToolbarItem(placement: .navigationBarTrailing)
                 {
                     EditButton()
                 }
@@ -295,27 +349,27 @@ struct BMIRecordsListView: View
 
 extension Double
 {
-    func rounded(toPlaces places: Int) -> Double 
+    func rounded(toPlaces places: Int) -> Double
     {
         let divisor = pow(10.0, Double(places))
         return (self * divisor).rounded() / divisor
     }
 }
 
-struct BMIRecordDetailView: View 
+struct BMIRecordDetailView: View
 {
     var record: BMIRecord
     var body: some View
     {
-        VStack 
+        VStack
         {
             bmiImage
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 100, height: 100)
                 .padding()
-            Text("身高: \(String(format: "%.1f", record.height)) 公分")
-            Text("體重: \(String(format: "%.1f", record.weight)) 公斤")
+            Text("身高: \(String(format: "%.1f", record.H)) 公分")
+            Text("體重: \(String(format: "%.1f", record.W)) 公斤")
             Text("你的BMI為: \(String(format: "%.2f", record.bmi))")
             Text("BMI分類: \(bmiCategory)")
                 .foregroundColor(categoryColor)
@@ -326,7 +380,7 @@ struct BMIRecordDetailView: View
     
     private var bmiCategory: String
     {
-        switch record.bmi 
+        switch record.bmi
         {
         case ..<18.5:
             return "過瘦"
@@ -343,9 +397,9 @@ struct BMIRecordDetailView: View
         }
     }
     
-    private var bmiImage: Image 
+    private var bmiImage: Image
     {
-        switch bmiCategory 
+        switch bmiCategory
         {
         case "過瘦":
             return Image("too_thin")
@@ -383,9 +437,9 @@ struct BMIRecordDetailView: View
 }
 
 
-struct BMIView_Previews: PreviewProvider 
+struct BMIView_Previews: PreviewProvider
 {
-    static var previews: some View 
+    static var previews: some View
     {
         BMIView()
     }

@@ -87,6 +87,7 @@ class User: ObservableObject, Decodable {
         self.name = userInfo.name
         self.gender = userInfo.gender
         self.birthday = userInfo.birthday
+        self.height = userInfo.height
     }
     
     // MARK: 从后端获取用户信息并更新视图

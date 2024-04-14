@@ -12,7 +12,7 @@ import Charts
 private func formattedDate(_ date: Date) -> String
 {
     let formatter = DateFormatter()
-    formatter.dateFormat = "MM-dd HH:mm"
+    formatter.dateFormat = "yyyy-MM-dd HH:mm"
     return formatter.string(from: date)
 }
 

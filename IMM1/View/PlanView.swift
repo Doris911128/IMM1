@@ -2,19 +2,24 @@
 import SwiftUI
 import Foundation
 
+
 struct Plan: Codable {
     let P_ID: String
     let U_ID: String
-    let Dis_ID: Int
-    let P_DT: Date
-    let P_Bought: Bool
+    let Dis_ID: String
+    let P_DT: String
+    let P_Bought: String
+    let Dis_name: String
 }
+
+
+
 
 struct PlanView: View {
     // DateFormatter for formatting dates
     private let dateFormatter: DateFormatter
     
-    @State private var plans: [String: [String]] = PlanManager.shared.loadPlans()
+    @State private var plans: [String: [String]] = [:]
     
     // DateFormatter for displaying dates in MM/DD format
     private var displayDateFormatter: DateFormatter = {
@@ -22,61 +27,82 @@ struct PlanView: View {
         formatter.dateFormat = "MM/dd"
         return formatter
     }()
-    
+    func convertPlansToDictionary(plans: [Plan]) -> [String: [String]] {
+        var plansDict = [String: [String]]()
+        let currentDate = Date()
+        let endDate = Calendar.current.date(byAdding: .day, value: 6, to: currentDate)!
+        
+        // 遍歷七天內的日期，初始化字典中的鍵
+        for i in 0..<7 {
+            if let date = Calendar.current.date(byAdding: .day, value: i, to: currentDate) {
+                plansDict[dateFormatter.string(from: date)] = []
+            }
+        }
+        
+        // 將計畫數據添加到字典中
+        for plan in plans {
+            guard let planDate = dateFormatter.date(from: plan.P_DT) else {
+                continue
+            }
+            // 檢查計畫日期是否在接下來的七天內，並添加到相應的日期中
+            if planDate >= currentDate && planDate <= endDate {
+                let date = dateFormatter.string(from: planDate)
+                if plansDict[date] == nil {
+                    plansDict[date] = []
+                }
+                plansDict[date]?.append(plan.Dis_name)
+            }
+        }
+        return plansDict
+    }
+
+
+    // 修改 fetchPlansFromServer 的調用和處理
+    func updatePlans() {
+        fetchPlansFromServer { plans, error in
+            if let plans = plans {
+                DispatchQueue.main.async {
+                    self.plans = convertPlansToDictionary(plans: plans) // 轉換後更新狀態
+                }
+            } else if let error = error {
+                print("Failed to fetch plans: \(error)")
+            }
+        }
+    }
+
     init() {
         dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
-        
-        var initialPlans: [String: [String]] = [:]
-        for i in 0..<7 {
-            if let date = Calendar.current.date(byAdding: .day, value: i, to: Date()) {
-                let formattedDate = dateFormatter.string(from: date)
-                initialPlans[formattedDate] = []
-            }
-        }
-        _plans = State(initialValue: initialPlans)
     }
 
-    var body: some View
-    {
-        NavigationStack
-        {
-            VStack
-            {
+    var body: some View {
+        NavigationStack {
+            VStack {
                 Text("計畫")
-                List
-                {
+                List {
                     ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
                         Section(header:
-                                    HStack
-                                {
-                           
-                            Text(self.displayDateFormatter.string(from: dateFormatter.date(from: day)!)).font(.title)
-                            Text(getDayLabelText(for: day)) // 顯示 "第一天" 到 "第七天" 的文本
-                            Spacer()
-                            Button(action:
-                                    {
-                                plans[day]?.append("新計畫")
-                            })
-                            {
-                                Image(systemName: "plus.circle")
-                                    .imageScale(.large)
-                                    .foregroundColor(.blue)
+                            HStack {
+                                Text(self.displayDateFormatter.string(from: dateFormatter.date(from: day)!)).font(.title)
+                                Text(getDayLabelText(for: day)) // 顯示 "第一天" 到 "第七天" 的文本
+                                Spacer()
+                                Button(action: {
+                                    plans[day]?.append("新計畫")
+                                }) {
+                                    Image(systemName: "plus.circle")
+                                        .imageScale(.large)
+                                        .foregroundColor(.blue)
+                                }
                             }
-                        }
-                        )
-                        {
-                            if let dayPlans = plans[day]
-                            {
+                        ) {
+                            if let dayPlans = plans[day] {
                                 ForEach(dayPlans.indices, id: \.self) { index in
                                     let plan = dayPlans[index]
-                                    NavigationLink(destination: EditPlanView(day: day, planIndex: index, plans: $plans))
-                                    {
+                                    NavigationLink(destination: EditPlanView(day: day, planIndex: index, plans: $plans)) {
                                         Text(plan).font(.headline)
                                     }
                                 }
-                                .onDelete
-                                { indices in
+                                .onDelete { indices in
                                     plans[day]?.remove(atOffsets: indices)
                                 }
                             }
@@ -86,19 +112,23 @@ struct PlanView: View {
                 .scrollIndicators(.hidden)
             }
         }
+        .onAppear {
+            updatePlans() // 在視圖顯示時獲取計畫
+        }
     }
-    
+
     // MARK: 根據日期獲取 "第一天" 到 "第七天" 的文本
-    private func getDayLabelText(for date: String) -> String
-    {
-        guard let index = Array(plans.keys.sorted(by: <)).firstIndex(of: date) else
-        {
+    private func getDayLabelText(for date: String) -> String {
+        guard let index = Array(plans.keys.sorted(by: <)).firstIndex(of: date) else {
             return ""
         }
         let dayNumber = (index % 7) + 1
         return "第\(dayNumber)天"
     }
 }
+
+
+
 struct PlanView_Previews: PreviewProvider
 {
     static var previews: some View
@@ -106,36 +136,8 @@ struct PlanView_Previews: PreviewProvider
         PlanView()
     }
 }
-func savePlanToServer(plan: Plan) {
-    guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
-        print("Invalid URL")
-        return
-    }
-    
-    let encoder = JSONEncoder()
-    encoder.dateEncodingStrategy = .iso8601
 
-    do {
-        let jsonData = try encoder.encode(plan)
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-        
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                print("Error saving plan: \(error)")
-            } else if let data = data {
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("Response from server: \(responseString)")
-                }
-            }
-        }.resume()
-    } catch {
-        print("Error encoding JSON: \(error)")
-    }
-}
+
 
 func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) {
     guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
@@ -164,7 +166,6 @@ func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) {
         
         do {
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
             let plans = try decoder.decode([Plan].self, from: jsonData)
             completion(plans, nil)
         } catch {
@@ -173,6 +174,3 @@ func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) {
         }
     }.resume()
 }
-
-// Call this function to save a plan
-//savePlanToServer(pID: "your_pID", uID: "your_uID", pDT: "your_pDT", pBought: 1)

@@ -14,6 +14,30 @@ import SwiftUI
 
 extension View
 {
+    func sendBMIData(height: Double, weight: Double, php: String) {
+        // 构建URL，包含查询参数
+        let urlString = "http://163.17.9.107/food/BMI.php?height=\(height)&weight=\(weight)"
+        guard let url = URL(string: urlString) else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"  // 修改为GET请求
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let httpResponse = response as? HTTPURLResponse {
+                print("HTTP Status code: \(httpResponse.statusCode)")
+            }
+            if let error = error {
+                print("Error sending data: \(error)")
+            } else {
+                // 如果需要处理返回的数据，可以在这里添加代码
+                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    print("Response: \(responseString)")
+                }
+                print("Data received successfully")
+            }
+        }.resume()
+    }
+
     func limitInput(text: Binding<String>, max: Int) -> some View
     {
         self.modifier(TextLimit(text: text, max: max))

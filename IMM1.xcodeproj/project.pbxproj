@@ -49,6 +49,10 @@
 		0447AFDB2B872F7C0080D222 /* Userlike.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0447AFD92B872F7C0080D222 /* Userlike.xcassets */; };
 		0447AFDD2B8730F60080D222 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0447AFDC2B8730F60080D222 /* Assets.xcassets */; };
 		0459852F2BB0285E006D8807 /* PlanManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0459852E2BB0285E006D8807 /* PlanManager.swift */; };
+		049CD69A2BC9156A00D7AA8E /* BMI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6992BC9156A00D7AA8E /* BMI.swift */; };
+		049CD6C02BCB742B00D7AA8E /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6BF2BCB742B00D7AA8E /* Response.swift */; };
+		049CD6C22BCB794700D7AA8E /* BMIRecordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */; };
+		049CD6C42BCBA72E00D7AA8E /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C32BCBA72E00D7AA8E /* Menu.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -96,6 +100,10 @@
 		0447AFDC2B8730F60080D222 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0447AFDE2B8731430080D222 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0459852E2BB0285E006D8807 /* PlanManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanManager.swift; sourceTree = "<group>"; };
+		049CD6992BC9156A00D7AA8E /* BMI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMI.swift; sourceTree = "<group>"; };
+		049CD6BF2BCB742B00D7AA8E /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
+		049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMIRecordViewModel.swift; sourceTree = "<group>"; };
+		049CD6C32BCBA72E00D7AA8E /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -155,6 +163,8 @@
 			children = (
 				0447AF7A2B872BBC0080D222 /* View.swift */,
 				0447AF7B2B872BBC0080D222 /* dismissKeyboard.swift */,
+				049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */,
+				049CD6C32BCBA72E00D7AA8E /* Menu.swift */,
 				0447AF7C2B872BBC0080D222 /* String.swift */,
 			);
 			path = Extension;
@@ -173,10 +183,12 @@
 			isa = PBXGroup;
 			children = (
 				0447AF8C2B872C520080D222 /* Dynamic.swift */,
+				049CD6992BC9156A00D7AA8E /* BMI.swift */,
 				0447AF8D2B872C520080D222 /* FoodOption.swift */,
 				0447AF8F2B872C520080D222 /* Forum.swift */,
 				0447AF912B872C520080D222 /* Information.swift */,
 				0447AF8E2B872C520080D222 /* User.swift */,
+				049CD6BF2BCB742B00D7AA8E /* Response.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -327,15 +339,19 @@
 				0447AFB92B872C980080D222 /* HyperlipidemiaView.swift in Sources */,
 				0447AFD22B872D110080D222 /* CustomButton.swift in Sources */,
 				0447AF612B8729C80080D222 /* IMM1App.swift in Sources */,
+				049CD6C02BCB742B00D7AA8E /* Response.swift in Sources */,
 				0447AFBB2B872C980080D222 /* HomeView.swift in Sources */,
+				049CD69A2BC9156A00D7AA8E /* BMI.swift in Sources */,
 				0447AFC32B872C980080D222 /* ForgePasswordView.swift in Sources */,
 				0447AF962B872C520080D222 /* Dynamic.swift in Sources */,
 				0447AFC82B872C980080D222 /* ContentView.swift in Sources */,
+				049CD6C42BCBA72E00D7AA8E /* Menu.swift in Sources */,
 				0447AFBC2B872C980080D222 /* DynamicView.swift in Sources */,
 				0447AF972B872C520080D222 /* FoodOption.swift in Sources */,
 				0447AFC52B872C980080D222 /* SignupView.swift in Sources */,
 				0447AFD42B872D110080D222 /* FoodSelectionView.swift in Sources */,
 				0447AFC72B872C980080D222 /* BMIView.swift in Sources */,
+				049CD6C22BCB794700D7AA8E /* BMIRecordViewModel.swift in Sources */,
 				0447AF9B2B872C520080D222 /* Information.swift in Sources */,
 				0447AFD12B872D110080D222 /* MemberButton.swift in Sources */,
 				0447AFC02B872C980080D222 /* HypertensionView.swift in Sources */,
