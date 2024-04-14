@@ -1,4 +1,3 @@
-//
 //  NowView.swift
 //  IM110CYUT
 //
@@ -8,9 +7,46 @@
 // MARK: 立即煮介面
 import SwiftUI
 import UIKit
+import Foundation
+
+struct DishService
+{
+    static func loadDishes(completion: @escaping ([Dishes]) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/Dishes.php") else { return }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data, error == nil else {
+                print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
+                completion([])
+                return
+            }
+            
+            do {
+                let dishes = try JSONDecoder().decode([Dishes].self, from: data)
+                DispatchQueue.main.async {
+                    completion(dishes)
+                }
+            } catch {
+                print("Error decoding JSON: \(error)")
+                completion([])
+            }
+        }.resume()
+    }
+}
 
 struct NowView: View
 {
+    @State private var dishesData: [Dishes] = []
+    @State private var selectedDish: Dishes? = nil // 用于存储用户选择的菜品信息
+    
+//    init() {
+//            // 這裡直接在初始化時呼叫異步方法
+//            DishService.loadDishes { dishes in
+//                self.dishesData = dishes
+//                self.selectedDish = dishes.first // 預設選擇第一道菜
+//            }
+//        }
+    
     var body: some View
     {
         NavigationStack
@@ -30,22 +66,27 @@ struct NowView: View
                     {
                         VStack
                         {
-                            NavigationLink(destination: MenuView())
-                            {
-                                RoundedRectangleBlock(imageName: "1", title: "煎餃")
-                            }
-                            NavigationLink(destination: MenuView())
-                            {
-                                RoundedRectangleBlock(imageName: "1", title: "炸豬排")
-                            }
-                            NavigationLink(destination: MenuView())
-                            {
-                                RoundedRectangleBlock(imageName: "1", title: "日式魚排")
-                            }
+                            NavigationLink(destination: MenuView(Dis_ID: selectedDish?.Dis_ID ?? 1)) {
+                                                   RoundedRectangleBlock(imageName: selectedDish?.D_image ?? "", title: selectedDish?.Dis_Name ?? "")
+                                           }
+//                            NavigationLink(destination: MenuView())
+//                            {
+//                                RoundedRectangleBlock(imageName: "1", title: "炸豬排")
+//                            }
+//                            NavigationLink(destination: MenuView())
+//                            {
+//                                RoundedRectangleBlock(imageName: "1", title: "日式魚排")
+//                            }
                         }
                         .padding(.trailing, 12)
                     }
                 }
+            }
+        }
+        .onAppear {
+            DishService.loadDishes { dishes in
+                self.dishesData = dishes
+                self.selectedDish = dishes.first
             }
         }
     }

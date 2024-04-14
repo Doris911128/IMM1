@@ -164,7 +164,6 @@
 				0447AF7A2B872BBC0080D222 /* View.swift */,
 				0447AF7B2B872BBC0080D222 /* dismissKeyboard.swift */,
 				049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */,
-				049CD6C32BCBA72E00D7AA8E /* Menu.swift */,
 				0447AF7C2B872BBC0080D222 /* String.swift */,
 			);
 			path = Extension;
@@ -182,6 +181,7 @@
 		0447AF872B872C520080D222 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				049CD6C32BCBA72E00D7AA8E /* Menu.swift */,
 				0447AF8C2B872C520080D222 /* Dynamic.swift */,
 				049CD6992BC9156A00D7AA8E /* BMI.swift */,
 				0447AF8D2B872C520080D222 /* FoodOption.swift */,

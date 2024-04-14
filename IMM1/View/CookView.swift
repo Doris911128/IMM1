@@ -1,3 +1,4 @@
+//CookView
 //// MARK: 烹飪View
 //import SwiftUI
 //
@@ -82,6 +83,7 @@
 // **MARK: 烹飪View**
 
 import SwiftUI
+import Foundation
 
 struct CookView: View {
     

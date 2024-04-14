@@ -1,4 +1,3 @@
-//
 //  AdjustView.swift
 //  IM110CYUT
 //
@@ -9,19 +8,19 @@
 // MARK: 採買View
 import SwiftUI
 
-struct AdjustedDish 
+struct AdjustedDish
 {
-    var dishName: String
+    var Dis_Name: String
     var components: [AdjustedIngredient]
 }
 
-struct AdjustedIngredient 
+struct AdjustedIngredient
 {
     var ingredientName: String
     var amount: String
 }
 
-struct AdjustedPlan 
+struct AdjustedPlan
 {
     var planDays: Int
     var dishes: [AdjustedDish]
@@ -29,17 +28,17 @@ struct AdjustedPlan
 
 
 
-struct AdjustedDishItemView: View 
+struct AdjustedDishItemView: View
 {
     @Binding var dishes: [AdjustedDish]
     
     var onDishSelected: (AdjustedDish) -> Void
     
-    var body: some View 
+    var body: some View
     {
         List
         {
-            ForEach(Array(dishes.enumerated()), id: \.element.dishName) 
+            ForEach(Array(dishes.enumerated()), id: \.element.Dis_Name)
             { index, dish in
                 ForEach(dish.components.indices, id: \.self)
                 { componentIndex in
@@ -53,7 +52,7 @@ struct AdjustedDishItemView: View
                         Spacer()
                     }
                 }
-                .onMove 
+                .onMove
                 { indices, newOffset in
                     // 處理食材重新排序
                     dishes[index].components.move(fromOffsets: indices, toOffset: newOffset)
@@ -64,16 +63,16 @@ struct AdjustedDishItemView: View
 }
 
 
-struct AdjustedView: View 
+struct AdjustedView: View
 {
     @State private var selectedDish: AdjustedDish?
     @State private var adjustedPlan = AdjustedPlan(planDays: 7, dishes: [])
     
-    var body: some View 
+    var body: some View
     {
-        NavigationView 
+        NavigationView
         {
-            VStack 
+            VStack
             {
                 AdjustedDishItemView(dishes: $adjustedPlan.dishes) { dish in
                     selectedDish = dish
@@ -86,9 +85,9 @@ struct AdjustedView: View
     }
 }
 
-struct AdjustedView_Previews: PreviewProvider 
+struct AdjustedView_Previews: PreviewProvider
 {
-    static var previews: some View 
+    static var previews: some View
     {
         AdjustedView()
     }

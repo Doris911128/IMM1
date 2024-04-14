@@ -277,7 +277,7 @@ struct MyView: View
                             // MARK: 過往食譜
                             HStack
                             {
-                                NavigationLink(destination: MenuView()) {
+                                NavigationLink(destination: MenuView(Dis_ID: 1)) {
                                     InformationLabel(image: "clock.arrow.circlepath", label: "過往食譜")
                                 }
                             }
@@ -291,7 +291,7 @@ struct MyView: View
                             // MARK: 飲食偏好
                             HStack
                             {
-                                NavigationLink(destination: MenuView()) {
+                                NavigationLink(destination: MenuView(Dis_ID: 1)) {
                                     InformationLabel(image: "fork.knife", label: "飲食偏好")
                                 }
                             }
