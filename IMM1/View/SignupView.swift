@@ -65,19 +65,24 @@ struct SignupView: View {
                return
            }
 
-           URLSession.shared.dataTask(with: request) { (data, response, error) in
-               if let error = error {
-                   print("網絡請求錯誤: \(error.localizedDescription)")
-                   DispatchQueue.main.async {
-                       self.result = (true, "錯誤: \(error.localizedDescription)")
-                   }
-               } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                   print("網絡請求響應: \(responseString)")
-                   DispatchQueue.main.async {
-                       self.result = (true, " \(responseString)")
-                   }
-               }
-           }.resume()
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                print("网络请求错误: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.result = (true, "错误: \(error.localizedDescription)")
+                }
+            } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                print("网络请求响应: \(responseString)")
+                DispatchQueue.main.async {
+                    if responseString.contains("success") {
+                        self.result = (true, "注册成功！")
+                    } else {
+                        self.result = (true, responseString) // 或者一个更具体的错误消息
+                    }
+                }
+            }
+        }.resume()
+
        }
 
     // 辅助方法来格式化日期字符串
