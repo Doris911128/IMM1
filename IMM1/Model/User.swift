@@ -84,11 +84,19 @@ class User: ObservableObject, Decodable {
     
     // 更新用户信息的方法
     func update(with userInfo: User) {
-        self.name = userInfo.name
-        self.gender = userInfo.gender
-        self.birthday = userInfo.birthday
-        self.height = userInfo.height
+        DispatchQueue.main.async {
+            self.name = userInfo.name
+            self.gender = userInfo.gender
+            self.birthday = userInfo.birthday
+            self.height = userInfo.height
+            self.weight = userInfo.weight
+            self.acid = userInfo.acid
+            self.sweet = userInfo.sweet
+            self.bitter = userInfo.bitter
+            self.hot = userInfo.hot
+        }
     }
+
     
     // MARK: 从后端获取用户信息并更新视图
         func fetchUserInfo(completion: @escaping (User?) -> Void) {

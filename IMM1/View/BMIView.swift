@@ -97,6 +97,33 @@ struct BMIView: View
     @State private var isShowingList: Bool = false
     @State private var isShowingDetailSheet: Bool = false
     
+    func postBMI(height: Double, weight: Double, name: String) {
+        guard let url = URL(string: "http://163.17.9.107/food/\(name).php") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        // 设置POST请求的body
+        let postString = "H=\(String(height))&W=\(String(weight))"
+        request.httpBody = postString.data(using: .utf8)
+
+        // Print the body data to be sent
+        print("Sending data to server: \(postString)") // 在這裡添加 print 語句
+
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                print("Error: \(error)")
+                return
+            }
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                DispatchQueue.main.async {
+                    // 解析JSON字符串并将记录添加到ViewModel
+                    self.bmiRecordViewModel.parseAndAddRecords(from: responseString)
+                }
+            }
+        }.resume()
+    }
+
+
     func connect(name: String)
     {
         let url: URL = URL(string: "http://163.17.9.107/food/\(name).php")!
@@ -207,45 +234,18 @@ struct BMIView: View
                             }
                     }
                     
-                    Button(action:
-                            {
-                        if let heightValue = Double(height), let weightValue = Double(weight)
-                        {
-                            if let existingRecordIndex = bmiRecordViewModel.bmiRecords.firstIndex(where:
-                                                                                                    { formattedDate($0.date) == formattedDate(Date()) }) {
-                                bmiRecordViewModel.bmiRecords[existingRecordIndex].H = heightValue
-                                bmiRecordViewModel.bmiRecords[existingRecordIndex].W = weightValue
-                                bmiRecordViewModel.bmiRecords[existingRecordIndex].bmi = weightValue / ((heightValue / 100) * (heightValue / 100))
-                            }
-                            else
-                            {
-                                let newRecord = BMIRecord(height: heightValue, weight: weightValue,date: Date())
-                                bmiRecordViewModel.bmiRecords.append(newRecord)
-                            }
+                    Button(action: {
+                        if let heightValue = Double(height), let weightValue = Double(weight) {
+                            // 调用postBMI发送数据
+                            postBMI(height: heightValue, weight: weightValue, name: "Dynamics")
                             
-                            if let existingSensorIndex = temperatureSensorViewModel.allSensors.firstIndex(where: { $0.id == "BMI" }) {
-                                if let existingRecordIndex = temperatureSensorViewModel.allSensors[existingSensorIndex].records.firstIndex(where: { formattedDate($0.date) == formattedDate(Date()) }) {
-                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].H = heightValue
-                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].W = weightValue
-                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records[existingRecordIndex].bmi = weightValue / ((heightValue / 100) * (heightValue / 100))
-                                }
-                                else
-                                {
-                                    let newRecord = BMIRecord(height: heightValue, weight: weightValue,date: Date())
-                                    temperatureSensorViewModel.allSensors[existingSensorIndex].records.append(newRecord)
-                                }
-                            }
-                            else
-                            {
-                                let newSensor = TemperatureSensor(id: "BMI", records: [BMIRecord(height: heightValue, weight: weightValue,date: Date())])
-                                temperatureSensorViewModel.allSensors.append(newSensor)
-                            }
+                            // 其余逻辑保持不变
+                            let today = Date()
+                            let newRecord = BMIRecord(height: heightValue, weight: weightValue, date: today)
+                            bmiRecordViewModel.addOrUpdateRecord(newRecord: newRecord)
                             
                             height = ""
                             weight = ""
-                            
-                            isShowingDetailSheet.toggle()
-                            
                         }
                     }) {
                         Text("計算BMI")
@@ -256,6 +256,7 @@ struct BMIView: View
                             .cornerRadius(100)
                             .font(.title3)
                     }
+
                     .padding()
                     .offset(y: -20)
                     .sheet(isPresented: $isShowingList)
@@ -273,7 +274,7 @@ struct BMIView: View
                         }
                     }
                 }.onAppear{
-                    self.connect(name: "Dynamics")
+                    self.connect(name: "findDynamics")
                 }
                 .onTapGesture
                 {

@@ -353,7 +353,6 @@ struct MyView: View
                     }
                     .listStyle(.plain)
                     .listStyle(InsetListStyle())
-                    .preferredColorScheme(self.colorScheme ? .light:.dark) //控制深淺模式切換
                     .onChange(of: self.colorScheme)
                     {
                         newValue in
@@ -362,6 +361,7 @@ struct MyView: View
                 }
             }
         }
+        .preferredColorScheme(self.colorScheme ? .light:.dark) //控制深淺模式切換
         .onAppear {
                 fetchUserInfo()
             }
