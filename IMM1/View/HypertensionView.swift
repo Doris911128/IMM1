@@ -5,19 +5,43 @@
 import SwiftUI
 import Charts
 
-struct HypertensionRecord: Identifiable //血壓紀錄
+struct HypertensionRecord: Identifiable,Codable //血壓紀錄
 {
-    var id = UUID()
+    var id = UUID()  // 在这里生成 UUID，不依赖 JSON 提供的 ID
     var hypertension: Double
     var date: Date
     
-    init(hypertension: Double)
-    {
+    enum CodingKeys: String, CodingKey {
+        case hypertension = "BP"
+        case date = "BP_DT"
+    }
+    
+    init(hypertension: Double, date: Date = Date()) {
         self.hypertension = hypertension
-        self.date = Date()
+        self.date = date
+    }
+    
+    init(from decoder: Decoder) throws
+    {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let hypertensionString = try container.decode(String.self, forKey: .hypertension)
+        guard let hypertensionDouble = Double(hypertensionString) else {
+            throw DecodingError.dataCorruptedError(forKey: .hypertension, in: container, debugDescription: "血壓值應為可轉換為Double的字符串。")
+        }
+        hypertension = hypertensionDouble
+        
+        let dateString = try container.decode(String.self, forKey: .date)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"  // 更新格式以包含秒
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        if let date = formatter.date(from: dateString) {
+            self.date = date
+        } else {
+            throw DecodingError.dataCorruptedError(forKey: .date, in: container, debugDescription: "日期字符串與格式器預期的格式不匹配。")
+        }
     }
 }
-
 struct HypertensionTemperatureSensor: Identifiable //包含ID和高血壓相關紀錄數組
 {
     var id: String
@@ -33,7 +57,10 @@ var HypertensionallSensors: [HypertensionTemperatureSensor] = //存取Temperatur
 private func formattedDate(_ date: Date) -> String
 {
     let formatter = DateFormatter()
-    formatter.dateFormat = "MM-dd HH:mm"
+    formatter.dateFormat = "yyyy-MM-dd HH:mm"  // 加入秒
+    formatter.locale = Locale(identifier: "en_US_POSIX") // 使用 POSIX 以保證日期格式的嚴格匹配
+    formatter.timeZone = TimeZone(secondsFromGMT: 0) // 根據需要調整時區
+    
     return formatter.string(from: date)
 }
 
@@ -46,6 +73,57 @@ struct HypertensionView: View
     @State private var isShowingList: Bool = false
     @State private var scrollToBottom: Bool = false
     @State private var showAlert: Bool = false
+    
+    
+    func connect(name: String, action: String) {
+        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = "action=\(action)".data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { (data, _, error) in
+            if let data = data {
+                print(String(decoding: data, as: UTF8.self))  // 打印原始 JSON 数据
+                do {
+                    let responseArray = try JSONDecoder().decode([HypertensionRecord].self, from: data)
+                    DispatchQueue.main.async {
+                        self.chartData = responseArray
+                        print("成功解码并更新了 chartData，包含 \(responseArray.count) 条记录。")
+                    }
+                } catch {
+                    print("解码数据失败: \(error)")
+                }
+            } else if let error = error {
+                print("网络请求出错: \(error)")
+            }
+        }.resume()
+    }
+    
+    func sendBPData(name: String, bp: Double, action: String) {
+        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let postData = "BP=\(bp)&action=\(action)"  // 確保 action 參數也被發送
+        request.httpBody = postData.data(using: .utf8)
+        
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard let data = data, error == nil else {
+                print("Network request error: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            do {
+                if let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    print("Response from server: \(jsonObject)")
+                } else {
+                    print("Received non-dictionary JSON response")
+                }
+            } catch {
+                print("Failed to decode JSON: \(error)")
+            }
+        }.resume()
+        
+    }
     
     var body: some View
     {
@@ -144,6 +222,8 @@ struct HypertensionView: View
                                 {
                             if let hypertensionValue = Double(hypertension)
                             {
+                                self.sendBPData(name: "BP", bp: hypertensionValue, action:"insert" )
+                                self.connect(name: "BP", action: "fetch")
                                 let newRecord = HypertensionRecord(hypertension: hypertensionValue)
                                 
                                 if let existingRecordIndex = chartData.lastIndex(where: { $0.date > Date().addingTimeInterval(-6 * 60 * 60) }) {
@@ -174,6 +254,9 @@ struct HypertensionView: View
                     }
                 }
                 .offset(y: 10)
+            }
+            .onAppear{
+                self.connect(name: "BP", action: "fetch")
             }
             .sheet(isPresented: $isShowingList)
             {

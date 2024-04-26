@@ -9,19 +9,17 @@ import Foundation
 
 extension BMIRecordViewModel
 {
-    func addOrUpdateRecord(newRecord: BMIRecord)
-    {
-        if let index = self.bmiRecords.firstIndex(where:{ $0.date.isSameDay(as: newRecord.date) })
-        {
-            // 已存在相同日期的记录，更新它
-            self.bmiRecords[index] = newRecord
-        }
-        else
-        {
-            // 无相同日期的记录，添加新记录
-            self.bmiRecords.append(newRecord)
-        }
-    }
+    func addOrUpdateRecord(newRecord: BMIRecord) {
+           if let index = self.bmiRecords.firstIndex(where: { $0.date.isSameDay(as: newRecord.date) }) {
+               // 比較現有記錄和新記錄的时间戳
+               if self.bmiRecords[index].timeStamp < newRecord.timeStamp {
+                   self.bmiRecords[index] = newRecord
+               }
+           } else {
+               self.bmiRecords.append(newRecord)
+           }
+       }
+    
     func parseAndAddRecords(from jsonString: String)
     {
         let decoder = JSONDecoder()

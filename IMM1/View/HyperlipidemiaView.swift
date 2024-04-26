@@ -11,16 +11,41 @@ import SwiftUI
 import Charts
 
 // MARK: 血脂紀錄
-struct HyperlipidemiaRecord: Identifiable
+struct HyperlipidemiaRecord: Identifiable,Codable
 {
     var id = UUID()
     var hyperlipidemia: Double
     var date: Date
     
+    enum CodingKeys: String, CodingKey {
+        case hyperlipidemia = "BL"
+        case date = "BL_DT"
+    }
+    
     init(hyperlipidemia: Double)
     {
         self.hyperlipidemia = hyperlipidemia
         self.date = Date()
+    }
+    init(from decoder: Decoder) throws
+    {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let hyperlipidemiaString = try container.decode(String.self, forKey: .hyperlipidemia)
+        guard let hyperlipidemiaDouble = Double(hyperlipidemiaString) else {
+            throw DecodingError.dataCorruptedError(forKey: .hyperlipidemia, in: container, debugDescription: "血壓值應為可轉換為Double的字符串。")
+        }
+        hyperlipidemia = hyperlipidemiaDouble
+        
+        let dateString = try container.decode(String.self, forKey: .date)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd "
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        if let date = formatter.date(from: dateString) {
+            self.date = date
+        } else {
+            throw DecodingError.dataCorruptedError(forKey: .date, in: container, debugDescription: "日期字符串與格式器預期的格式不匹配。")
+        }
     }
 }
 
@@ -40,7 +65,8 @@ var HyperlipidemiaallSensors: [HyperlipidemiaTemperatureSensor] = [
 private func formattedDate(_ date: Date) -> String
 {
     let formatter = DateFormatter()
-    formatter.dateFormat = "MM-dd"
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
     return formatter.string(from: date)
 }
 
@@ -54,6 +80,54 @@ struct HyperlipidemiaView: View
     @State private var scrollToBottom: Bool = false
     @State private var showAlert: Bool = false//
     
+    func connect(name: String, action: String) {
+        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = "action=\(action)".data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { (data, _, error) in
+            if let data = data {
+                print(String(decoding: data, as: UTF8.self))  // 打印原始 JSON 数据
+                do {
+                    let responseArray = try JSONDecoder().decode([HyperlipidemiaRecord].self, from: data)
+                    DispatchQueue.main.async {
+                        self.chartData = responseArray
+                        print("成功解码并更新了 chartData，包含 \(responseArray.count) 条记录。")
+                    }
+                } catch {
+                    print("解码数据失败: \(error)")
+                }
+            } else if let error = error {
+                print("网络请求出错: \(error)")
+            }
+        }.resume()
+    }
+    func sendBPData(name: String, bl: Double, action: String) {
+        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let postData = "BL=\(bl)&action=\(action)"  // 確保 action 參數也被發送
+        request.httpBody = postData.data(using: .utf8)
+        
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard let data = data, error == nil else {
+                print("Network request error: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+            do {
+                if let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    print("Response from server: \(jsonObject)")
+                } else {
+                    print("Received non-dictionary JSON response")
+                }
+            } catch {
+                print("Failed to decode JSON: \(error)")
+            }
+        }.resume()
+        
+    }
     var body: some View
     {
         NavigationStack
@@ -145,6 +219,8 @@ struct HyperlipidemiaView: View
                                 {
                             if let hyperlipidemiaValue = Double(hyperlipidemia)
                             {
+                                self.sendBPData(name: "BL", bl: hyperlipidemiaValue, action:"insert" )
+                                self.connect(name: "BL", action: "fetch")
                                 if let index = chartData.firstIndex(where:{ Calendar.current.isDate($0.date, inSameDayAs: Date()) }) //檢查是否已經有當天的紀錄存在
                                 {
                                     chartData[index].hyperlipidemia = hyperlipidemiaValue //如果有，則更新當天的值
@@ -175,6 +251,9 @@ struct HyperlipidemiaView: View
                     }
                 }
                 .offset(y: 10)
+            }
+            .onAppear{
+                self.connect(name: "BS", action: "fetch")
             }
             .sheet(isPresented: $isShowingList)
             {

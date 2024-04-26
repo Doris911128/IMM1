@@ -24,14 +24,13 @@ class TemperatureSensorViewModel: ObservableObject
     }
 }
 
-import Foundation
-
 struct BMIRecord: Identifiable, Decodable {
     var id = UUID()
     var H: Double
     var W: Double
     var bmi: Double
     var date: Date
+    var timeStamp: Date = Date()
     
     enum CodingKeys: String, CodingKey {
         case H, W, date = "BMI_DT"
@@ -237,8 +236,8 @@ struct BMIView: View
                     Button(action: {
                         if let heightValue = Double(height), let weightValue = Double(weight) {
                             // 调用postBMI发送数据
-                            postBMI(height: heightValue, weight: weightValue, name: "Dynamics")
-                            
+                            postBMI(height: heightValue, weight: weightValue, name: "BMI")
+                            self.connect(name: "FindBMI")
                             // 其余逻辑保持不变
                             let today = Date()
                             let newRecord = BMIRecord(height: heightValue, weight: weightValue, date: today)
@@ -274,7 +273,7 @@ struct BMIView: View
                         }
                     }
                 }.onAppear{
-                    self.connect(name: "findDynamics")
+                    self.connect(name: "FindBMI")
                 }
                 .onTapGesture
                 {
