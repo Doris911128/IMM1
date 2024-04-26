@@ -6,6 +6,15 @@
 //
 
 import Foundation
+
+//解析JSON的
+struct DishesResponse: Codable
+{
+    var dishes: [Dishes]
+    var foods: [Food]
+    var amounts: [Amount]
+}
+
 // MARK: 菜譜結構
 struct Dishes: Codable
 {
