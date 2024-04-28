@@ -1,26 +1,17 @@
-
 // EditPlanView.swift
 
 import SwiftUI
 import Foundation
 
-// Define the structure for food data obtained from the server
-struct FoodData: Codable {
-    let Dis_ID: String
-    let Dis_Name: String
-    let D_image: String
-    
-    // Additional properties can be added if needed
-    
-    init(Dis_ID: String, Dis_Name: String, D_image: String, category: String) {
-        self.Dis_ID = Dis_ID
-        self.Dis_Name = Dis_Name
-        self.D_image = D_image
-    }
+
+// 定義從服務器獲取的計劃數據結構
+struct PlanData: Codable {
+    let P_ID: String
+    // 根據需要添加其他屬性
 }
 
 // Define a function to fetch food data from a specified URL
-func fetchFoodData(from url: URL, completion: @escaping ([FoodData]?, Error?) -> Void) {
+func fetchFoodData(from url: URL, completion: @escaping ([Dishes]?, Error?) -> Void) {
     URLSession.shared.dataTask(with: url) { data, response, error in
         if let error = error {
             completion(nil, error)
@@ -34,7 +25,7 @@ func fetchFoodData(from url: URL, completion: @escaping ([FoodData]?, Error?) ->
         
         do {
             let decoder = JSONDecoder()
-            let foodData = try decoder.decode([FoodData].self, from: data)
+            let foodData = try decoder.decode([Dishes].self, from: data)
             completion(foodData, nil)
         } catch {
             completion(nil, error)
@@ -42,24 +33,7 @@ func fetchFoodData(from url: URL, completion: @escaping ([FoodData]?, Error?) ->
     }.resume()
 }
 
-// Define a function to save a plan to the server
-func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: String, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
-    // Implement the logic to save the plan to the server here
-    // If the save is successful, call completion(true, nil)
-    // If the save fails, call completion(false, "Error message")
-}
 
-func updatePlanToServer(P_ID: String, newPlan: String, completion: @escaping (Bool, String?) -> Void) {
-    // 實現更新計畫至伺服器的邏輯
-    // 如果更新成功，調用 completion(true, nil)
-    // 如果更新失敗，調用 completion(false, "錯誤訊息")
-}
-
-func deletePlanFromServer(P_ID: String, completion: @escaping (Bool, String?) -> Void) {
-    // 實現從伺服器刪除計畫的邏輯
-    // 如果刪除成功，調用 completion(true, nil)
-    // 如果刪除失敗，調用 completion(false, "錯誤訊息")
-}
 
 
 // Define the EditPlanView SwiftUI view
@@ -68,61 +42,64 @@ struct EditPlanView: View {
     var day: String
     var planIndex: Int
     
+    @State private var dishesData: [Dishes] = []
     @State private var show1: [Bool] = [false, false, false, false, false, false, false]
     @State private var searchText: String = ""
     @State private var editedPlan = ""
     @State private var isShowingDetail = false
-    @State private var foodDataFromServer: [FoodData] = []
-    @State private var foodOptions: [FoodData] = []
+    @State private var foodDataFromServer: [Dishes] = []
+    @State private var foodOptions: [Dishes] = []
     @Binding var plans: [String: [String]]
-    
+    @State private var isNewPlan = true
+    @State private var planID: String = ""
+
+  
+
     @Environment(\.presentationMode) var presentationMode
     
     // Function to fetch food options from the server
     func fetchFoodOptions() {
-        if let url = URL(string: "http://163.17.9.107/food/Dishes.php") {
-            fetchFoodData(from: url) { foodData, error in
-                if let error = error {
-                    print("Error occurred: \(error)")
-                } else if let foodData = foodData {
-                    print("Fetched food data: \(foodData)")
-                    self.foodDataFromServer = foodData
-                    self.foodOptions = foodData
-                    self.foodOptions1 = Array(foodData[0...4])
-                    self.foodOptions2 = [foodData[2]]
-                    self.foodOptions3 = foodData.filter { ["7", "9", "11"].contains($0.Dis_ID) }
-                    self.foodOptions4 = foodData
-                    self.foodOptions5 = foodData
-                    self.foodOptions6 = foodData
+            if let url = URL(string: "http://163.17.9.107/food/Dishes.php") {
+                fetchFoodData(from: url) { foodData, error in
+                    if let error = error {
+                        print("Error occurred: (error)")
+                    } else if let dishes = foodData {
+                        print("Fetched food data: (dishes)")
+                        self.foodDataFromServer = dishes
+                        self.foodOptions = dishes
+                        self.foodOptions1 = Array(dishes[0...4])
+                        self.foodOptions2 = [dishes[2]]
+                        self.foodOptions3 = dishes.filter { ["7", "9", "11"].contains(String($0.Dis_ID)) }
+                        self.foodOptions4 = dishes
+                        self.foodOptions5 = dishes
+                        self.foodOptions6 = dishes
+                    }
                 }
+            } else {
+                print("Invalid URL")
             }
-        } else {
-            print("Invalid URL")
         }
-    }
 
-
-    
      // MARK: 懶人選項
-     @State private var foodOptions1: [FoodData] = []
+     @State private var foodOptions1: [Dishes] = []
 
      // MARK: 減肥選項
-     @State private var foodOptions2: [FoodData] = []
+     @State private var foodOptions2: [Dishes] = []
      
      // MARK: 省錢選項
-     @State private var foodOptions3: [FoodData] = []
+     @State private var foodOptions3: [Dishes] = []
      
      // MARK: 放縱選項
-     @State private var foodOptions4: [FoodData] = []
+     @State private var foodOptions4: [Dishes] = []
      
      // MARK: 養生選項
-     @State private var foodOptions5: [FoodData] = []
+     @State private var foodOptions5: [Dishes] = []
      
      // MARK: 今日推薦選項
-     @State private var foodOptions6: [FoodData] = []
+     @State private var foodOptions6: [Dishes] = []
      
      @State private var isShowingDetail7 = false
-     func findSelectedFoodData(for name: String) -> FoodData? {
+     func findSelectedFoodData(for name: String) -> Dishes? {
          
          // 根據食物名稱在從服務器獲取的數據中找到對應的食物資料
          // 注意：您需要根據自己的數據結構和邏輯來實現這個函式
@@ -153,10 +130,49 @@ struct EditPlanView: View {
          }
          
      }
-    
+    // 定義一個從指定 URL 獲取計劃數據的函數
+    func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> Void) {
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                completion(nil, error)
+                return
+            }
+            
+            guard let data = data else {
+                completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
+                return
+            }
+            
+            do {
+                let decoder = JSONDecoder()
+                let planData = try decoder.decode(PlanData.self, from: data)
+                completion(planData, nil)
+            } catch {
+                completion(nil, error)
+            }
+        }.resume()
+    }
+
+    // 在你的 EditPlanView 中，修改函數以獲取計劃數據
+    func fetchPlanData() {
+        if let url = URL(string: "http://163.17.9.107/food/Plan.php") {
+            fetchPlanData(from: url) { planData, error in
+                if let error = error {
+                    print("在獲取計劃數據時發生錯誤：\(error)")
+                } else if let planData = planData {
+                    // 在這裡處理獲取的計劃數據
+                    print("獲取的計劃數據：\(planData)")
+                    // 根據需要將 P_ID 存儲在變量中，或者根據需要將其傳遞給其他函數
+                }
+            }
+        } else {
+            print("無效的 URL")
+        }
+    }
+
     
      @ViewBuilder
-     private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [FoodData]) -> some View {
+     private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes]) -> some View {
          CustomButton(imageName: imageName, buttonText: buttonText) {
              isShowingDetail.wrappedValue.toggle()
          }
@@ -166,8 +182,61 @@ struct EditPlanView: View {
              })
          }
      }
+    // 在 updatePlanOnServer 函數中將 pID 參數改為可選型
+    func updatePlanOnServer(pID: String?, disID: String) {
+        guard let url = URL(string: "http://163.17.9.107/food/Planupdate.php") else {
+            print("Invalid URL")
+            return
+        }
 
-    // Function to save plan to server
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+
+        // 構造 POST 數據
+        var postData = "Dis_ID=\(disID)"
+        if let pID = pID {
+            postData += "&P_ID=\(pID)"
+        } else {
+            // 如果 pID 為 nil，直接返回，不執行後續操作
+            print("pID is nil, skipping update operation")
+            return
+        }
+
+        request.httpBody = postData.data(using: .utf8)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error: \(error)")
+                return
+            }
+
+            // 解析響應
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                print("Response: \(responseString)")
+                // 在此處處理服務器的響應
+
+                // 確保更新成功後才保存計劃到伺服器
+                if responseString.contains("成功") { // 假設服務器返回成功的訊息
+                    self.isNewPlan = false
+                    savePlanToServer(P_ID: "", U_ID: "", Dis_ID: disID, P_DT: day, P_Bought: "") { success, errorMessage in
+                        if success {
+                            print("計劃成功保存到伺服器")
+                        } else {
+                            print("保存計劃的結果：\(errorMessage ?? "出問題")")
+                        }
+                    }
+                }
+              
+
+            }
+        }.resume()
+    }
+
+
+
+
+    // 函數來將計劃保存到伺服器
     func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: String, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
             completion(false, "無效的 URL")
@@ -178,7 +247,7 @@ struct EditPlanView: View {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
-        // Construct POST data
+        // 構造 POST 數據
         let postData = "P_ID=\(P_ID)&U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&P_DT=\(P_DT)&P_Bought=\(P_Bought)"
         request.httpBody = postData.data(using: .utf8)
 
@@ -188,7 +257,7 @@ struct EditPlanView: View {
                 return
             }
 
-            // 解析响应
+            // 解析響應
             if let data = data,
                let responseString = String(data: data, encoding: .utf8) {
                 if responseString.contains("計劃已成功保存到數據庫") {
@@ -201,6 +270,8 @@ struct EditPlanView: View {
             }
         }.resume()
     }
+
+
 
      var body: some View {
          VStack {
@@ -222,16 +293,16 @@ struct EditPlanView: View {
                         dateFormatter.dateFormat = "yyyy-MM-dd"
                         let dateString = dateFormatter.string(from: Date())
                         
-                        savePlanToServer(P_ID: "", U_ID: "", Dis_ID: selectedFoodData.Dis_ID, P_DT: day, P_Bought: "") { success, errorMessage in
-                            if success {
-                                print("計畫成功保存到伺服器")
-                            } else {
-                                print("保存計畫的結果：\(errorMessage ?? "出問題")")
-                            
                         
-                            }
-                        }
-
+                        updatePlanOnServer(pID:"nJqERSSPjn", disID: String(selectedFoodData.Dis_ID))
+                        
+                        savePlanToServer(P_ID: "", U_ID: "", Dis_ID: String(selectedFoodData.Dis_ID), P_DT: day, P_Bought: "") { success, errorMessage in
+                                           if success {
+                                               print("計劃成功保存到伺服器")
+                                           } else {
+                                               print("保存計劃的結果：\(errorMessage ?? "出問題")")
+                                           }
+                                       }
                     } else {
                         print("Selected food data not found")
                     }

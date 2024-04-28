@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-extension FoodData {
+extension Dishes {
     func toFoodOption() -> FoodOption {
         return FoodOption(name: self.Dis_Name, backgroundImage: URL(string: self.D_image)!)
     }

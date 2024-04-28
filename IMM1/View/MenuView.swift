@@ -12,21 +12,21 @@ struct MenuView: View
     @State private var amountData: [Amount] = []
     
     @State private var cookingMethod: String? // 新增一個狀態來儲存從URL加載的烹飪方法
+    @State private var selectedDish: Dishes?
     
-    //var selectedDish: Dishes?
-    private var selectedDish: Dishes?
-    {
-        dishesData.first(where: { $0.Dis_ID == Dis_ID })
-    }
+    var Dis_ID: Int // 接受传递的 Dis_ID
     
-    private func filteredAmounts(for dish: Dishes) -> [Amount] 
+//    private var selectedDish: Dishes? //var selectedDish: Dishes?
+//    {
+//        dishesData.first(where: { $0.Dis_ID == Dis_ID })
+//    }
+    
+    private func filteredAmounts(for dish: Dishes) -> [Amount]
     {
         amountData.filter { $0.Dis_ID == dish.Dis_ID }
     }
     
-    let Dis_ID: Int // 接受传递的 Dis_ID
-    
-    
+
 //    // MARK: Test data
 //    // 菜譜結構
 //    let dishesData: [Dishes] = [
@@ -44,41 +44,57 @@ struct MenuView: View
 //        Amount(A_ID:2,Dis_ID: 1,F_ID: 2,A_Amount:2),
 //        Amount(A_ID:3,Dis_ID: 1,F_ID: 7,A_Amount:0.3)
 //    ]
+    
     // MARK: 讀取php從後端加載菜譜數據
-    private func loadMenuData(for Dis_ID: Int) {
-        guard let url = URL(string: "http://163.17.9.107/food/Dishes.php?id=\(Dis_ID)")
-        else {
+    // 在 MenuView.swift 中的 loadMenuData 方法
+    func loadMenuData() {
+        // 确保 Dis_ID 是一个有效的整数并已正确赋值
+        assert(Dis_ID > 0, "Dis_ID must be greater than 0")
+        
+        // 添加调试语句，确认实际接收到的 Dis_ID 值
+        let urlString = "http://163.17.9.107/food/Dishes.php?id=\(Dis_ID)"
+        print("Requesting data from URL: \(urlString)") // 确认 URL
+        
+        // 确保 URL 正确处理，进行 URL 编码
+        guard let url = URL(string: urlString) else {
             print("Invalid URL")
             return
         }
-
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        
+        // 创建一个 URLRequest 对象，并设置请求方法和请求头
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        // 发起网络请求
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            // 处理网络请求的结果
             if let error = error {
-                print("Error: \(error)")
+                print("Error: \(error.localizedDescription)")
                 return
             }
 
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200
-            else {
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 print("Invalid response")
                 return
             }
 
             if let data = data {
                 do {
-                    let dishes = try JSONDecoder().decode([Dishes].self, from: data)
-
+                    // 解析 JSON 数据
+                    let decoder = JSONDecoder()
+                    let dishesData = try decoder.decode([Dishes].self, from: data)
                     DispatchQueue.main.async {
-                        self.dishesData = dishes
-
-                        // 額外加載烹飪方法的文本
-                        if let cookingURL = dishes.first?.D_Cook 
-                        {
-                            self.loadCookingMethod(from: cookingURL)
+                        // 更新 UI
+                        self.dishesData = dishesData
+                        self.selectedDish = self.dishesData.first(where: { $0.Dis_ID == self.Dis_ID })
+                        // 加载烹饪方法
+                        if let cookingUrl = self.selectedDish?.D_Cook {
+                            self.loadCookingMethod(from: cookingUrl)
                         }
                     }
                 } catch {
-                    print("Error decoding JSON: \(error)")
+                    print("Error decoding JSON: \(error.localizedDescription)")
                 }
             }
         }.resume()
@@ -87,7 +103,7 @@ struct MenuView: View
     // MARK: 從URL加載烹飪方法
     private func loadCookingMethod(from urlString: String)
     {
-        guard let url = URL(string: urlString) 
+        guard let url = URL(string: urlString)
         else {
             print("Invalid URL for cooking method")
             return
@@ -100,7 +116,7 @@ struct MenuView: View
             }
             
             if let data = data, let cookingText = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     self.cookingMethod = cookingText
                 }
@@ -230,7 +246,7 @@ struct MenuView: View
                 .foregroundStyle(.orange)
                 .font(.title2)
                 .offset(x: -130)
-            if let selectedDish = selectedDish 
+            if let selectedDish = selectedDish
             {
                        
                 // 根據選擇的菜譜ID過濾相應的菜譜食材數量
@@ -243,7 +259,7 @@ struct MenuView: View
                 ForEach(filteredAmounts, id: \.F_ID) { amount in
                       
                     // 在食材數據中查找對應的食材
-                    if let food = foodData.first(where: { $0.F_ID == amount.F_ID }) 
+                    if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
                     {
                                let formattedAmount = String(format: "%.1f", amount.A_Amount)
                                 Text("\(food.F_Name) \(formattedAmount) \(food.F_Unit)")
@@ -274,7 +290,9 @@ struct MenuView: View
             Text(dishesData.first?.D_Video ?? "無影片資訊")
         }
         .onAppear {
-            loadMenuData(for: Dis_ID)
+            if let cookingUrl = selectedDish?.D_Cook {
+                    loadCookingMethod(from: cookingUrl)
+                }
         }
     }
 
@@ -320,7 +338,8 @@ struct MenuView: View
         }
         .onAppear
         {
-            loadMenuData(for: Dis_ID)
+            print("顯示的 Dis_ID: \(Dis_ID)")
+            loadMenuData()
         }
     }
 }

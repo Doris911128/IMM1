@@ -23,13 +23,15 @@ struct Dishes: Codable
     let D_Cook: String //煮法
     let D_image: String //照片
     let D_Video: String //影片
+    var category: String? // MARK: 由EditPlanView.swift 中更新分類
 
     // 添加初始化方法，接受传递的 Dis_ID
     init(Dis_ID: Int = 0,
          Dis_Name: String = "",
          D_Cook: String  = "",
          D_image: String  = "",
-         D_Video: String  = ""
+         D_Video: String  = "",
+        category: String = ""
     )
     {
         self.Dis_ID = Dis_ID
@@ -37,6 +39,7 @@ struct Dishes: Codable
         self.D_Cook = D_Cook
         self.D_image = D_image
         self.D_Video = D_Video
+        self.category = category
     }
 }
 
