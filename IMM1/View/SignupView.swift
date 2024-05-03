@@ -205,6 +205,7 @@ struct SignupView: View {
                             .background(Color.gray.opacity(0.1))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
+                            .autocapitalization(/*@START_MENU_TOKEN@*/.none/*@END_MENU_TOKEN@*/)
                     }
                 }
                 //.ignoresSafeArea(.keyboard)
