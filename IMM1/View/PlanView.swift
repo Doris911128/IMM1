@@ -85,6 +85,8 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
         @State private var deletionResult: Result<Void, Error>? = nil
         @State private var plans: [String: [String]] = [:] // 修改此行，將型別改為 [String: [String]]
         @State private var nameToIDMap: [String: String] = [:]
+        @State private var showingAlert = false
+        @State private var alertMessage = ""
 
         // DateFormatter for displaying dates in MM/DD format
         private var displayDateFormatter: DateFormatter = {
@@ -131,7 +133,9 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
         }
 
 
-
+        func isNewPlan(_ plan: String) -> Bool {
+            return plan != "新計畫"
+        }
 
         func updatePlans() {
             fetchPlansFromServer { fetchedPlans, error in
@@ -159,7 +163,7 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
             dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
         }
-
+     
         var body: some View {
             NavigationStack {
                 VStack {
@@ -180,15 +184,20 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
                                     }
                                 }
                             ) {
+                                
                                 if let dayPlans = plans[day] {
                                     ForEach(dayPlans.indices, id: \.self) { index in
                                         let plan = dayPlans[index]
-                                        NavigationLink(destination: EditPlanView(day: day, planIndex: index, plans: $plans)) {
-                                            Text(plan) // 將此處的文本更改為顯示 P_ID
+                                        let isEditable = !isNewPlan(plan) // 檢查是否是新計畫
+
+                                        NavigationLink(destination: isEditable ? EditPlanView(day: day, planIndex: index, plans: $plans) : nil) {
+                                            Text(plan)
                                                 .font(.headline)
-                                            
                                         }
+                                        .disabled(!isEditable) // 禁用點擊進入功能
+
                                     }
+                                    
                                     .onDelete { indices in
                                         guard let deletedPlanName = plans[day]?[indices.first ?? 0] else {
                                             print("Error: Deleted plan name not found")
@@ -197,31 +206,37 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
                                         guard let deletedPlanID = nameToIDMap[deletedPlanName] else {
                                             print("Error: Deleted plan ID not found for name \(deletedPlanName)")
                                             return
-                                    }
-
-                                        
+                                        }
+                                        showingAlert = true
+                                           // 設置警示框的內容
+                                        alertMessage = "確定要刪除 \(plans[day]?[indices.first ?? 0] ?? "") 嗎？"
+                                       
+                                        // 直接執行刪除計畫
                                         deletePlan(withID: deletedPlanID, day: day, at: indices) { result in
                                             switch result {
                                             case .success:
-                                                print("Failed with error:", deletedPlanID)
+                                                print("成功刪除計畫:", deletedPlanID)
                                                 DispatchQueue.main.async {
                                                     if var dayPlans = self.plans[day] {
                                                         dayPlans.remove(atOffsets: indices)
                                                         self.plans[day] = dayPlans
                                                     }
+                                                    
+                                                  
                                                 }
                                             case .failure(let error):
                                                 print("Failed with error:", error)
                                                 if let planDeleteError = error as? PlanDeleteError {
                                                     print("計劃刪除錯誤訊息:", planDeleteError.message)
                                                 }
-
                                             }
                                         }
                                     }
+                                    
 
                                 }
-
+                                  
+                              
                             }
                         }
                     }
@@ -230,6 +245,36 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
             }
             .onAppear {
                 updatePlans() // 在視圖顯示時獲取計畫
+            }
+            
+        }
+        
+        func deleteSelectedPlan(day: String, indices: IndexSet) {
+            guard let deletedPlanName = plans[day]?[indices.first ?? 0] else {
+                print("Error: Deleted plan name not found")
+                return
+            }
+            guard let deletedPlanID = nameToIDMap[deletedPlanName] else {
+                print("Error: Deleted plan ID not found for name \(deletedPlanName)")
+                return
+            }
+            
+            deletePlan(withID: deletedPlanID, day: day, at: indices) { result in
+                switch result {
+                case .success:
+                    print("成功刪除計畫:", deletedPlanID)
+                    DispatchQueue.main.async {
+                        if var dayPlans = self.plans[day] {
+                            dayPlans.remove(atOffsets: indices)
+                            self.plans[day] = dayPlans
+                        }
+                    }
+                case .failure(let error):
+                    print("Failed with error:", error)
+                    if let planDeleteError = error as? PlanDeleteError {
+                        print("計劃刪除錯誤訊息:", planDeleteError.message)
+                    }
+                }
             }
         }
 

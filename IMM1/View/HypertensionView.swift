@@ -57,7 +57,7 @@ var HypertensionallSensors: [HypertensionTemperatureSensor] = //存取Temperatur
 private func formattedDate(_ date: Date) -> String
 {
     let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm"  // 加入秒
+    formatter.dateFormat = "MM-dd HH:mm"  // 加入秒
     formatter.locale = Locale(identifier: "en_US_POSIX") // 使用 POSIX 以保證日期格式的嚴格匹配
     formatter.timeZone = TimeZone(secondsFromGMT: 0) // 根據需要調整時區
     
@@ -184,7 +184,7 @@ struct HypertensionView: View
                             .symbolSize(100)
                         }
                         .chartForegroundStyleScale(["血壓值": .orange])
-                        .frame(width: 350, height: 200)
+                        .frame(width: max(350, Double(chartData.count) * 80), height: 200)
                         
                     }
                 }

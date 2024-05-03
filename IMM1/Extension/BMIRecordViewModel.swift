@@ -7,21 +7,22 @@
 
 import Foundation
 
-extension BMIRecordViewModel
-{
+extension BMIRecordViewModel {
     func addOrUpdateRecord(newRecord: BMIRecord) {
-           if let index = self.bmiRecords.firstIndex(where: { $0.date.isSameDay(as: newRecord.date) }) {
-               // 比較現有記錄和新記錄的时间戳
-               if self.bmiRecords[index].timeStamp < newRecord.timeStamp {
-                   self.bmiRecords[index] = newRecord
-               }
-           } else {
-               self.bmiRecords.append(newRecord)
-           }
-       }
+        if let index = self.bmiRecords.firstIndex(where: { $0.date.isSameDay(as: newRecord.date) }) {
+            // 比较现有记录和新记录的时间戳
+            if self.bmiRecords[index].timeStamp < newRecord.timeStamp {
+                self.bmiRecords[index] = newRecord
+            }
+        } else {
+            self.bmiRecords.append(newRecord)
+        }
+        
+        // 每次添加或更新记录后，重新排序数组
+        self.bmiRecords.sort(by: { $0.date < $1.date })
+    }
     
-    func parseAndAddRecords(from jsonString: String)
-    {
+    func parseAndAddRecords(from jsonString: String) {
         let decoder = JSONDecoder()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -41,7 +42,28 @@ extension BMIRecordViewModel
             }
         }
     }
+    func records(for range: TimeRange) -> [BMIRecord] {
+            let now = Date()
+            let calendar = Calendar.current
+            var startDate: Date
+            
+            switch range {
+            case .week:
+                startDate = calendar.date(byAdding: .weekOfYear, value: -1, to: now)!
+            case .month:
+                startDate = calendar.date(byAdding: .month, value: -1, to: now)!
+            case .threeMonths:
+                startDate = calendar.date(byAdding: .month, value: -3, to: now)!
+            case .sixMonths:
+                startDate = calendar.date(byAdding: .month, value: -6, to: now)!
+            case .year:
+                startDate = calendar.date(byAdding: .year, value: -1, to: now)!
+            }
+
+            return bmiRecords.filter { $0.date >= startDate }
+        }
 }
+
 
 extension Date
 {
@@ -53,5 +75,10 @@ extension Date
     }
 }
 
-
-
+enum TimeRange {
+    case week
+    case month
+    case threeMonths
+    case sixMonths
+    case year
+}

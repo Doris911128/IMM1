@@ -1,4 +1,3 @@
-
 // MARK: BMIView
 
 import SwiftUI
@@ -79,7 +78,7 @@ struct TemperatureSensor: Identifiable
 private func formattedDate(_ date: Date) -> String
 {
     let formatter = DateFormatter()
-    formatter.dateFormat = "YYYY-MM-dd"
+    formatter.dateFormat = "MM-dd"
     return formatter.string(from: date)
 }
 
@@ -197,10 +196,12 @@ struct BMIView: View
                             }
                         }
                         .chartForegroundStyleScale(["BMI": .orange])
-                        .frame(width: 350, height: 200)
+                        // 動態調整寬度
+                        .frame(width: max(350, Double(bmiRecordViewModel.bmiRecords.count) * 65), height: 200)
                     }
                     .padding()
                 }
+
 
                 
                 VStack(spacing: 10)

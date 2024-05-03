@@ -187,7 +187,7 @@ struct HyperglycemiaView: View
                     .chartForegroundStyleScale([
                         "血糖值": .orange
                     ])
-                    .frame(width: 350, height: 200)
+                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
                 }
                 .padding()
                 VStack

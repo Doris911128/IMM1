@@ -141,8 +141,8 @@ struct HyperlipidemiaView: View
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x:-60)
-
-                    Button(action: 
+                    
+                    Button(action:
                             {
                         isShowingList.toggle()
                     }) {
@@ -156,41 +156,32 @@ struct HyperlipidemiaView: View
                     }
                     .offset(x:10)
                 }
-                    ScrollView(.horizontal)
-                    {
-                            Chart(HyperlipidemiaallSensors)
-                            {
-                                sensor in
-                                ForEach(chartData) //動態顯示用戶輸入的數據
-                                {
-                                    record in
-                                    LineMark(
-                                        x: .value("Hour", formattedDate(record.date)),
-                                        y: .value("Value", record.hyperlipidemia)
-                                    )
-                                    .lineStyle(.init(lineWidth: 5))
-                                    
-                                    PointMark(
-                                        x: .value("Hour", formattedDate(record.date)),
-                                        y: .value("Value", record.hyperlipidemia)
-                                    )
-                                    .annotation(position: .top)
-                                    {
-                                        Text("\(record.hyperlipidemia, specifier: "%.2f")")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(Color("textcolor"))
-                                    }
-                                }
-                                .foregroundStyle(by: .value("Location", sensor.id))
-                                .symbol(by: .value("Sensor Location", sensor.id))
-                                .symbolSize(100)
-                            }
-                            .chartForegroundStyleScale([
-                                "血脂值": .orange
-                            ])
-                            .frame(width: 350, height: 200)
+                ScrollView(.horizontal) {
+                    Chart(chartData) { record in
+                        LineMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Hyperlipidemia", record.hyperlipidemia)
+                        )
+                        .lineStyle(.init(lineWidth: 5))
+                        
+                        PointMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Hyperlipidemia", record.hyperlipidemia)
+                        )
+                        .annotation(position: .top) {
+                            Text("\(record.hyperlipidemia, specifier: "%.2f")")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color("textcolor"))
+                        }
                     }
-                    .padding()
+                    .chartForegroundStyleScale([
+                        "血脂值": .orange
+                    ])
+                    // 使用 max 函数确保至少有一个基础宽度，并随记录数动态增加
+                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                }
+                .padding()
+                
                 VStack
                 {
                     Text("血脂值輸入") //血脂值輸入
@@ -207,7 +198,7 @@ struct HyperlipidemiaView: View
                             .frame(width: 330)
                             .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification))
                         {_ in}
-                        .onChange(of: hyperlipidemia)
+                            .onChange(of: hyperlipidemia)
                         { newValue in
                             if let newValue = Double(newValue), newValue > upperLimit
                             {
@@ -224,7 +215,7 @@ struct HyperlipidemiaView: View
                                 if let index = chartData.firstIndex(where:{ Calendar.current.isDate($0.date, inSameDayAs: Date()) }) //檢查是否已經有當天的紀錄存在
                                 {
                                     chartData[index].hyperlipidemia = hyperlipidemiaValue //如果有，則更新當天的值
-
+                                    
                                 }
                                 else
                                 {
@@ -253,7 +244,7 @@ struct HyperlipidemiaView: View
                 .offset(y: 10)
             }
             .onAppear{
-                self.connect(name: "BS", action: "fetch")
+                self.connect(name: "BL", action: "fetch")
             }
             .sheet(isPresented: $isShowingList)
             {
@@ -293,7 +284,7 @@ struct HyperlipidemiaRecordsListView: View
                 .onDelete(perform: deleteRecord)
             }
             .navigationTitle("血脂紀錄列表")
-            .toolbar 
+            .toolbar
             {
                 ToolbarItem(placement: .navigationBarTrailing)
                 {
@@ -338,7 +329,7 @@ struct EditHyperlipidemiaRecordView: View
                 if let editedValue = Double(editedHyperlipidemia)
                 {
                     if editedValue <= 500 //檢查是否超過上限
-
+                    
                     {
                         record.hyperlipidemia = editedValue
                         presentationMode.wrappedValue.dismiss()
