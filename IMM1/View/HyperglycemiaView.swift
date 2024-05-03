@@ -167,7 +167,7 @@ struct HyperglycemiaView: View
                                 x: .value("Hour", formattedDate(record.date)),
                                 y: .value("Value", record.hyperglycemia)
                             )
-                            .lineStyle(.init(lineWidth: 5))
+                            .lineStyle(.init(lineWidth: 3))
                             
                             PointMark(
                                 x: .value("Hour", formattedDate(record.date)),
@@ -188,6 +188,7 @@ struct HyperglycemiaView: View
                         "血糖值": .orange
                     ])
                     .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                    .padding(.top, 20)
                 }
                 .padding()
                 VStack

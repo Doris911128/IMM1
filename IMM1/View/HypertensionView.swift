@@ -157,6 +157,7 @@ struct HypertensionView: View
                 {
                     HStack(spacing: 30)
                     {
+                        
                         Chart(HypertensionallSensors) { sensor in
                             let groupedRecords = Dictionary(grouping: chartData, by: { formattedDate($0.date) })
                             let latestRecords = groupedRecords.mapValues { $0.last! }
@@ -166,7 +167,7 @@ struct HypertensionView: View
                                     x: .value("Hour", formattedDate(record.date)),
                                     y: .value("Value", record.hypertension)
                                 )
-                                .lineStyle(.init(lineWidth: 5))
+                                .lineStyle(.init(lineWidth: 3))
                                 
                                 PointMark(
                                     x: .value("Hour", formattedDate(record.date)),
@@ -183,8 +184,10 @@ struct HypertensionView: View
                             .symbol(by: .value("Sensor Location", sensor.id))
                             .symbolSize(100)
                         }
+                        
                         .chartForegroundStyleScale(["血壓值": .orange])
                         .frame(width: max(350, Double(chartData.count) * 80), height: 200)
+                        .padding(.top, 20)
                         
                     }
                 }

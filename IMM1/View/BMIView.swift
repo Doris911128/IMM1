@@ -183,7 +183,6 @@ struct BMIView: View
                                 y: .value("BMI", record.bmi)
                             )
                             .lineStyle(.init(lineWidth: 2))
-                            .foregroundStyle(.blue)
 
                             PointMark(
                                 x: .value("Date", formattedDate(record.date)),

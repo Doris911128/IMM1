@@ -162,7 +162,7 @@ struct HyperlipidemiaView: View
                             x: .value("Date", formattedDate(record.date)),
                             y: .value("Hyperlipidemia", record.hyperlipidemia)
                         )
-                        .lineStyle(.init(lineWidth: 5))
+                        .lineStyle(.init(lineWidth: 3))
                         
                         PointMark(
                             x: .value("Date", formattedDate(record.date)),
@@ -179,6 +179,7 @@ struct HyperlipidemiaView: View
                     ])
                     // 使用 max 函数确保至少有一个基础宽度，并随记录数动态增加
                     .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                    .padding(.top, 20)
                 }
                 .padding()
                 
