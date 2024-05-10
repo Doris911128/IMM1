@@ -68,13 +68,27 @@ struct HypertensionView: View
 {
     let upperLimit: Double = 400.0 //輸入最大值
     
+    @State private var displayMode: Int = 0  // 0 表示每日，1 表示每七日
     @State private var hypertension: String = ""
     @State private var chartData: [HypertensionRecord] = []
     @State private var isShowingList: Bool = false
     @State private var scrollToBottom: Bool = false
     @State private var showAlert: Bool = false
     
-    
+
+    private func averagesEverySevenRecords() -> [HypertensionRecord] {
+        var results: [HypertensionRecord] = []
+        let sortedRecords = chartData.sorted(by: { $0.date < $1.date })
+        for start in stride(from: 0, to: sortedRecords.count, by: 7) {
+            let end = min(start + 7, sortedRecords.count)
+            let batch = Array(sortedRecords[start..<end])
+            let averageHypertension = batch.map({ $0.hypertension }).reduce(0, +) / Double(batch.count)
+            let recordDate = batch.first!.date  // 使用第一条记录的日期
+            results.append(HypertensionRecord(hypertension: averageHypertension, date: recordDate))
+        }
+        return results
+    }
+
     func connect(name: String, action: String) {
         let url = URL(string: "http://163.17.9.107/food/\(name).php")!
         var request = URLRequest(url: url)
@@ -124,7 +138,6 @@ struct HypertensionView: View
         }.resume()
         
     }
-    
     var body: some View
     {
         NavigationView
@@ -153,54 +166,46 @@ struct HypertensionView: View
                     }
                     .offset(x:10)
                 }
-                ScrollView(.horizontal)
-                {
-                    HStack(spacing: 30)
-                    {
-                        
-                        Chart(HypertensionallSensors) { sensor in
-                            let groupedRecords = Dictionary(grouping: chartData, by: { formattedDate($0.date) })
-                            let latestRecords = groupedRecords.mapValues { $0.last! }
-                            
-                            ForEach(latestRecords.sorted(by: { $0.key < $1.key }), id: \.key) { date, record in
-                                LineMark(
-                                    x: .value("Hour", formattedDate(record.date)),
-                                    y: .value("Value", record.hypertension)
-                                )
-                                .lineStyle(.init(lineWidth: 3))
-                                
-                                PointMark(
-                                    x: .value("Hour", formattedDate(record.date)),
-                                    y: .value("Value", record.hypertension)
-                                )
-                                .annotation(position: .top)
-                                {
-                                    Text("\(record.hypertension, specifier: "%.2f")")
-                                        .font(.system(size: 12))
-                                        .foregroundColor(Color("textcolor"))
-                                }
-                            }
-                            .foregroundStyle(by: .value("Location", sensor.id))
-                            .symbol(by: .value("Sensor Location", sensor.id))
-                            .symbolSize(100)
+                ScrollView(.horizontal) {
+                    Chart(displayMode == 0 ? chartData : averagesEverySevenRecords()) { record in
+                        LineMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Value", record.hypertension)
+                        )
+                        .lineStyle(.init(lineWidth: 3))
+
+                        PointMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Value", record.hypertension)
+                        )
+                        .annotation(position: .top) {
+                            Text("\(record.hypertension, specifier: "%.2f")")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color("textcolor"))
                         }
-                        
-                        .chartForegroundStyleScale(["血壓值": .orange])
-                        .frame(width: max(350, Double(chartData.count) * 80), height: 200)
-                        .padding(.top, 20)
-                        
                     }
+                    .chartForegroundStyleScale(["血壓值": .orange])
+                    .frame(width: max(350, Double(chartData.count) * 65), height: 200) 
+                    .padding(.top, 20)
                 }
                 .padding()
-                
+
                 VStack
                 {
-                    Text("血壓值輸入")
-                        .font(.system(size: 20, weight: .semibold))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 20)
-                        .foregroundColor(Color("textcolor"))
-                    
+                    HStack
+                    {
+                        Text("血壓值輸入")
+                            .font(.system(size: 20, weight: .semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 20)
+                            .foregroundColor(Color("textcolor"))
+                        Picker("显示模式", selection: $displayMode) {
+                            Text("每日").tag(0)
+                            Text("每七日").tag(1)
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .padding()
+                    }
                     VStack(spacing: -5)
                     {
                         TextField("請輸入血壓值", text: $hypertension)
