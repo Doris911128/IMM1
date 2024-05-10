@@ -91,7 +91,7 @@ struct BMIView: View
     
     @ObservedObject private var bmiRecordViewModel = BMIRecordViewModel()
     @ObservedObject private var temperatureSensorViewModel = TemperatureSensorViewModel(allSensors: [TemperatureSensor(id: "BMI", records: [])])
-    
+    @State private var displayMode: Int = 0 // 0 for Daily, 1 for Weekly
     @State private var isShowingList: Bool = false
     @State private var isShowingDetailSheet: Bool = false
     
@@ -133,9 +133,11 @@ struct BMIView: View
             {
                 if let responseString = String(data: data, encoding: .utf8) {
                     DispatchQueue.main.async {
+                        print("Response from server: \(responseString)") 
                         // 解析 JSON 字串並將記錄添加到 ViewModel
                         self.bmiRecordViewModel.parseAndAddRecords(from: responseString)
                         //self.isShowingList = true // 顯示列表，如果需要
+                       
                     }
                 }
             } else if let error = error {
@@ -175,28 +177,27 @@ struct BMIView: View
                     }
                     .offset(x:10)
                 }
-                ScrollView(.horizontal) {
-                    HStack(spacing: 30) {
-                        Chart(bmiRecordViewModel.bmiRecords) { record in
-                            LineMark(
-                                x: .value("Date", formattedDate(record.date)),
-                                y: .value("BMI", record.bmi)
-                            )
-                            .lineStyle(.init(lineWidth: 2))
+                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 20) { // HStack spacing 根据需要调整
+                                        Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords : bmiRecordViewModel.averagesEverySevenRecordsSorted()) { record in
+                                            LineMark(
+                                                x: .value("Date", formattedDate(record.date)),
+                                                y: .value("BMI", record.bmi)
+                                            )
+                                            .lineStyle(.init(lineWidth: 2))
 
-                            PointMark(
-                                x: .value("Date", formattedDate(record.date)),
-                                y: .value("BMI", record.bmi)
-                            )
-                            .annotation(position: .top) {
-                                Text("\(record.bmi, specifier: "%.2f")")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(Color("textcolor"))
-                            }
-                        }
-                        .chartForegroundStyleScale(["BMI": .orange])
-                        // 動態調整寬度
-                        .frame(width: max(350, Double(bmiRecordViewModel.bmiRecords.count) * 65), height: 200)
+                                            PointMark(
+                                                x: .value("Date", formattedDate(record.date)),
+                                                y: .value("BMI", record.bmi)
+                                            )
+                                            .annotation(position: .top) {
+                                                Text("\(record.bmi, specifier: "%.2f")")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(Color("textcolor"))
+                                            }
+                                        }
+                                        // 根据 displayMode 动态调整图表宽度，减少每七日乘数至 100
+                                        .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)), height: 200)
                     }
                     .padding()
                 }
@@ -205,12 +206,18 @@ struct BMIView: View
                 
                 VStack(spacing: 10)
                 {
-                    Text("BMI計算")
-                        .font(.system(size: 20, weight: .semibold))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 20)
-                        .foregroundColor(Color("textcolor"))
-                    
+                    HStack{
+                        Text("BMI計算")
+                            .font(.system(size: 20, weight: .semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 20)
+                            .foregroundColor(Color("textcolor"))
+                        Picker("顯示模式", selection: $displayMode) {
+                                            Text("每日").tag(0)
+                                            Text("每七日").tag(1)
+                                        }
+                                        .pickerStyle(MenuPickerStyle())
+                    }
                     VStack(spacing: -5)
                     {
                         TextField("請輸入身高（公分）", text: $height)

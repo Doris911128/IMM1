@@ -62,9 +62,58 @@ extension BMIRecordViewModel {
 
             return bmiRecords.filter { $0.date >= startDate }
         }
+    func averagesEverySevenRecordsSorted() -> [BMIRecord] {
+            // 先按日期排序
+            let sortedRecords = bmiRecords.sorted { $0.date < $1.date }
+            var results = [BMIRecord]()
+            let batchSize = 7
+
+            // 将排序好的记录分批处理，每批7筆
+            for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+                let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+                let batch = Array(sortedRecords[batchStart..<batchEnd])
+
+                // 计算每批的平均身高和体重
+                let totalHeight = batch.reduce(0.0) { $0 + $1.H }
+                let totalWeight = batch.reduce(0.0) { $0 + $1.W }
+                if !batch.isEmpty {
+                    let averageHeight = totalHeight / Double(batch.count)
+                    let averageWeight = totalWeight / Double(batch.count)
+                    let averageBMI = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
+                    
+                    // 使用批次中的第一筆记录的日期
+                    let recordDate = batch.first!.date
+                    let avgRecord = BMIRecord(height: averageHeight, weight: averageWeight, date: recordDate)
+                    results.append(avgRecord)
+                }
+            }
+            
+            return results
+        }
+    func weeklyAverages() -> [BMIRecord] {
+          let calendar = Calendar.current  // 定义 calendar
+          let grouped = Dictionary(grouping: bmiRecords) { calendar.startOfWeek(for: $0.date) }
+          var weeklyAverages = [BMIRecord]()
+          for (_, records) in grouped {
+              let totalHeight = records.reduce(0.0, { $0 + $1.H })
+              let totalWeight = records.reduce(0.0, { $0 + $1.W })
+              if let firstRecord = records.first, records.count > 0 {
+                  let averageHeight = totalHeight / Double(records.count)
+                  let averageWeight = totalWeight / Double(records.count)
+                  let averageBMI = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
+                  let avgRecord = BMIRecord(height: averageHeight, weight: averageWeight, date: firstRecord.date)
+                  weeklyAverages.append(avgRecord)
+              }
+          }
+          return weeklyAverages.sorted(by: { $0.date < $1.date })
+      }}
+
+extension Calendar {
+    func startOfWeek(for date: Date) -> Date {
+        let components = dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
+        return self.date(from: components) ?? date
+    }
 }
-
-
 extension Date
 {
     // Helper 函数来检查两个日期是否是同一天
