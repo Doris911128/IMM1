@@ -73,7 +73,7 @@ struct DynamicView: View
     @ViewBuilder
     func displaySelectedRecordView() -> some View
     {
-        switch selectedRecord
+        switch(selectedRecord)
         {
         case .BMI:
             BMIView().animation(nil)

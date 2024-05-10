@@ -22,17 +22,17 @@ struct HyperlipidemiaRecord: Identifiable,Codable
         case date = "BL_DT"
     }
     
-    init(hyperlipidemia: Double)
+    init(hyperlipidemia: Double,date: Date = Date())
     {
         self.hyperlipidemia = hyperlipidemia
-        self.date = Date()
+        self.date = date
     }
     init(from decoder: Decoder) throws
     {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let hyperlipidemiaString = try container.decode(String.self, forKey: .hyperlipidemia)
         guard let hyperlipidemiaDouble = Double(hyperlipidemiaString) else {
-            throw DecodingError.dataCorruptedError(forKey: .hyperlipidemia, in: container, debugDescription: "血壓值應為可轉換為Double的字符串。")
+            throw DecodingError.dataCorruptedError(forKey: .hyperlipidemia, in: container, debugDescription: "血脂值應為可轉換為Double的字符串。")
         }
         hyperlipidemia = hyperlipidemiaDouble
         
@@ -73,7 +73,7 @@ private func formattedDate(_ date: Date) -> String
 struct HyperlipidemiaView: View
 {
     let upperLimit: Double = 500.0
-    
+    @State private var displayMode: Int = 0  // 0 表示每日，1 表示每七日
     @State private var hyperlipidemia: String = ""
     @State private var chartData: [HyperlipidemiaRecord] = []
     @State private var isShowingList: Bool = false //列表控制
@@ -157,39 +157,47 @@ struct HyperlipidemiaView: View
                     .offset(x:10)
                 }
                 ScrollView(.horizontal) {
-                    Chart(chartData) { record in
-                        LineMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Hyperlipidemia", record.hyperlipidemia)
-                        )
-                        .lineStyle(.init(lineWidth: 3))
-                        
-                        PointMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Hyperlipidemia", record.hyperlipidemia)
-                        )
-                        .annotation(position: .top) {
-                            Text("\(record.hyperlipidemia, specifier: "%.2f")")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color("textcolor"))
-                        }
-                    }
-                    .chartForegroundStyleScale([
-                        "血脂值": .orange
-                    ])
-                    // 使用 max 函数确保至少有一个基础宽度，并随记录数动态增加
-                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
-                    .padding(.top, 20)
+                                    Chart(displayMode == 0 ? chartData : averagesEverySevenRecords()) { record in
+                                        LineMark(
+                                            x: .value("Date", formattedDate(record.date)),
+                                            y: .value("Hyperlipidemia", record.hyperlipidemia)
+                                        )
+                                        .lineStyle(.init(lineWidth: 3))
+
+                                        PointMark(
+                                            x: .value("Date", formattedDate(record.date)),
+                                            y: .value("Hyperlipidemia", record.hyperlipidemia)
+                                        )
+                                        .annotation(position: .top) {
+                                            Text("\(record.hyperlipidemia, specifier: "%.2f")")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(Color("textcolor"))
+                                        }
+                                    }
+                                    .chartForegroundStyleScale([
+                                        "血脂值": .orange
+                                    ])
+                                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                                    .padding(.top, 20)
                 }
                 .padding()
                 
                 VStack
                 {
-                    Text("血脂值輸入") //血脂值輸入
-                        .font(.system(size: 20, weight: .semibold))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 20)
-                        .foregroundColor(Color("textcolor"))
+                    HStack
+                    {
+                        Text("血脂值輸入") //血脂值輸入
+                            .font(.system(size: 20, weight: .semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 20)
+                            .foregroundColor(Color("textcolor"))
+                        Picker("显示模式", selection: $displayMode) {
+                            Text("每日").tag(0)
+                            Text("每七日").tag(1)
+                        }
+                        .pickerStyle(SegmentedPickerStyle())
+                        .padding()
+                    }
                     VStack(spacing: -5) //使用者輸入
                     {
                         TextField("請輸入血脂值", text: $hyperlipidemia)
@@ -262,6 +270,26 @@ struct HyperlipidemiaView: View
         }
         .offset(y: -98)
     }
+    private func averagesEverySevenRecords() -> [HyperlipidemiaRecord] {
+        let sortedRecords = chartData.sorted { $0.date < $1.date }
+        var results: [HyperlipidemiaRecord] = []
+        let batchSize = 7
+
+        for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+            let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+            let batch = Array(sortedRecords[batchStart..<batchEnd])
+            let totalHyperlipidemia = batch.reduce(0.0) { $0 + $1.hyperlipidemia }
+            if !batch.isEmpty {
+                let averageHyperlipidemia = totalHyperlipidemia / Double(batch.count)
+                let recordDate = batch.first!.date
+                let avgRecord = HyperlipidemiaRecord(hyperlipidemia: averageHyperlipidemia, date: recordDate)
+                results.append(avgRecord)
+            }
+        }
+
+        return results
+    }
+
 }
 
 // MARK: 列表記錄
