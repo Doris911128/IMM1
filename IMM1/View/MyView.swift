@@ -279,7 +279,7 @@ struct MyView: View
                             // MARK: 過往食譜
                             HStack
                             {
-                                NavigationLink(destination: MenuView(Dis_ID: self.disID)) {
+                                NavigationLink(destination: PastRecipesView()) {
                                     InformationLabel(image: "clock.arrow.circlepath", label: "過往食譜")
                                 }
                             }

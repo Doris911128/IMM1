@@ -54,6 +54,8 @@
 		049CD6C22BCB794700D7AA8E /* BMIRecordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */; };
 		049CD6C42BCBA72E00D7AA8E /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C32BCBA72E00D7AA8E /* Menu.swift */; };
 		0F67D0EF2BF05D870094B4C2 /* Recipe_IP_View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */; };
+		1C0081722BF07CD000720927 /* PastRecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0081712BF07CD000720927 /* PastRecipesView.swift */; };
+		1CA599992BF09D680087A795 /* RecipeBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA599982BF09D680087A795 /* RecipeBlock.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -106,6 +108,8 @@
 		049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMIRecordViewModel.swift; sourceTree = "<group>"; };
 		049CD6C32BCBA72E00D7AA8E /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe_IP_View.swift; sourceTree = "<group>"; };
+		1C0081712BF07CD000720927 /* PastRecipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastRecipesView.swift; sourceTree = "<group>"; };
+		1CA599982BF09D680087A795 /* RecipeBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeBlock.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -212,6 +216,7 @@
 				0447AFA42B872C980080D222 /* MyView.swift */,
 				0447AFB52B872C980080D222 /* MenuView.swift */,
 				0447AFA92B872C980080D222 /* PlanView.swift */,
+				1C0081712BF07CD000720927 /* PastRecipesView.swift */,
 				0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */,
 				0447AFAE2B872C980080D222 /* NowView.swift */,
 				0447AFB02B872C980080D222 /* StockView.swift */,
@@ -228,6 +233,7 @@
 			children = (
 				0447AFCC2B872D110080D222 /* CustomButton.swift */,
 				0447AFD02B872D110080D222 /* EditPlanView.swift */,
+				1CA599982BF09D680087A795 /* RecipeBlock.swift */,
 				0447AFCE2B872D110080D222 /* FoodSelectionView.swift */,
 				0447AFCB2B872D110080D222 /* MemberButton.swift */,
 				0447AFCD2B872D110080D222 /* TagButton.swift */,
@@ -320,6 +326,7 @@
 			files = (
 				0447AFC12B872C980080D222 /* AdjustedView.swift in Sources */,
 				0447AF7F2B872BBC0080D222 /* dismissKeyboard.swift in Sources */,
+				1CA599992BF09D680087A795 /* RecipeBlock.swift in Sources */,
 				0447AFC42B872C980080D222 /* StockView.swift in Sources */,
 				0447AF802B872BBC0080D222 /* String.swift in Sources */,
 				0447AFB62B872C980080D222 /* ShopView.swift in Sources */,
@@ -356,6 +363,7 @@
 				0447AFD42B872D110080D222 /* FoodSelectionView.swift in Sources */,
 				0447AFC72B872C980080D222 /* BMIView.swift in Sources */,
 				049CD6C22BCB794700D7AA8E /* BMIRecordViewModel.swift in Sources */,
+				1C0081722BF07CD000720927 /* PastRecipesView.swift in Sources */,
 				0447AF9B2B872C520080D222 /* Information.swift in Sources */,
 				0447AFD12B872D110080D222 /* MemberButton.swift in Sources */,
 				0447AFC02B872C980080D222 /* HypertensionView.swift in Sources */,
