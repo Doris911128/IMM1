@@ -16,8 +16,6 @@ struct MyView: View
     
     @Binding var select: Int
     
-    @State private var selectIndex = 0
-    @State var disID: Int = 1  // 添加一個外部可綁定的 Dis_ID
     @State private var shouldRefreshView = false // 添加一个属性来存储是否需要刷新视图
     @State private var pickImage: PhotosPickerItem?
     @State var isDarkMode: Bool = false
@@ -279,7 +277,7 @@ struct MyView: View
                             // MARK: 過往食譜
                             HStack
                             {
-                                NavigationLink(destination: MenuView(Dis_ID: self.disID)) {
+                                NavigationLink(destination: MenuView(Dis_ID: 1)) {
                                     InformationLabel(image: "clock.arrow.circlepath", label: "過往食譜")
                                 }
                             }
@@ -290,11 +288,11 @@ struct MyView: View
                                     InformationLabel(image: "doc.on.clipboard", label: "檢視庫存")
                                 }
                             }
-                            // MARK: 飲食偏好->暫時食譜顯示
+                            // MARK: 飲食偏好
                             HStack
                             {
-                                NavigationLink(destination: MenuView(Dis_ID: self.disID)) {
-                                    InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
+                                NavigationLink(destination: MenuView(Dis_ID: 1)) {
+                                    InformationLabel(image: "fork.knife", label: "飲食偏好")
                                 }
                             }
                             // MARK: 我的最愛
@@ -409,7 +407,7 @@ struct NameSheetView: View
 struct MyView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            MyView(select: .constant(0), disID: 1)  // 提供常數綁定
+            MyView(select: .constant(0)) // 在这里将常数改为变量，或者根据实际需要传递一个值
         }
     }
 }

@@ -14,7 +14,7 @@ struct MenuView: View
     @State private var cookingMethod: String? // 新增一個狀態來儲存從URL加載的烹飪方法
     @State private var selectedDish: Dishes?
     
-    var Dis_ID: Int // 從外部接收 Dish ID
+    var Dis_ID: Int // 接受传递的 Dis_ID
     
 //    private var selectedDish: Dishes? //var selectedDish: Dishes?
 //    {
@@ -47,101 +47,75 @@ struct MenuView: View
     
     // MARK: 讀取php從後端加載菜譜數據
     // 在 MenuView.swift 中的 loadMenuData 方法
-    // MARK: 從後端加載菜譜數據
     func loadMenuData() {
-        // 確保 Dis_ID 是有效的整數且已正確賦值
-        assert(Dis_ID > 0, "Dis_ID 必須大於 0")
-
-        // 構建帶有查詢參數的 URL 字串，使用實際的 Dis_ID 值
-        let urlString = "http://163.17.9.107/food/Dishes.php"
-        print("正在從此URL請求數據: \(urlString)")  // 打印 URL 以確認其正確性
-
-        // 使用 URL 編碼確保 URL 結構的正確性，避免 URL 中有特殊字符造成問題
-        guard let encodedURLString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                  let url = URL(string: encodedURLString) else {
-                print("生成的 URL 無效")
-                return
+        // 确保 Dis_ID 是一个有效的整数并已正确赋值
+        assert(Dis_ID > 0, "Dis_ID must be greater than 0")
+        
+        // 添加调试语句，确认实际接收到的 Dis_ID 值
+        let urlString = "http://163.17.9.107/food/Dishes.php?id=\(Dis_ID)"
+        print("Requesting data from URL: \(urlString)") // 确认 URL
+        
+        // 确保 URL 正确处理，进行 URL 编码
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
+            return
         }
-
+        
+        // 创建一个 URLRequest 对象，并设置请求方法和请求头
         var request = URLRequest(url: url)
-        request.httpMethod = "GET" // 設定 HTTP 請求方法為 GET
-        request.addValue("application/json", forHTTPHeaderField: "Accept")// 請求頭部指定期望回應格式為 JSON
-
-        // 發起異步網絡請求
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        // 发起网络请求
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
+            // 处理网络请求的结果
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
                 return
             }
 
-            // 檢查並處理 HTTP 響應狀態碼
-//            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-//                print("HTTP 錯誤: \(httpResponse.statusCode)")
-//                if let result = try? JSONDecoder().decode([String: String].self, from: data) {
-//                    print("錯誤訊息: \(result["error"] ?? "無錯誤訊息")")
-//                }
-//                return
-//            }
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-                        print("HTTP 錯誤: \(httpResponse.statusCode)")
-                        return
-                    }
-            
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                print("Invalid response")
+                return
+            }
 
-            // 解析 JSON 數據
-            do {
-                let decoder = JSONDecoder()
-                let dishesData = try decoder.decode([Dishes].self, from: data)
-                DispatchQueue.main.async {
-                    self.dishesData = dishesData
-                    self.selectedDish = self.dishesData.first(where: { $0.Dis_ID == self.Dis_ID })
-                    self.foodData = self.selectedDish?.foods ?? []
-                    self.amountData = self.selectedDish?.amounts ?? []
-
-                    // 如果存在烹飪方法的 URL，進行加載
-                    if let cookingUrl = self.selectedDish?.D_Cook {
-                        self.loadCookingMethod(from: cookingUrl)
-                    }
-                    
-                    // 打印接收到的Dis_ID JSON 字串，用於調試
-//                    if let jsonStr = String(data: data, encoding: .utf8)
-//                    {
-//                        print("接收到的 JSON 數據: \(jsonStr)")
-//                    }
-                    // 打印所有菜譜的 JSON 數據
-                    if let jsonStr = String(data: data, encoding: .utf8) {
-                            print("接收到的 JSON 數據: \(jsonStr)")
+            if let data = data {
+                do {
+                    // 解析 JSON 数据
+                    let decoder = JSONDecoder()
+                    let dishesData = try decoder.decode([Dishes].self, from: data)
+                    DispatchQueue.main.async {
+                        // 更新 UI
+                        self.dishesData = dishesData
+                        self.selectedDish = self.dishesData.first(where: { $0.Dis_ID == self.Dis_ID })
+                        // 加载烹饪方法
+                        if let cookingUrl = self.selectedDish?.D_Cook {
+                            self.loadCookingMethod(from: cookingUrl)
                         }
-
-                }
-            } catch {
-                print("JSON 解析錯誤: \(error)")
-                if let jsonStr = String(data: data, encoding: .utf8) {
-                    print("接收到的數據字串: \(jsonStr)")
+                    }
+                } catch {
+                    print("Error decoding JSON: \(error.localizedDescription)")
                 }
             }
-        }.resume() // 繼續執行已暫停的請求
+        }.resume()
     }
 
     // MARK: 從URL加載烹飪方法
     private func loadCookingMethod(from urlString: String)
     {
         guard let url = URL(string: urlString)
-        else
-        {
+        else {
             print("Invalid URL for cooking method")
             return
         }
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error
-            {
+            if let error = error {
                 print("Failed to load cooking method: \(error)")
                 return
             }
-
-            if let data = data, let cookingText = String(data: data, encoding: .utf8)
-            {
+            
+            if let data = data, let cookingText = String(data: data, encoding: .utf8) {
                 DispatchQueue.main.async
                 {
                     self.cookingMethod = cookingText

@@ -1,11 +1,14 @@
-//  MenuView.swift
+//  食譜內頁顯示(食譜圖片、煮法、食材數量)
+//  Recipe_IP.swift
+//  IMM1
 //
+//  Created by 朝陽資管 on 2024/5/12.
 //
 
 import SwiftUI
 import Foundation
 
-struct MenuView: View
+struct Recipe_IP_View: View
 {
     @State private var dishesData: [Dishes] = []
     @State private var foodData: [Food] = []
@@ -47,7 +50,6 @@ struct MenuView: View
     
     // MARK: 讀取php從後端加載菜譜數據
     // 在 MenuView.swift 中的 loadMenuData 方法
-    // MARK: 從後端加載菜譜數據
     func loadMenuData() {
         // 確保 Dis_ID 是有效的整數且已正確賦值
         assert(Dis_ID > 0, "Dis_ID 必須大於 0")
@@ -122,7 +124,7 @@ struct MenuView: View
             }
         }.resume() // 繼續執行已暫停的請求
     }
-
+    
     // MARK: 從URL加載烹飪方法
     private func loadCookingMethod(from urlString: String)
     {
@@ -149,9 +151,11 @@ struct MenuView: View
             }
         }.resume()
     }
+    
     // MARK: 封面畫面
     @ViewBuilder
-    private func CoverView(safeArea: EdgeInsets, size: CGSize) -> some View {
+    private func CoverView(safeArea: EdgeInsets, size: CGSize) -> some View
+    {
         let height: CGFloat = size.height * 0.5
 
         GeometryReader { reader in
@@ -216,7 +220,7 @@ struct MenuView: View
         }
         .frame(height: height + safeArea.top)
     }
-
+    
     // MARK: 標題畫面
     @ViewBuilder
     private func HeaderView(size: CGSize) -> some View
@@ -321,7 +325,7 @@ struct MenuView: View
                 }
         }
     }
-
+    
     // MARK: body
     var body: some View
     {
@@ -369,6 +373,7 @@ struct MenuView: View
         }
     }
 }
+
 #Preview {
-    MenuView(Dis_ID: 1)
+    Recipe_IP_View(Dis_ID: 1)
 }

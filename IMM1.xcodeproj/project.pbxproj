@@ -53,6 +53,7 @@
 		049CD6C02BCB742B00D7AA8E /* Response.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6BF2BCB742B00D7AA8E /* Response.swift */; };
 		049CD6C22BCB794700D7AA8E /* BMIRecordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */; };
 		049CD6C42BCBA72E00D7AA8E /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C32BCBA72E00D7AA8E /* Menu.swift */; };
+		0F67D0EF2BF05D870094B4C2 /* Recipe_IP_View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -104,6 +105,7 @@
 		049CD6BF2BCB742B00D7AA8E /* Response.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Response.swift; sourceTree = "<group>"; };
 		049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMIRecordViewModel.swift; sourceTree = "<group>"; };
 		049CD6C32BCBA72E00D7AA8E /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
+		0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe_IP_View.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -210,6 +212,7 @@
 				0447AFA42B872C980080D222 /* MyView.swift */,
 				0447AFB52B872C980080D222 /* MenuView.swift */,
 				0447AFA92B872C980080D222 /* PlanView.swift */,
+				0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */,
 				0447AFAE2B872C980080D222 /* NowView.swift */,
 				0447AFB02B872C980080D222 /* StockView.swift */,
 				0447AFAA2B872C980080D222 /* SigninView.swift */,
@@ -336,6 +339,7 @@
 				0447AFD52B872D110080D222 /* InformationLabel.swift in Sources */,
 				0447AFBA2B872C980080D222 /* SpinnerView.swift in Sources */,
 				0447AFB72B872C980080D222 /* FavoriteView.swift in Sources */,
+				0F67D0EF2BF05D870094B4C2 /* Recipe_IP_View.swift in Sources */,
 				0447AFB92B872C980080D222 /* HyperlipidemiaView.swift in Sources */,
 				0447AFD22B872D110080D222 /* CustomButton.swift in Sources */,
 				0447AF612B8729C80080D222 /* IMM1App.swift in Sources */,
