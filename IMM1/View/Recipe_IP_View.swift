@@ -24,12 +24,12 @@ struct Recipe_IP_View: View
 //        dishesData.first(where: { $0.Dis_ID == Dis_ID })
 //    }
     
+    // 過濾對應菜品的食材數量
     private func filteredAmounts(for dish: Dishes) -> [Amount]
     {
         amountData.filter { $0.Dis_ID == dish.Dis_ID }
     }
     
-
 //    // MARK: Test data
 //    // 菜譜結構
 //    let dishesData: [Dishes] = [
@@ -55,14 +55,16 @@ struct Recipe_IP_View: View
         assert(Dis_ID > 0, "Dis_ID 必須大於 0")
 
         // 構建帶有查詢參數的 URL 字串，使用實際的 Dis_ID 值
-        let urlString = "http://163.17.9.107/food/Dishes.php"
+        let urlString = "http://163.17.9.107/food/Dishes.php?id=\(Dis_ID)"
         print("正在從此URL請求數據: \(urlString)")  // 打印 URL 以確認其正確性
 
         // 使用 URL 編碼確保 URL 結構的正確性，避免 URL 中有特殊字符造成問題
         guard let encodedURLString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                  let url = URL(string: encodedURLString) else {
-                print("生成的 URL 無效")
-                return
+              let url = URL(string: encodedURLString) 
+        else
+        {
+            print("生成的 URL 無效")
+            return
         }
 
         var request = URLRequest(url: url)
@@ -71,10 +73,10 @@ struct Recipe_IP_View: View
 
         // 發起異步網絡請求
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
-                print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
-                return
-            }
+                   guard let data = data, error == nil else {
+                       print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
+                       return
+                   }
 
             // 檢查並處理 HTTP 響應狀態碼
 //            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
@@ -84,24 +86,28 @@ struct Recipe_IP_View: View
 //                }
 //                return
 //            }
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-                        print("HTTP 錯誤: \(httpResponse.statusCode)")
-                        return
-                    }
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) 
+            {
+                print("HTTP 錯誤: \(httpResponse.statusCode)")
+                return
+            }
             
 
             // 解析 JSON 數據
-            do {
+            do 
+            {
                 let decoder = JSONDecoder()
                 let dishesData = try decoder.decode([Dishes].self, from: data)
-                DispatchQueue.main.async {
+                DispatchQueue.main.async 
+                {
                     self.dishesData = dishesData
                     self.selectedDish = self.dishesData.first(where: { $0.Dis_ID == self.Dis_ID })
                     self.foodData = self.selectedDish?.foods ?? []
                     self.amountData = self.selectedDish?.amounts ?? []
 
                     // 如果存在烹飪方法的 URL，進行加載
-                    if let cookingUrl = self.selectedDish?.D_Cook {
+                    if let cookingUrl = self.selectedDish?.D_Cook 
+                    {
                         self.loadCookingMethod(from: cookingUrl)
                     }
                     
@@ -111,14 +117,17 @@ struct Recipe_IP_View: View
 //                        print("接收到的 JSON 數據: \(jsonStr)")
 //                    }
                     // 打印所有菜譜的 JSON 數據
-                    if let jsonStr = String(data: data, encoding: .utf8) {
+                    if let jsonStr = String(data: data, encoding: .utf8) 
+                    {
                             print("接收到的 JSON 數據: \(jsonStr)")
-                        }
+                    }
 
                 }
-            } catch {
+            } catch 
+            {
                 print("JSON 解析錯誤: \(error)")
-                if let jsonStr = String(data: data, encoding: .utf8) {
+                if let jsonStr = String(data: data, encoding: .utf8)
+                {
                     print("接收到的數據字串: \(jsonStr)")
                 }
             }
@@ -131,14 +140,14 @@ struct Recipe_IP_View: View
         guard let url = URL(string: urlString)
         else
         {
-            print("Invalid URL for cooking method")
+            print("無效的烹飪方法 URL Invalid URL for cooking method")
             return
         }
 
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error
             {
-                print("Failed to load cooking method: \(error)")
+                print("加載烹飪方法失敗 Failed to load cooking method: \(error)")
                 return
             }
 

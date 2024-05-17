@@ -27,10 +27,11 @@ struct FavoriteView: View
                 //MARK: 料理顯示區
                 ScrollView(showsIndicators: false)
                 {
-                    LazyVStack {
+                    LazyVStack 
+                    {
                         ForEach(dishesData, id: \.Dis_ID)
                         { dish in
-                            NavigationLink(destination: MenuView(Dis_ID: dish.Dis_ID))
+                            NavigationLink(destination: Recipe_IP_View(Dis_ID: dish.Dis_ID))
                             {
                                 RecipeBlock(imageName: dish.D_image, title: dish.Dis_Name)
                             }
@@ -39,7 +40,8 @@ struct FavoriteView: View
                     }
                 }
             }
-            .onAppear {
+            .onAppear 
+            {
                 DishService.loadDishes
                 { dishes in
                     self.dishesData = dishes
