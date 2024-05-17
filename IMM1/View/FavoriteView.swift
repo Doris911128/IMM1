@@ -9,8 +9,13 @@ import SwiftUI
 
 struct FavoriteView: View 
 {
+    @AppStorage("U_ID") private var U_ID: String = "" // 从 AppStorage 中读取 U_ID
+    
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes? = nil  // 用於存儲用戶選擇的菜品資訊
+    
+    //let U_ID: Int //用於添加我的最愛
+    //let Dis_ID: Int //用於添加我的最愛
     
     var body: some View
     {
@@ -33,7 +38,12 @@ struct FavoriteView: View
                         { dish in
                             NavigationLink(destination: Recipe_IP_View(Dis_ID: dish.Dis_ID))
                             {
-                                RecipeBlock(imageName: dish.D_image, title: dish.Dis_Name)
+                                RecipeBlock(
+                                    imageName: dish.D_image,
+                                    title: dish.Dis_Name,
+                                    U_ID: U_ID,
+                                    Dis_ID: "\(dish.Dis_ID)" // 确保 Dis_ID 是字符串
+                                )
                             }
                             .padding(.bottom, 10)
                         }

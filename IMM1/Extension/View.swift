@@ -14,7 +14,8 @@ import SwiftUI
 
 extension View
 {
-    func sendBMIData(height: Double, weight: Double, php: String) {
+    func sendBMIData(height: Double, weight: Double, php: String) 
+    {
         // 构建URL，包含查询参数
         let urlString = "http://163.17.9.107/food/BMI.php?height=\(height)&weight=\(weight)"
         guard let url = URL(string: urlString) else { return }
@@ -23,14 +24,18 @@ extension View
         request.httpMethod = "GET"  // 修改为GET请求
 
         URLSession.shared.dataTask(with: request) { data, response, error in
-            if let httpResponse = response as? HTTPURLResponse {
+            if let httpResponse = response as? HTTPURLResponse 
+            {
                 print("HTTP Status code: \(httpResponse.statusCode)")
             }
-            if let error = error {
+            if let error = error 
+            {
                 print("Error sending data: \(error)")
-            } else {
+            } else 
+            {
                 // 如果需要处理返回的数据，可以在这里添加代码
-                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                if let data = data, let responseString = String(data: data, encoding: .utf8) 
+                {
                     print("Response: \(responseString)")
                 }
                 print("Data received successfully")
@@ -42,8 +47,31 @@ extension View
     {
         self.modifier(TextLimit(text: text, max: max))
     }
-
+    
+    // MARK: 愛心toggle
+    func toggleFavorite(U_ID: String, Dis_ID: String, isFavorited: Bool)
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/Favorite.php") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let bodyData = "U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&isFavorited=\(isFavorited)"
+        request.httpBody = bodyData.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error
+            {
+                print("Error: \(error.localizedDescription)")
+                return
+            }
+            if let data = data, let responseString = String(data: data, encoding: .utf8)
+            {
+                print("Response: \(responseString)")
+            }
+        }.resume()
+    }
+    
 }
+
 struct TextLimit: ViewModifier
 {
     @Binding var text: String

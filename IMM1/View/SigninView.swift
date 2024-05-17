@@ -6,6 +6,8 @@ struct SigninView: View
 {
     @AppStorage("signin") private var signin: Bool = false
     @AppStorage("rememberMe") private var rememberMe: Bool = false
+    @AppStorage("U_ID") private var storedU_ID: String = "" // 用于存储
+    
     @State private var U_Acc: String = ""
     @State private var U_Pas: String = ""
     @State private var result: (Bool, String) = (false, "")
@@ -199,6 +201,7 @@ struct SigninView: View
 struct ResponseData: Codable {
     let status: String
     let message: String
+    let U_ID: String // 添加 U_ID 字段
 }
 
 struct SigninView_Previews: PreviewProvider

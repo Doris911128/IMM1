@@ -186,11 +186,11 @@ struct MenuView: View
                                              .font(.largeTitle)
                                              .foregroundStyle(.orange)
 
-                                         HStack(spacing: 5) {
-                                             Image(systemName: "timer")
-                                             Text("時間：")
-                                             Text("一輩子")
-                                         }
+//                                         HStack(spacing: 5) {
+//                                             Image(systemName: "timer")
+//                                             Text("時間：")
+//                                             Text("一輩子")
+//                                         }
                                          .bold()
                                          .font(.body)
                                          .foregroundStyle(.gray)
