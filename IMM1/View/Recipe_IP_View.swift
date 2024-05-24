@@ -50,7 +50,8 @@ struct Recipe_IP_View: View
     
     // MARK: 讀取php從後端加載菜譜數據
     // 在 MenuView.swift 中的 loadMenuData 方法
-    func loadMenuData() {
+    func loadMenuData()
+    {
         // 確保 Dis_ID 是有效的整數且已正確賦值
         assert(Dis_ID > 0, "Dis_ID 必須大於 0")
 
@@ -60,7 +61,7 @@ struct Recipe_IP_View: View
 
         // 使用 URL 編碼確保 URL 結構的正確性，避免 URL 中有特殊字符造成問題
         guard let encodedURLString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: encodedURLString) 
+              let url = URL(string: encodedURLString)
         else
         {
             print("生成的 URL 無效")
@@ -86,7 +87,7 @@ struct Recipe_IP_View: View
 //                }
 //                return
 //            }
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) 
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode)
             {
                 print("HTTP 錯誤: \(httpResponse.statusCode)")
                 return
@@ -94,11 +95,11 @@ struct Recipe_IP_View: View
             
 
             // 解析 JSON 數據
-            do 
+            do
             {
                 let decoder = JSONDecoder()
                 let dishesData = try decoder.decode([Dishes].self, from: data)
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     self.dishesData = dishesData
                     self.selectedDish = self.dishesData.first(where: { $0.Dis_ID == self.Dis_ID })
@@ -106,7 +107,7 @@ struct Recipe_IP_View: View
                     self.amountData = self.selectedDish?.amounts ?? []
 
                     // 如果存在烹飪方法的 URL，進行加載
-                    if let cookingUrl = self.selectedDish?.D_Cook 
+                    if let cookingUrl = self.selectedDish?.D_Cook
                     {
                         self.loadCookingMethod(from: cookingUrl)
                     }
@@ -117,13 +118,13 @@ struct Recipe_IP_View: View
 //                        print("接收到的 JSON 數據: \(jsonStr)")
 //                    }
                     // 打印所有菜譜的 JSON 數據
-                    if let jsonStr = String(data: data, encoding: .utf8) 
+                    if let jsonStr = String(data: data, encoding: .utf8)
                     {
-                            print("接收到的 JSON 數據: \(jsonStr)")
+                        print("接收到的 JSON 數據: \(jsonStr)")
                     }
 
                 }
-            } catch 
+            } catch
             {
                 print("JSON 解析錯誤: \(error)")
                 if let jsonStr = String(data: data, encoding: .utf8)
@@ -173,7 +174,8 @@ struct Recipe_IP_View: View
             let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8)) // 滑動狀態的數值
 
             // 檢查是否有菜餚數據並嘗試加載圖片
-            if let dish = dishesData.first {
+            if let dish = dishesData.first
+            {
                 AsyncImage(url: URL(string: dish.D_image)) { phase in
                     switch phase {
                     case .success(let image):
@@ -182,7 +184,8 @@ struct Recipe_IP_View: View
                              .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
                              .clipped()
                              .overlay(
-                                 ZStack(alignment: .bottom) {
+                                 ZStack(alignment: .bottom)
+                                 {
                                      LinearGradient(colors: [
                                          Color("menusheetbackgroundcolor").opacity(0 - progress),
                                          Color("menusheetbackgroundcolor").opacity(0.2 - progress),
@@ -223,7 +226,8 @@ struct Recipe_IP_View: View
                 .onChange(of: progress) {
                     print("CoverView的progress值: \(progress)")
                 }
-            } else {
+            } else
+            {
                 Color.gray.frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
             }
         }
@@ -278,33 +282,33 @@ struct Recipe_IP_View: View
     
     // MARK: 烹飪書畫面
     @ViewBuilder
-    private func CookbookView(safeArea: EdgeInsets) -> some View {
-        VStack(spacing: 20) {
+    private func CookbookView(safeArea: EdgeInsets) -> some View
+    {
+        VStack(spacing: 20)
+        {
             // 所需食材
             Text("所需食材")
                 .foregroundStyle(.orange)
                 .font(.title2)
                 .offset(x: -130)
+            
             if let selectedDish = selectedDish
             {
-                       
                 // 根據選擇的菜譜ID過濾相應的菜譜食材數量
-                       
                 let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
                         
-                      
                 // 遍歷過濾後的菜譜食材數量
-                      
                 ForEach(filteredAmounts, id: \.F_ID) { amount in
                       
                     // 在食材數據中查找對應的食材
                     if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
                     {
-                               let formattedAmount = String(format: "%.1f", amount.A_Amount)
-                                Text("\(food.F_Name) \(formattedAmount) \(food.F_Unit)")
+                        //let amountString = amount.A_Amount
+                        Text("\(food.F_Name) \(amount.A_Amount) \(food.F_Unit)")
                     }
                 }
-            } else {
+            } else
+            {
                 Text("載入中...") // 或顯示載入狀態
             }
 
@@ -313,10 +317,15 @@ struct Recipe_IP_View: View
                 .foregroundStyle(.orange)
                 .font(.title2)
                 .offset(x: -130)
-            ScrollView {
-                if let method = cookingMethod {
+            ScrollView
+            {
+                if let method = cookingMethod
+                {
                     Text(method) // 使用已有的 cookingMethod 顯示烹飪方法
-                } else {
+                        .padding(.leading, 20)
+                        .padding(.trailing, 20)
+                } else
+                {
                     Text("載入中...") // 或顯示載入狀態
                 }
             }
@@ -328,10 +337,12 @@ struct Recipe_IP_View: View
                 .offset(x: -130)
             Text(dishesData.first?.D_Video ?? "無影片資訊")
         }
-        .onAppear {
-            if let cookingUrl = selectedDish?.D_Cook {
-                    loadCookingMethod(from: cookingUrl)
-                }
+        .onAppear
+        {
+            if let cookingUrl = selectedDish?.D_Cook
+            {
+                loadCookingMethod(from: cookingUrl)
+            }
         }
     }
     
@@ -364,13 +375,14 @@ struct Recipe_IP_View: View
         {
             ToolbarItem(placement: .navigationBarTrailing)
             {
-                Button(action: {
+                Button(action:
+                {
                     //您的操作代碼在這裡
-                }) {
+                })
+                {
                     Image(systemName: "heart")
                         .font(.title2)
                         .foregroundStyle(.orange) //設定愛心為橘色
-                    
                 }
                 .animation(.none) //移除這行如果不需要動畫
             }
@@ -383,6 +395,7 @@ struct Recipe_IP_View: View
     }
 }
 
-#Preview {
+#Preview
+{
     Recipe_IP_View(Dis_ID: 1)
 }

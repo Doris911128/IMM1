@@ -79,13 +79,13 @@ struct Amount: Codable
     let A_ID: Int //主鍵
     let Dis_ID: Int //外來鍵
     let F_ID: Int //外來鍵
-    let A_Amount: Float//外來鍵
+    let A_Amount: Int//外來鍵
     
     // 添加初始化方法，接受传递的 A_ID
     init(A_ID: Int = 0,
          Dis_ID: Int = 0,
          F_ID: Int = 0,
-         A_Amount: Float  = 0.0
+         A_Amount: Int = 0
     )
     {
         self.A_ID = A_ID
