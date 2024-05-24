@@ -204,7 +204,7 @@ struct BMIView: View
                 
                 
                 
-                VStack(spacing: 10)
+                VStack()
                 {
                     HStack{
                         Text("BMI計算")
@@ -288,7 +288,7 @@ struct BMIView: View
                     self.dismissKeyboard()
                 }
                 .padding(.bottom, 25)
-            }
+            }.offset(y:-60)
         }
     }
 }

@@ -1,11 +1,10 @@
 //血壓（Blood Pressure）的英文縮寫是 BP
 
-
 // MARK: 血壓View
 import SwiftUI
 import Charts
 
-struct HypertensionRecord: Identifiable,Codable //血壓紀錄
+struct HypertensionRecord: Identifiable, Codable //血壓紀錄
 {
     var id = UUID()  // 在这里生成 UUID，不依赖 JSON 提供的 ID
     var hypertension: Double
@@ -42,6 +41,7 @@ struct HypertensionRecord: Identifiable,Codable //血壓紀錄
         }
     }
 }
+
 struct HypertensionTemperatureSensor: Identifiable //包含ID和高血壓相關紀錄數組
 {
     var id: String
@@ -72,34 +72,47 @@ struct HypertensionView: View
     @State private var hypertension: String = ""
     @State private var chartData: [HypertensionRecord] = []
     @State private var isShowingList: Bool = false
-    @State private var scrollToBottom: Bool = false
     @State private var showAlert: Bool = false
     
-
     private func averagesEverySevenRecords() -> [HypertensionRecord] {
+        let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HypertensionRecord] = []
-        let sortedRecords = chartData.sorted(by: { $0.date < $1.date })
-        for start in stride(from: 0, to: sortedRecords.count, by: 7) {
-            let end = min(start + 7, sortedRecords.count)
-            let batch = Array(sortedRecords[start..<end])
-            let averageHypertension = batch.map({ $0.hypertension }).reduce(0, +) / Double(batch.count)
-            let recordDate = batch.first!.date  // 使用第一条记录的日期
-            results.append(HypertensionRecord(hypertension: averageHypertension, date: recordDate))
+        let batchSize = 7
+
+        for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+            let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+            let batch = Array(sortedRecords[batchStart..<batchEnd])
+            let totalHypertension = batch.reduce(0.0) { $0 + $1.hypertension }
+            if !batch.isEmpty {
+                let averageHypertension = totalHypertension / Double(batch.count)
+                let recordDate = batch.first!.date
+                let avgRecord = HypertensionRecord(hypertension: averageHypertension, date: recordDate)
+                results.append(avgRecord)
+            }
         }
+
         return results
     }
+
     private func averagesEveryThirtyRecords() -> [HypertensionRecord] {
-            var results: [HypertensionRecord] = []
-            let sortedRecords = chartData.sorted(by: { $0.date < $1.date })
-            for start in stride(from: 0, to: sortedRecords.count, by: 30) {
-                let end = min(start + 30, sortedRecords.count)
-                let batch = Array(sortedRecords[start..<end])
-                let averageHypertension = batch.map({ $0.hypertension }).reduce(0, +) / Double(batch.count)
-                let recordDate = batch.first!.date  // 使用第一条记录的日期
-                results.append(HypertensionRecord(hypertension: averageHypertension, date: recordDate))
+        let sortedRecords = chartData.sorted { $0.date < $1.date }
+        var results: [HypertensionRecord] = []
+        let batchSize = 30
+
+        for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+            let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+            let batch = Array(sortedRecords[batchStart..<batchEnd])
+            let totalHypertension = batch.reduce(0.0) { $0 + $1.hypertension }
+            if !batch.isEmpty {
+                let averageHypertension = totalHypertension / Double(batch.count)
+                let recordDate = batch.first!.date
+                let avgRecord = HypertensionRecord(hypertension: averageHypertension, date: recordDate)
+                results.append(avgRecord)
             }
-            return results
         }
+
+        return results
+    }
 
     func connect(name: String, action: String) {
         let url = URL(string: "http://163.17.9.107/food/\(name).php")!
@@ -132,7 +145,6 @@ struct HypertensionView: View
         let postData = "BP=\(bp)&action=\(action)"  // 確保 action 參數也被發送
         request.httpBody = postData.data(using: .utf8)
         
-        
         URLSession.shared.dataTask(with: request) { (data, response, error) in
             guard let data = data, error == nil else {
                 print("Network request error: \(error?.localizedDescription ?? "Unknown error")")
@@ -148,11 +160,11 @@ struct HypertensionView: View
                 print("Failed to decode JSON: \(error)")
             }
         }.resume()
-        
     }
+
     var body: some View
     {
-        NavigationView
+        NavigationStack
         {
             VStack
             {
@@ -162,7 +174,7 @@ struct HypertensionView: View
                         .foregroundColor(Color("textcolor"))
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
-                        .offset(x:-60)
+                        .offset(x: -60)
                     
                     Button(action:
                             {
@@ -176,32 +188,32 @@ struct HypertensionView: View
                             .padding(.trailing, 20)
                             .imageScale(.large)
                     }
-                    .offset(x:10)
+                    .offset(x: 10)
                 }
                 ScrollView(.horizontal) {
-                                   Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
-                                       LineMark(
-                                           x: .value("Date", formattedDate(record.date)),
-                                           y: .value("Value", record.hypertension)
-                                       )
-                                       .lineStyle(.init(lineWidth: 3))
+                    Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                        LineMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Value", record.hypertension)
+                        )
+                        .lineStyle(.init(lineWidth: 3))
 
-                                       PointMark(
-                                           x: .value("Date", formattedDate(record.date)),
-                                           y: .value("Value", record.hypertension)
-                                       )
-                                       .annotation(position: .top) {
-                                           Text("\(record.hypertension, specifier: "%.2f")")
-                                               .font(.system(size: 12))
-                                               .foregroundColor(Color("textcolor"))
-                                       }
-                                   }
-                                   .chartForegroundStyleScale(["血壓值": .orange])
-                                   .frame(width: max(350, Double(chartData.count) * 65), height: 200)
-                                   .padding(.top, 20)
-                               }
-                               .padding()
-
+                        PointMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Value", record.hypertension)
+                        )
+                        .annotation(position: .top) {
+                            Text("\(record.hypertension, specifier: "%.2f")")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color("textcolor"))
+                        }
+                    }
+                    .chartForegroundStyleScale(["血壓值": .orange])
+                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                    .padding(.top, 20)
+                }
+                .padding()
+                
                 VStack
                 {
                     HStack
@@ -245,15 +257,15 @@ struct HypertensionView: View
                             {
                                 self.sendBPData(name: "BP", bp: hypertensionValue, action:"insert" )
                                 self.connect(name: "BP", action: "fetch")
-                                let newRecord = HypertensionRecord(hypertension: hypertensionValue)
-                                
-                                if let existingRecordIndex = chartData.lastIndex(where: { $0.date > Date().addingTimeInterval(-6 * 60 * 60) }) {
-                                    chartData[existingRecordIndex] = newRecord
+                                if let index = chartData.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: Date()) }) //檢查是否已經有當天的紀錄存在
+                                {
+                                    chartData[index].hypertension = hypertensionValue //如果有，則更新當天的值
+                                    
                                 }
                                 else
                                 {
+                                    let newRecord = HypertensionRecord(hypertension: hypertensionValue) //否則新增一條紀錄
                                     chartData.append(newRecord)
-                                    scrollToBottom = true
                                 }
                                 
                                 hypertension = ""
@@ -293,7 +305,7 @@ struct HypertensionView: View
                 )
             }
         }
-        .offset(y: -46)
+        .offset(y: -98)
     }
 }
 
