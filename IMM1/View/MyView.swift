@@ -90,11 +90,11 @@ struct MyView: View
             }
 
             // 清除本地会话中的用户信息
-            DispatchQueue.main.async {
-                self.signin = false
-                // 清除存储的用户 ID
-                UserDefaults.standard.removeObject(forKey: "userID")
-            }
+//            DispatchQueue.main.async {
+//                self.signin = false
+//                // 清除存储的用户 ID
+//                UserDefaults.standard.removeObject(forKey: "userID")
+//            }
         }.resume()
     }
 
@@ -116,7 +116,7 @@ struct MyView: View
                     return "隱私"
                 }
             } else {
-                return "隱私" // 如果无法转换为整数，则返回隐私
+                return "" // 如果无法转换为整数，则返回隐私
             }
         case 2:
             return self.user.birthday
@@ -324,6 +324,9 @@ struct MyView: View
                                     .tint(Color("sidebuttomcolor"))
                                     .scaleEffect(0.75)
                                     .offset(x: 30)
+                                    .onChange(of:self.colorScheme){
+                                            fetchUserInfo()
+                                        }
                             }
                             // MARK: 登出
                             Button(action:{

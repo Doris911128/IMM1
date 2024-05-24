@@ -97,6 +97,26 @@ struct HyperglycemiaView: View
 
             return results
         }
+    private func averagesEveryThirtyRecords() -> [HyperglycemiaRecord] {
+           let sortedRecords = chartData.sorted { $0.date < $1.date }
+           var results: [HyperglycemiaRecord] = []
+           let batchSize = 30
+
+           for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+               let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+               let batch = Array(sortedRecords[batchStart..<batchEnd])
+               let totalHyperglycemia = batch.reduce(0.0) { $0 + $1.hyperglycemia }
+               if !batch.isEmpty {
+                   let averageHyperglycemia = totalHyperglycemia / Double(batch.count)
+                   let recordDate = batch.first!.date
+                   let avgRecord = HyperglycemiaRecord(hyperglycemia: averageHyperglycemia, date: recordDate)
+                   results.append(avgRecord)
+               }
+           }
+
+           return results
+       }
+
     func connect(name: String, action: String) {
         let url = URL(string: "http://163.17.9.107/food/\(name).php")!
         var request = URLRequest(url: url)
@@ -174,7 +194,7 @@ struct HyperglycemiaView: View
                     .offset(x:10)
                 }
                 ScrollView(.horizontal) {
-                                    Chart(displayMode == 0 ? chartData : averagesEverySevenRecords()) { record in
+                                    Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
                                         LineMark(
                                             x: .value("Date", formattedDate(record.date)),
                                             y: .value("Hyperglycemia", record.hyperglycemia)
@@ -196,8 +216,8 @@ struct HyperglycemiaView: View
                                     ])
                                     .frame(width: max(350, Double(chartData.count) * 65), height: 200)
                                     .padding(.top, 20)
-                }
-                .padding()
+                                }
+                                .padding()
                 VStack
                 {
                     HStack
@@ -209,9 +229,10 @@ struct HyperglycemiaView: View
                             .foregroundColor(Color("textcolor"))
                         Picker("显示模式", selection: $displayMode) {
                             Text("每日").tag(0)
-                            Text("每七日").tag(1)
+                            Text("每7日").tag(1)
+                            Text("每30日").tag(2)
                         }
-                        .pickerStyle(SegmentedPickerStyle())
+                        .pickerStyle(MenuPickerStyle())
                         .padding()
                     }
                     

@@ -88,6 +88,18 @@ struct HypertensionView: View
         }
         return results
     }
+    private func averagesEveryThirtyRecords() -> [HypertensionRecord] {
+            var results: [HypertensionRecord] = []
+            let sortedRecords = chartData.sorted(by: { $0.date < $1.date })
+            for start in stride(from: 0, to: sortedRecords.count, by: 30) {
+                let end = min(start + 30, sortedRecords.count)
+                let batch = Array(sortedRecords[start..<end])
+                let averageHypertension = batch.map({ $0.hypertension }).reduce(0, +) / Double(batch.count)
+                let recordDate = batch.first!.date  // 使用第一条记录的日期
+                results.append(HypertensionRecord(hypertension: averageHypertension, date: recordDate))
+            }
+            return results
+        }
 
     func connect(name: String, action: String) {
         let url = URL(string: "http://163.17.9.107/food/\(name).php")!
@@ -167,28 +179,28 @@ struct HypertensionView: View
                     .offset(x:10)
                 }
                 ScrollView(.horizontal) {
-                    Chart(displayMode == 0 ? chartData : averagesEverySevenRecords()) { record in
-                        LineMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Value", record.hypertension)
-                        )
-                        .lineStyle(.init(lineWidth: 3))
+                                   Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                                       LineMark(
+                                           x: .value("Date", formattedDate(record.date)),
+                                           y: .value("Value", record.hypertension)
+                                       )
+                                       .lineStyle(.init(lineWidth: 3))
 
-                        PointMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Value", record.hypertension)
-                        )
-                        .annotation(position: .top) {
-                            Text("\(record.hypertension, specifier: "%.2f")")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color("textcolor"))
-                        }
-                    }
-                    .chartForegroundStyleScale(["血壓值": .orange])
-                    .frame(width: max(350, Double(chartData.count) * 65), height: 200) 
-                    .padding(.top, 20)
-                }
-                .padding()
+                                       PointMark(
+                                           x: .value("Date", formattedDate(record.date)),
+                                           y: .value("Value", record.hypertension)
+                                       )
+                                       .annotation(position: .top) {
+                                           Text("\(record.hypertension, specifier: "%.2f")")
+                                               .font(.system(size: 12))
+                                               .foregroundColor(Color("textcolor"))
+                                       }
+                                   }
+                                   .chartForegroundStyleScale(["血壓值": .orange])
+                                   .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                                   .padding(.top, 20)
+                               }
+                               .padding()
 
                 VStack
                 {
@@ -201,9 +213,10 @@ struct HypertensionView: View
                             .foregroundColor(Color("textcolor"))
                         Picker("显示模式", selection: $displayMode) {
                             Text("每日").tag(0)
-                            Text("每七日").tag(1)
+                            Text("每7日").tag(1)
+                            Text("每30日").tag(2)
                         }
-                        .pickerStyle(SegmentedPickerStyle())
+                        .pickerStyle(MenuPickerStyle())
                         .padding()
                     }
                     VStack(spacing: -5)

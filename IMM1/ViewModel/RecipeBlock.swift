@@ -54,18 +54,18 @@ struct RecipeBlock: View
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 10)
                         
-//                        Image(systemName: self.isFavorited ? "heart.fill" : "heart")
-//                            .font(.title)
-//                            .foregroundStyle(.orange)
-//                            .colorMultiply(.red.opacity(0.6))
-//                            .onTapGesture 
-//                           {
-//                                withAnimation(.easeInOut.speed(3))
-//                                {
-//                                    self.isFavorited.toggle()
-//                                    toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited)
-//                                }
-//                            }
+                        Image(systemName: self.isFavorited ? "heart.fill" : "heart")
+                            .font(.title)
+                            .foregroundStyle(.orange)
+                            .colorMultiply(.red.opacity(0.6))
+                            .onTapGesture 
+                           {
+                                withAnimation(.easeInOut.speed(3))
+                                {
+                                    self.isFavorited.toggle()
+                                    toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited)
+                                }
+                            }
                             .padding(.trailing, 10)
                             .symbolEffect(.bounce, value: self.isFavorited)
                     }

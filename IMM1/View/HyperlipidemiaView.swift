@@ -157,30 +157,30 @@ struct HyperlipidemiaView: View
                     .offset(x:10)
                 }
                 ScrollView(.horizontal) {
-                                    Chart(displayMode == 0 ? chartData : averagesEverySevenRecords()) { record in
-                                        LineMark(
-                                            x: .value("Date", formattedDate(record.date)),
-                                            y: .value("Hyperlipidemia", record.hyperlipidemia)
-                                        )
-                                        .lineStyle(.init(lineWidth: 3))
+                                   Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                                       LineMark(
+                                           x: .value("Date", formattedDate(record.date)),
+                                           y: .value("Hyperlipidemia", record.hyperlipidemia)
+                                       )
+                                       .lineStyle(.init(lineWidth: 3))
 
-                                        PointMark(
-                                            x: .value("Date", formattedDate(record.date)),
-                                            y: .value("Hyperlipidemia", record.hyperlipidemia)
-                                        )
-                                        .annotation(position: .top) {
-                                            Text("\(record.hyperlipidemia, specifier: "%.2f")")
-                                                .font(.system(size: 12))
-                                                .foregroundColor(Color("textcolor"))
-                                        }
-                                    }
-                                    .chartForegroundStyleScale([
-                                        "血脂值": .orange
-                                    ])
-                                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
-                                    .padding(.top, 20)
-                }
-                .padding()
+                                       PointMark(
+                                           x: .value("Date", formattedDate(record.date)),
+                                           y: .value("Hyperlipidemia", record.hyperlipidemia)
+                                       )
+                                       .annotation(position: .top) {
+                                           Text("\(record.hyperlipidemia, specifier: "%.2f")")
+                                               .font(.system(size: 12))
+                                               .foregroundColor(Color("textcolor"))
+                                       }
+                                   }
+                                   .chartForegroundStyleScale([
+                                       "血脂值": .orange
+                                   ])
+                                   .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                                   .padding(.top, 20)
+                               }
+                               .padding()
                 
                 VStack
                 {
@@ -193,9 +193,10 @@ struct HyperlipidemiaView: View
                             .foregroundColor(Color("textcolor"))
                         Picker("显示模式", selection: $displayMode) {
                             Text("每日").tag(0)
-                            Text("每七日").tag(1)
+                            Text("每7日").tag(1)
+                            Text("每30日").tag(2)
                         }
-                        .pickerStyle(SegmentedPickerStyle())
+                        .pickerStyle(MenuPickerStyle())
                         .padding()
                     }
                     VStack(spacing: -5) //使用者輸入
@@ -289,7 +290,25 @@ struct HyperlipidemiaView: View
 
         return results
     }
+    private func averagesEveryThirtyRecords() -> [HyperlipidemiaRecord] {
+            let sortedRecords = chartData.sorted { $0.date < $1.date }
+            var results: [HyperlipidemiaRecord] = []
+            let batchSize = 30
 
+            for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+                let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+                let batch = Array(sortedRecords[batchStart..<batchEnd])
+                let totalHyperlipidemia = batch.reduce(0.0) { $0 + $1.hyperlipidemia }
+                if !batch.isEmpty {
+                    let averageHyperlipidemia = totalHyperlipidemia / Double(batch.count)
+                    let recordDate = batch.first!.date
+                    let avgRecord = HyperlipidemiaRecord(hyperlipidemia: averageHyperlipidemia, date: recordDate)
+                    results.append(avgRecord)
+                }
+            }
+
+            return results
+        }
 }
 
 // MARK: 列表記錄

@@ -209,21 +209,21 @@ struct ShopView: View {
     @State private var isLoading = true
     @State private var selectedIngredients: [Ingredient] = []
     @State private var userUID: String? // 用戶的 UID
-
+    
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
-
+    
     private var sevenDaysAgo: Date {
         return Calendar.current.date(byAdding: .day, value: 7, to: currentDate)!
     }
-
+    
     private var currentDate: Date {
         return Date()
     }
-
+    
     // 在此處獲取和設置用戶的 UID
     func getUserUIDFromDatabase() {
         // 在這裡從您的資料庫中獲取用戶的 UID
@@ -232,12 +232,12 @@ struct ShopView: View {
         // 例如，如果您使用 Firebase，您可以通過 Auth.currentUser?.uid 獲取用戶的 UID
         // 或者您可以使用自定義的身份驗證系統從自己的服務器獲取用戶的 UID
     }
-
+    
     // 在 ShopView 中添加 sendSelectedIngredientsToBackend 方法
     private func sendSelectedIngredientsToBackend() {
         // 在這裡實現將所選食材發送到後端的邏輯
     }
-
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -266,7 +266,7 @@ struct ShopView: View {
             sendSelectedIngredientsToBackend()
         }
     }
-
+    
     // 修改 handleIngredientSelection 方法，接受用戶的 UID 作為參數
     private func handleIngredientSelection(_ fid: Int, _ uid: String, _ sksum: Int) {
         // 將值轉換成字典
@@ -281,12 +281,12 @@ struct ShopView: View {
             // 調用 sendJSONDataToBackend 函數，將 JSON 數據發送到後端
             sendJSONDataToBackend(jsonData: jsonData)
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-                           // 打印 JSON 字符串
-                           print("JSON String:", jsonString)
-                       }
+                // 打印 JSON 字符串
+                print("JSON String:", jsonString)
+            }
         }
     }
-
+    
     
     private func loadRecipes() {
         // 獲取當前日期和7天前的日期
@@ -295,14 +295,14 @@ struct ShopView: View {
         
         print("Current Date String:", currentDateStr)
         print("Seven Days Ago String:", sevenDaysAgoStr)
-
+        
         // 使用日期參數構建URL
         guard let url = URL(string: "http://163.17.9.107/food/Shop.php?start_date=\(sevenDaysAgoStr)&end_date=\(currentDateStr)") else {
             print("Invalid URL")
             self.isLoading = false
             return
         }
-
+        
         // 發送URL請求
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard error == nil else {
@@ -310,19 +310,19 @@ struct ShopView: View {
                 self.handleLoadingError()
                 return
             }
-
+            
             guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 print("Invalid HTTP response")
                 self.handleLoadingError()
                 return
             }
-
+            
             guard let data = data else {
                 print("No data received")
                 self.handleLoadingError()
                 return
             }
-
+            
             do {
                 let recipeWrappers = try JSONDecoder().decode([RecipeWrapper].self, from: data)
                 self.aggregateRecipes(recipeWrappers)
@@ -332,47 +332,42 @@ struct ShopView: View {
             }
         }.resume()
     }
-
+    
     private func makeURL(startDate: String, endDate: String) -> URL? {
         let urlString = "http://163.17.9.107/food/Shop.php?start_date=\(startDate)&end_date=\(endDate)"
         return URL(string: urlString)
     }
-    
     private func handleLoadingError() {
         self.isLoading = false
     }
-    
     private func aggregateRecipes(_ recipeWrappers: [RecipeWrapper]) {
         var aggregatedRecipes: [String: RecipeWrapper] = [:]
         
         for wrapper in recipeWrappers {
-            guard let dateStr = wrapper.sqlResult.P_DT, let recipeDate = dateFormatter.date(from: dateStr) else {
-                continue // Skip if the date is invalid
-            }
-            
-            // Check if the recipe date is within the last 7 days
-            if isWithinLastSevenDays(date: recipeDate) {
-                let name = wrapper.sqlResult.name
-                if var existingWrapper = aggregatedRecipes[name] {
-                    existingWrapper.sqlResult.amount += wrapper.sqlResult.amount
-                    existingWrapper.sqlResult.stock = (existingWrapper.sqlResult.stock ?? 0) + (wrapper.sqlResult.stock ?? 0)
-                    aggregatedRecipes[name] = existingWrapper
-                } else {
-                    aggregatedRecipes[name] = wrapper
+            let name = wrapper.sqlResult.name
+            if var existingWrapper = aggregatedRecipes[name] {
+                // 更新食材数量和库存
+                existingWrapper.sqlResult.amount += wrapper.sqlResult.amount
+                if let wrapperStock = wrapper.sqlResult.stock {
+                    existingWrapper.sqlResult.stock = (existingWrapper.sqlResult.stock ?? 0) + wrapperStock
                 }
+                // 更新计划数量（planAmount）
+                if let wrapperShopPlan = wrapper.shopPlan, let existingShopPlan = existingWrapper.shopPlan {
+                    if let wrapperAmount = Int(wrapperShopPlan.amount), let existingAmount = Int(existingShopPlan.amount) {
+                        existingWrapper.shopPlan?.amount = String(wrapperAmount + existingAmount)
+                    }
+                } else if let wrapperShopPlan = wrapper.shopPlan {
+                    existingWrapper.shopPlan = wrapperShopPlan
+                }
+                aggregatedRecipes[name] = existingWrapper
+            } else {
+                aggregatedRecipes[name] = wrapper
             }
         }
         
-        let aggregatedArray = Array(aggregatedRecipes.values)
-        
-        DispatchQueue.main.async {
-            self.recipes = aggregatedArray
-            self.isLoading = false
-        }
-    }
-    
-    private func isWithinLastSevenDays(date: Date) -> Bool {
-        return date <= sevenDaysAgo && date >= currentDate
+        // 将字典转换为数组并更新 `recipes`
+        self.recipes = Array(aggregatedRecipes.values)
+        self.isLoading = false
     }
 }
 private func sendJSONDataToBackend(jsonData: Data) {

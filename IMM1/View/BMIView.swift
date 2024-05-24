@@ -178,8 +178,8 @@ struct BMIView: View
                     .offset(x:10)
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 20) { // HStack spacing 根据需要调整
-                        Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords : bmiRecordViewModel.averagesEverySevenRecordsSorted()) { record in
+                    HStack(spacing: 20) {
+                        Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords : (displayMode == 1 ? bmiRecordViewModel.averagesEverySevenRecordsSorted() : bmiRecordViewModel.averagesEveryThirtyRecordsSorted())) { record in
                             LineMark(
                                 x: .value("Date", formattedDate(record.date)),
                                 y: .value("BMI", record.bmi)
@@ -196,11 +196,11 @@ struct BMIView: View
                                     .foregroundColor(Color("textcolor"))
                             }
                         }
-                        // 根据 displayMode 动态调整图表宽度，减少每七日乘数至 100
-                        .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)), height: 200)
+                        .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : (displayMode == 1 ? CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)) : CGFloat(max(300, bmiRecordViewModel.averagesEveryThirtyRecordsSorted().count * 100))), height: 200)
                     }
                     .padding()
                 }
+
                 
                 
                 
@@ -214,7 +214,8 @@ struct BMIView: View
                             .foregroundColor(Color("textcolor"))
                         Picker("顯示模式", selection: $displayMode) {
                             Text("每日").tag(0)
-                            Text("每七日").tag(1)
+                            Text("每7日").tag(1)
+                            Text("每30日").tag(2)
                         }
                         .pickerStyle(MenuPickerStyle())
                     }
