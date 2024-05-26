@@ -215,7 +215,7 @@ class NetworkManager {
     }
 }
 
-// MARK: - 主库存视图
+// MARK: - 主庫存視圖
 struct StockView: View {
     @State private var ingredients: [StockIngredient] = []
     @State private var isAddSheetPresented = false
@@ -229,55 +229,59 @@ struct StockView: View {
                 Text("庫存")
                     .font(.title)
                     .padding()
-                
-                List {
-                    ForEach(ingredients.indices, id: \.self) { index in
-                        HStack {
-                            if isEditing {
-                                Button(action: {
-                                    toggleSelection(index)
-                                }) {
-                                    Image(systemName: ingredients[index].isSelectedForDeletion ? "checkmark.square" : "square")
-                                }
-                                .buttonStyle(BorderlessButtonStyle())
-                                
-                                // 显示食材名称
-                                Text(ingredients[index].F_Name)
-                                    .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                
-                                Spacer() // 创建自动扩展的空间
-                                
-                                TextField("食材數量", value: $ingredients[index].SK_SUM, formatter: NumberFormatter())
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing) // 右对齐
-                                    .onChange(of: ingredients[index].SK_SUM) { newValue in
-                                        sendEditedIngredientData(F_ID: ingredients[index].F_ID, U_ID: ingredients[index].U_ID, SK_SUM: newValue)
+
+                if ingredients.isEmpty {
+                    Spacer()
+                    Text("目前無庫存項目")
+//                        .padding()
+                    Spacer()
+                } else {
+                    List {
+                        ForEach(ingredients.indices, id: \.self) { index in
+                            HStack {
+                                if isEditing {
+                                    Button(action: {
+                                        toggleSelection(index)
+                                    }) {
+                                        Image(systemName: ingredients[index].isSelectedForDeletion ? "checkmark.square" : "square")
                                     }
-                                
-                                    .keyboardType(.numberPad)
-                                    .multilineTextAlignment(.trailing) // 右对齐
-                                
-                            } else {
-                                // 如果不处于编辑模式，显示只读的文本
-                                Text(ingredients[index].F_Name)
+                                    .buttonStyle(BorderlessButtonStyle())
+                                    
+                                    // 显示食材名称
+                                    Text(ingredients[index].F_Name)
+                                        .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
+                                    
+                                    Spacer() // 创建自动扩展的空间
+                                    
+                                    TextField("食材數量", value: $ingredients[index].SK_SUM, formatter: NumberFormatter())
+                                        .keyboardType(.numberPad)
+                                        .multilineTextAlignment(.trailing) // 右对齐
+                                        .onChange(of: ingredients[index].SK_SUM) { newValue in
+                                            sendEditedIngredientData(F_ID: ingredients[index].F_ID, U_ID: ingredients[index].U_ID, SK_SUM: newValue)
+                                        }
+                                    
+                                } else {
+                                    // 如果不处于编辑模式，显示只读的文本
+                                    Text(ingredients[index].F_Name)
+                                        .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
+                                    
+                                    Spacer() // 创建自动扩展的空间
+                                    
+                                    //                                Text("\(ingredients[index].SK_SUM)")
+                                    //                                    .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
+                                    //                                    .multilineTextAlignment(.trailing) // 右对齐
+                                    HStack {
+                                        Text("\(ingredients[index].SK_SUM)")
+                                        Text(ingredients[index].F_Unit ?? "")  // 显示单位
+                                    }
                                     .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                
-                                Spacer() // 创建自动扩展的空间
-                                
-                                //                                Text("\(ingredients[index].SK_SUM)")
-                                //                                    .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                //                                    .multilineTextAlignment(.trailing) // 右对齐
-                                HStack {
-                                    Text("\(ingredients[index].SK_SUM)")
-                                    Text(ingredients[index].F_Unit ?? "")  // 显示单位
+                                    .multilineTextAlignment(.trailing)
                                 }
-                                .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                .multilineTextAlignment(.trailing)
                             }
                         }
                     }
+                    .padding()
                 }
-                .padding()
                 
                 HStack {
                     if isEditing {

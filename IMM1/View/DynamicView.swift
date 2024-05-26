@@ -18,32 +18,28 @@ private func formattedDate(_ date: Date) -> String
 
 struct DynamicView: View
 {
-    enum DynamicRecordType 
+    enum DynamicRecordType
     {
         case BMI, hypertension, hyperglycemia, hyperlipidemia
     }
     
-    
     func recordButton(_ type: DynamicRecordType, title: String) -> some View
     {
-        Button(action: 
+        Button(action:
                 {
-            selectedRecord = type
+            withAnimation {
+                selectedRecord = type
+            }
         }) {
             Text(title)
                 .foregroundColor(.primary)
                 .padding(.horizontal, 16)
         }
     }
+    
     @State private var selectedRecord: DynamicRecordType = .BMI
     @State public var DynamicTitle:[String]=["BMI", "血壓" , "血糖", "血脂"]
     
-    //創建一些示例傳感器和記錄
-//    let BMISensors: [TemperatureSensor<Double>] = [TemperatureSensor(sensorID: "BMI Sensor 1", records: [BMIRecord])]
-//    let BPSensors: [TemperatureSensor<Double>] = [TemperatureSensor(sensorID: "BP Sensor 1", records: [BPRecord])]
-//    let BSSensors: [TemperatureSensor<Double>] = [TemperatureSensor(sensorID: "BS Sensor 1", records: [BSRecord])]
-//    let BLSensors: [TemperatureSensor<Int>] = [TemperatureSensor(sensorID: "BL Sensor 1", records: [BLRecord])]
-
     var body: some View
     {
         VStack(spacing: 20)
@@ -67,30 +63,30 @@ struct DynamicView: View
 
             displaySelectedRecordView()
                 .padding()
-            }
-
+        }
     }
+    
     @ViewBuilder
     func displaySelectedRecordView() -> some View
     {
         switch(selectedRecord)
         {
         case .BMI:
-            BMIView().animation(nil)
+            BMIView()
         case .hypertension:
-            HypertensionView().animation(nil)
+            HypertensionView()
         case .hyperglycemia:
-            HyperglycemiaView().animation(nil)
+            HyperglycemiaView()
         case .hyperlipidemia:
-            HyperlipidemiaView().animation(nil)
+            HyperlipidemiaView()
         }
     }
 
 }
 // MARK: Preview
-struct DynamicView_Previews: PreviewProvider 
+struct DynamicView_Previews: PreviewProvider
 {
-    static var previews: some View 
+    static var previews: some View
     {
         DynamicView()
     }

@@ -79,7 +79,7 @@ extension BMIRecordViewModel {
             if !batch.isEmpty {
                 let averageHeight = totalHeight / Double(batch.count)
                 let averageWeight = totalWeight / Double(batch.count)
-                let averageBMI = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
+                _ = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
                 
                 // 使用批次中的第一筆记录的日期
                 let recordDate = batch.first!.date
@@ -100,7 +100,7 @@ extension BMIRecordViewModel {
             if let firstRecord = records.first, records.count > 0 {
                 let averageHeight = totalHeight / Double(records.count)
                 let averageWeight = totalWeight / Double(records.count)
-                let averageBMI = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
+                _ = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
                 let avgRecord = BMIRecord(height: averageHeight, weight: averageWeight, date: firstRecord.date)
                 weeklyAverages.append(avgRecord)
             }
@@ -121,7 +121,7 @@ extension BMIRecordViewModel {
                 if !batch.isEmpty {
                     let averageHeight = totalHeight / Double(batch.count)
                     let averageWeight = totalWeight / Double(batch.count)
-                    let averageBMI = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
+                    _ = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
                     
                     let recordDate = batch.first!.date
                     let avgRecord = BMIRecord(height: averageHeight, weight: averageWeight, date: recordDate)
