@@ -217,7 +217,7 @@ struct ShopView: View {
     }()
     
     private var sevenDaysAgo: Date {
-        return Calendar.current.date(byAdding: .day, value: 7, to: currentDate)!
+        return Calendar.current.date(byAdding: .day, value: -7, to: currentDate)!
     }
     
     private var currentDate: Date {
@@ -288,51 +288,68 @@ struct ShopView: View {
     }
     
     
+    private var sevenDaysLater: Date {
+        return Calendar.current.date(byAdding: .day, value: 6, to: currentDate)!
+    }
+
+    private var oneDayBefore: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
+    }
+
     private func loadRecipes() {
-        // 獲取當前日期和7天前的日期
-        let currentDateStr = dateFormatter.string(from: currentDate)
-        let sevenDaysAgoStr = dateFormatter.string(from: sevenDaysAgo)
+        let currentDateStr = dateFormatter.string(from: oneDayBefore)
+        let sevenDaysLaterStr = dateFormatter.string(from: sevenDaysLater)
         
         print("Current Date String:", currentDateStr)
-        print("Seven Days Ago String:", sevenDaysAgoStr)
-        
-        // 使用日期參數構建URL
-        guard let url = URL(string: "http://163.17.9.107/food/Shop.php?start_date=\(sevenDaysAgoStr)&end_date=\(currentDateStr)") else {
+        print("Seven Days Later String:", sevenDaysLaterStr)
+
+        guard let url = URL(string: "http://163.17.9.107/food/Shop.php?start_date=\(currentDateStr)&end_date=\(sevenDaysLaterStr)") else {
             print("Invalid URL")
             self.isLoading = false
             return
         }
-        
-        // 發送URL請求
+
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard error == nil else {
                 print("Error:", error!)
                 self.handleLoadingError()
                 return
             }
-            
+
             guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
                 print("Invalid HTTP response")
                 self.handleLoadingError()
                 return
             }
-            
+
             guard let data = data else {
                 print("No data received")
                 self.handleLoadingError()
                 return
             }
-            
+
             do {
                 let recipeWrappers = try JSONDecoder().decode([RecipeWrapper].self, from: data)
-                self.aggregateRecipes(recipeWrappers)
+                // 包括今天及其前一天和后七天的食材
+                let filteredWrappers = recipeWrappers.filter { wrapper in
+                    if let pdtString = wrapper.sqlResult.P_DT,
+                       let pdtDate = dateFormatter.date(from: pdtString) {
+                        // 使用当前日期、前一天和未来七天的日期范围
+                        return pdtDate >= oneDayBefore && pdtDate <= sevenDaysLater
+                    }
+                    return false
+                }
+                self.aggregateRecipes(filteredWrappers)
             } catch {
                 print("Error decoding JSON:", error)
                 self.handleLoadingError()
             }
         }.resume()
     }
-    
+
+
+
+
     private func makeURL(startDate: String, endDate: String) -> URL? {
         let urlString = "http://163.17.9.107/food/Shop.php?start_date=\(startDate)&end_date=\(endDate)"
         return URL(string: urlString)
