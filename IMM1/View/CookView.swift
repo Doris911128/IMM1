@@ -19,8 +19,29 @@ struct Cook: Codable, Identifiable {
     }
 }
 
+struct CookPlan: Codable, Identifiable {
+    let id = UUID()
+    let P_ID: String
+    let U_ID: String
+    let Dis_ID: String
+    let P_DT: String
+    let P_Bought: String
+    let Dis_name: String
+    let D_image: String
+
+    enum CodingKeys: String, CodingKey {
+        case P_ID
+        case U_ID
+        case Dis_ID
+        case P_DT
+        case P_Bought
+        case Dis_name
+        case D_image
+    }
+}
+
 struct CookView: View {
-    @State private var plans: [Cook] = []
+    @State private var plans: [CookPlan] = []
     @State private var isEditing = false
 
     var body: some View {
@@ -28,52 +49,60 @@ struct CookView: View {
             VStack {
                 Text("烹飪")
                     .offset(x: 0, y: 23)
+                    .padding(.bottom, 30)
                 
-                HStack {
-                    Spacer()
-                    if isEditing {
-                        Button(action: {
-                            isEditing.toggle()
-                        }) {
-                            Text("完成")
-                        }
-                        .padding(.trailing, 20)
-                    } else {
-                        Button(action: {
-                            isEditing.toggle()
-                        }) {
-                            Text("編輯")
-                        }
-                        .padding(.trailing, 20)
-                    }
-                }
+//                HStack {
+//                    Spacer()
+//                    if isEditing {
+//                        Button(action: {
+//                            isEditing.toggle()
+//                        }) {
+//                            Text("完成")
+//                        }
+//                        .padding(.trailing, 20)
+//                    } else {
+//                        Button(action: {
+//                            isEditing.toggle()
+//                        }) {
+//                            Text("編輯")
+//                        }
+//                        .padding(.trailing, 20)
+//                    }
+//                }
             }
             .padding(.top, -23)
             
-            List {
-                ForEach(computeDays(), id: \.self) { day in
-                    VStack(alignment: .leading, spacing: 10) {
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    ForEach(computeDays(), id: \.self) { day in
                         let dateString = day.dateString
-                        Text("\(dateString) 第 \(day.dayIndex + 1) 天")
-                            .font(.headline)
-                        
-                        let dayPlans = plans.filter { $0.P_DT == dateString }
-                        if dayPlans.isEmpty {
-                            Text("沒有計畫").font(.subheadline).foregroundColor(.gray)
-                        } else {
-                            ForEach(dayPlans, id: \.P_ID) { plan in
-                                VStack {
-                                    RecipeBlock(
-                                        imageName: plan.Dis_name, // Assuming Dis_name is the image name, adjust if necessary
-                                        title: plan.Dis_name,
-                                        U_ID: plan.U_ID,
-                                        Dis_ID: plan.Dis_ID
-                                    )
-                                }
-                            }
-                            .onDelete { indexSet in
-                                for index in indexSet {
-                                    plans.removeAll { $0.P_ID == dayPlans[index].P_ID }
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("\(dateString)")
+                                .font(.headline)
+//                                .offset(x:-130,y:0)
+                            let dayPlans = plans.filter { $0.P_DT == dateString }
+                            if dayPlans.isEmpty {
+                                Text("尚無計畫").font(.subheadline).foregroundColor(.gray)
+                                    .offset(x:20,y:0)
+
+                            } else {
+                                ForEach(dayPlans, id: \.P_ID) { CookPlan in
+                                    HStack {
+                                        NavigationLink(destination: MenuView(Dis_ID: Int(CookPlan.Dis_ID) ?? 0)) {
+                                            RecipeBlock(imageName: CookPlan.D_image, title: CookPlan.Dis_name, U_ID: CookPlan.U_ID, Dis_ID: CookPlan.Dis_ID)
+                                        }
+                                        
+                                        if isEditing {
+                                            Button(action: {
+                                                if let index = plans.firstIndex(where: { $0.P_ID == CookPlan.P_ID }) {
+                                                    plans.remove(at: index)
+                                                }
+                                            }) {
+                                                Image(systemName: "minus.circle")
+                                                    .foregroundColor(.red)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -103,19 +132,17 @@ struct CookView: View {
 
     func computeDays() -> [Day] {
         var days: [Day] = []
-        for dayIndex in 0..<7 {
-            if let targetDate = Calendar.current.date(byAdding: .day, value: dayIndex, to: Date()) {
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd"
-                let dateString = formatter.string(from: targetDate)
-                
-                let day = Day(dateString: dateString, dayIndex: dayIndex)
-                days.append(day)
-            }
+        if let targetDate = Calendar.current.date(byAdding: .day, value: 0, to: Date()) {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            let dateString = formatter.string(from: targetDate)
+            
+            let day = Day(dateString: dateString, dayIndex: 0)
+            days.append(day)
         }
         return days
     }
-    
+
     struct Day: Hashable {
         let dateString: String
         let dayIndex: Int
@@ -128,8 +155,8 @@ struct CookView_Previews: PreviewProvider {
     }
 }
 
-func fetchCookPlansFromServer(completion: @escaping ([Cook]?, Error?) -> Void) {
-    guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
+func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Void) {
+    guard let url = URL(string: "http://163.17.9.107/food/Cook.php") else {
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
     }
@@ -151,12 +178,11 @@ func fetchCookPlansFromServer(completion: @escaping ([Cook]?, Error?) -> Void) {
         }
         
         do {
-            // 打印原始的JSON数据
             if let jsonString = String(data: data, encoding: .utf8) {
                 print("Fetched JSON: \(jsonString)")
             }
             
-            let plans = try JSONDecoder().decode([Cook].self, from: data)
+            let plans = try JSONDecoder().decode([CookPlan].self, from: data)
             completion(plans, nil)
         } catch {
             completion(nil, error)
