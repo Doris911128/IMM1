@@ -62,15 +62,21 @@ struct CookView: View {
                             Text("沒有計畫").font(.subheadline).foregroundColor(.gray)
                         } else {
                             ForEach(dayPlans, id: \.P_ID) { plan in
-                                Text(plan.Dis_name).font(.subheadline)
+                                VStack {
+                                    RecipeBlock(
+                                        imageName: plan.Dis_name, // Assuming Dis_name is the image name, adjust if necessary
+                                        title: plan.Dis_name,
+                                        U_ID: plan.U_ID,
+                                        Dis_ID: plan.Dis_ID
+                                    )
+                                }
+                            }
+                            .onDelete { indexSet in
+                                for index in indexSet {
+                                    plans.removeAll { $0.P_ID == dayPlans[index].P_ID }
+                                }
                             }
                         }
-                    }
-                }
-                .onDelete { indexSet in
-                    for index in indexSet {
-                        let day = computeDays()[index].dateString
-                        plans.removeAll { $0.P_DT == day }
                     }
                 }
             }
@@ -88,10 +94,10 @@ struct CookView: View {
             .scrollIndicators(.hidden)
             .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
             
-            NavigationLink(destination: NowView()) {
-                Text("立即煮")
-                    .padding()
-            }
+//            NavigationLink(destination: NowView()) {
+//                Text("立即煮")
+//                    .padding()
+//            }
         }
     }
 
@@ -99,8 +105,9 @@ struct CookView: View {
         var days: [Day] = []
         for dayIndex in 0..<7 {
             if let targetDate = Calendar.current.date(byAdding: .day, value: dayIndex, to: Date()) {
-                let targetDateComponents = Calendar.current.dateComponents([.month, .day], from: targetDate)
-                let dateString = "\(targetDateComponents.month ?? 0)/\(targetDateComponents.day ?? 0)"
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                let dateString = formatter.string(from: targetDate)
                 
                 let day = Day(dateString: dateString, dayIndex: dayIndex)
                 days.append(day)

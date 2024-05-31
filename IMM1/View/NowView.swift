@@ -63,8 +63,8 @@ struct NowView: View
                                 NavigationLink(destination: MenuView(Dis_ID: selectedDish.Dis_ID)) 
                                 {
                                     RecipeBlock(
-                                        imageName: selectedDish.D_image ?? "",
-                                        title: selectedDish.Dis_Name ?? "",
+                                        imageName: selectedDish.D_image ,
+                                        title: selectedDish.Dis_Name ,
                                         U_ID: U_ID,
                                         Dis_ID: "\(selectedDish.Dis_ID)" // 确保 Dis_ID 是字符串
                                     )

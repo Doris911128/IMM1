@@ -39,15 +39,22 @@ struct CookingAiView: View
     }
 }
 
-struct CardView: View {
+struct CardView: View
+{
     let dish: Dishes
     @State private var cookSteps: [String] = ["載入中..."]
 
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 20) {
-                ForEach(cookSteps.indices, id: \.self) { index in
-                    VStack(alignment: .leading) {
+    var body: some View
+    {
+        ScrollView(.horizontal, showsIndicators: false)
+        {
+            HStack(spacing: 20)
+            {
+                ForEach(cookSteps.indices, id: \.self)
+                { index in
+                    VStack(alignment: .leading)
+                    {
+                        //圖片
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
                             .frame(height: 150)
@@ -76,25 +83,34 @@ struct CardView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .onAppear {
+            .onAppear
+            {
                 loadCookDetails(from: dish.D_Cook)
             }
         }
     }
 
-    func loadCookDetails(from urlString: String) {
-        guard let url = URL(string: urlString) else {
+    func loadCookDetails(from urlString: String)
+    {
+        guard let url = URL(string: urlString)
+        else
+        {
             cookSteps = ["無效的URL"]
             return
         }
         
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data, let details = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async {
+        let task = URLSession.shared.dataTask(with: url)
+        { data, response, error in
+            if let data = data, let details = String(data: data, encoding: .utf8)
+            {
+                DispatchQueue.main.async
+                {
                     cookSteps = splitSteps(details)
                 }
-            } else {
-                DispatchQueue.main.async {
+            } else
+            {
+                DispatchQueue.main.async
+                {
                     cookSteps = ["無法載入資料"]
                 }
             }
@@ -102,36 +118,38 @@ struct CardView: View {
         task.resume()
     }
 
-    func splitSteps(_ text: String) -> [String] {
-        // 使用正則表達式來分割步驟
-        let pattern = "(?<=\\d\\.\\s)"
-        let regex = try? NSRegularExpression(pattern: pattern, options: [])
-        let range = NSRange(text.startIndex..<text.endIndex, in: text)
-        
-        var results: [String] = []
-        var lastEndIndex = text.startIndex
-        
-        regex?.enumerateMatches(in: text, options: [], range: range) { match, _, _ in
-            if let match = match {
-                let stepRange = Range(match.range, in: text)!
-                if lastEndIndex < stepRange.lowerBound {
-                    let stepText = String(text[lastEndIndex..<stepRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !stepText.isEmpty {
-                        results.append(stepText)
+    func splitSteps(_ text: String) -> [String]
+    {
+            // 使用行分割方法
+            var steps = text.split(separator: "\n")
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+
+            // 確保每步驟是以數字和句點開頭
+            var stepIndex = 1
+            var result: [String] = []
+            var currentStep = ""
+
+            for step in steps {
+                if step.hasPrefix("\(stepIndex).")
+                {
+                    if !currentStep.isEmpty
+                    {
+                        result.append(currentStep.trimmingCharacters(in: .whitespacesAndNewlines))
                     }
-                    lastEndIndex = stepRange.lowerBound
+                    currentStep = step
+                    stepIndex += 1
+                } else
+                {
+                    currentStep += " \(step)"
                 }
             }
+           
+        if !currentStep.isEmpty
+        {
+            result.append(currentStep.trimmingCharacters(in: .whitespacesAndNewlines))
         }
-        
-        if lastEndIndex < text.endIndex {
-            let stepText = String(text[lastEndIndex..<text.endIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
-            if !stepText.isEmpty {
-                results.append(stepText)
-            }
-        }
-        
-        return results
+            return result
     }
 }
 
