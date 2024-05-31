@@ -26,9 +26,7 @@ struct PastRecipesView: View {
                 
                 ScrollView(showsIndicators: false) {
                     LazyVStack {
-                        ForEach(dishesData.filter {
-                            searchKeyword.isEmpty || $0.Dis_Name.contains(searchKeyword)
-                        }, id: \.Dis_ID) { dish in
+                        ForEach(filteredDishesData(), id: \.Dis_ID) { dish in
                             NavigationLink(destination: Recipe_IP_View(Dis_ID: dish.Dis_ID)) {
                                 RecipeBlock(
                                     imageName: dish.D_image,
@@ -52,6 +50,7 @@ struct PastRecipesView: View {
         }
     }
     
+    // 加载菜单数据
     func loadMenuData(keyword: String) {
         let urlString = "http://163.17.9.107/food/Dishes.php?keyword=\(keyword)"
         print("正在從此URL請求數據: \(urlString)")
@@ -94,6 +93,29 @@ struct PastRecipesView: View {
                 }
             }
         }.resume()
+    }
+    
+    // 根据搜索关键字过滤菜品数据
+    func filteredDishesData() -> [Dishes] {
+        if searchKeyword.isEmpty {
+            return dishesData
+        } else {
+            let resultDisIDs = findRecipesByIngredientName(searchKeyword)
+            return dishesData.filter { resultDisIDs.contains($0.Dis_ID) }
+        }
+    }
+    
+    // 根据食材名称查找对应的菜品ID，支持部分匹配
+    func findRecipesByIngredientName(_ ingredientName: String) -> [Int] {
+        var resultDisIDs: [Int] = []
+
+        for dish in dishesData {
+            if dish.foods.contains(where: { $0.F_Name.contains(ingredientName) }) {
+                resultDisIDs.append(dish.Dis_ID)
+            }
+        }
+        
+        return resultDisIDs
     }
 }
 
