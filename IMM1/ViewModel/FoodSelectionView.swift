@@ -2,7 +2,7 @@
 //  FoodSelectionView.swift
 //  IM110CYUT
 //
-//  Created by Ｍac on 2023/12/10.
+//  Created by ï¼­ac on 2023/12/10.
 //
 
 import SwiftUI
@@ -14,24 +14,18 @@ extension Dishes {
 }
 
 struct FoodSelectionView: View {
-    
     @Binding var isShowingDetail: Bool
     @Binding var editedPlan: String
-    var foodOptions: [FoodOption] = []
+    @Binding var foodOptions: [FoodOption]
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         VStack {
-            Text("選擇一個食物：")
-                .font(.title)
-                .padding()
-
             ScrollView {
                 ForEach(foodOptions, id: \.name) { foodOption in
                     Button(action: {
                         self.editedPlan = foodOption.name
                         self.isShowingDetail.toggle()
-                        self.presentationMode.wrappedValue.dismiss()
                     }) {
                         ZStack {
                             Rectangle()
@@ -74,6 +68,8 @@ struct FoodSelectionView: View {
             .scrollIndicators(.hidden)
         }
         .padding(20)
+        .onAppear {
+            print("Food options: \(foodOptions)")
+        }
     }
-  
 }
