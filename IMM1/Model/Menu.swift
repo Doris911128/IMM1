@@ -14,12 +14,12 @@ struct Dishes: Codable
 {
     let Dis_ID: Int //ID
     let Dis_Name: String //名稱
-    let D_Cook: String //煮法
+    let D_Cook: String? //煮法
     let D_image: String //照片
-    let D_Video: String //影片
+    let D_Video: String? //影片
     var category: String? // MARK: 由EditPlanView.swift 中更新分類
-    var foods: [Food]
-    var amounts: [Amount]
+    var foods: [Food]?
+    var amounts: [Amount]?
     
     // 添加初始化方法，接受传递的 Dis_ID
     init(
@@ -100,3 +100,4 @@ struct Amount: Codable
 //    Amount(A_ID:2,Dis_ID: 1,F_ID: 2,A_Amount:2),
 //    Amount(A_ID:3,Dis_ID: 1,F_ID: 7,A_Amount:0.3)
 //]
+

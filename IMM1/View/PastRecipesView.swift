@@ -110,15 +110,17 @@ struct PastRecipesView: View {
         var resultDisIDs: [Int] = []
 
         for dish in dishesData {
-            if dish.foods.contains(where: { $0.F_Name.contains(ingredientName) }) {
+            if let foods = dish.foods, foods.contains(where: { $0.F_Name.contains(ingredientName) }) {
                 resultDisIDs.append(dish.Dis_ID)
             }
         }
         
         return resultDisIDs
     }
+
 }
 
 #Preview {
     PastRecipesView()
 }
+

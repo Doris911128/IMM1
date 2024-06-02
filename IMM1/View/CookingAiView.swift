@@ -30,7 +30,7 @@ struct CookingAiView: View
             
             VStack(spacing: 0)
             {
-                HStack 
+                HStack
                 {
                     Text(dishesData.first?.Dis_Name ?? "Unknown食譜名稱")
                         .font(.largeTitle)
@@ -170,7 +170,7 @@ struct CardView: View
         }
     }
     
-    var body: some View 
+    var body: some View
     {
         VStack
         {
@@ -233,7 +233,14 @@ struct CardView: View
                 .padding(20)
                 .onAppear
                 {
-                    loadCookDetails(from: dish.D_Cook)
+                    if let cookDetails = dish.D_Cook
+                    {
+                        loadCookDetails(from: cookDetails)
+                    }
+                    else
+                    {
+                        print("D_Cook is nil")
+                    }
                 }
             }
         }
@@ -244,3 +251,4 @@ struct CardView: View
 {
     CookingAiView()
 }
+

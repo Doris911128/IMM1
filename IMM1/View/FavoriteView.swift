@@ -1,4 +1,3 @@
-//
 //  Favorite.swift
 //
 //  Created on 2023/8/18.
@@ -7,15 +6,44 @@
 // MARK: 最愛View
 import SwiftUI
 
-struct FavoriteView: View 
+struct FavoriteView: View
 {
-    @AppStorage("U_ID") private var U_ID: String = "" // 从 AppStorage 中读取 U_ID
-    
     @State private var dishesData: [Dishes] = []
-    @State private var selectedDish: Dishes? = nil  // 用於存儲用戶選擇的菜品資訊
-    
-    //let U_ID: Int //用於添加我的最愛
-    //let Dis_ID: Int //用於添加我的最愛
+    @State private var selectedDish: Dishes? = nil
+
+    func loadUFavData()
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/Favorite.php")
+        else
+        {
+            print("生成的 URL 無效")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.addValue("application/json", forHTTPHeaderField: "Accept")
+        
+        URLSession.shared.dataTask(with: request)
+        { data, response, error in
+            if let data = data
+            {
+                do
+                {
+                    let decoder = JSONDecoder()
+                    let dishes = try decoder.decode([Dishes].self, from: data)
+                    DispatchQueue.main.async
+                    {
+                        self.dishesData = dishes
+                    }
+                }
+                catch
+                {
+                    print("Error decoding JSON: \(error)")
+                }
+            }
+        }.resume()
+    }
     
     var body: some View
     {
@@ -28,21 +56,20 @@ struct FavoriteView: View
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 20)
-
-                //MARK: 料理顯示區
+                
                 ScrollView(showsIndicators: false)
                 {
-                    LazyVStack 
+                    LazyVStack
                     {
                         ForEach(dishesData, id: \.Dis_ID)
                         { dish in
                             NavigationLink(destination: Recipe_IP_View(Dis_ID: dish.Dis_ID))
                             {
                                 RecipeBlock(
-                                    imageName: dish.D_image,
+                                    imageName: dish.D_image ?? "",
                                     title: dish.Dis_Name,
-                                    U_ID: U_ID,
-                                    Dis_ID: "\(dish.Dis_ID)" // 确保 Dis_ID 是字符串
+                                    U_ID: "", // 假設 U_ID 不再需要傳遞
+                                    Dis_ID: "\(dish.Dis_ID)"
                                 )
                             }
                             .padding(.bottom, 10)
@@ -50,54 +77,17 @@ struct FavoriteView: View
                     }
                 }
             }
-            .onAppear 
+            .onAppear
             {
-                DishService.loadDishes
-                { dishes in
-                    self.dishesData = dishes
-                }
+                loadUFavData()
             }
         }
     }
-//    var body: some View
-//    {
-//        ScrollView 
-//        {
-//            VStack(spacing: 20) 
-//            {
-//                ForEach(0..<10) 
-//                { _ in
-//                    VStack(alignment: .leading)
-//                    {
-//                        HStack {
-//                            Circle() //頭像
-//                                .fill(Color(.systemGray3))
-//                                .frame(width: 50)
-//                            Text("收藏料理") //收藏料理
-//                                .font(.title3)
-//                                .foregroundColor(.black)
-//                        }
-//                        Text("料理作法") //料理作法
-//                            .font(.title2)
-//                            .foregroundColor(.black)
-//                            .padding(10)
-//                            .frame(maxWidth: .infinity)
-//                            .background(Color(.systemGray3))
-//                            .cornerRadius(30)
-//                    }
-//                }
-//            }
-//            .padding()
-//        }
-//        .scrollIndicators(.hidden)
-//    }
-    
-    
 }
 
-struct FavoriteView_Previews: PreviewProvider 
+struct FavoriteView_Previews: PreviewProvider
 {
-    static var previews: some View 
+    static var previews: some View
     {
         ContentView()
     }

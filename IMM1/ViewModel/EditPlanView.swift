@@ -51,12 +51,9 @@ struct EditPlanView: View {
     @State private var currentCategoryIndex: Int? = nil
     @State private var isSaveAlertShowing = false
     @State private var isSearchingByIngredient = false
-
-    @Environment(\.presentationMode) var presentationMode
     
-    // Add search result state
     @State private var searchResults: [FoodOption] = []
-
+    @Environment(\.presentationMode) var presentationMode
     // 選擇食物的函數
     func selectFood(food: Dishes) {
         selectedFoodData = food
@@ -65,7 +62,6 @@ struct EditPlanView: View {
             show1[categoryIndex] = false // 隱藏分類介面
         }
     }
-    
     // Function to fetch food options from the server
     func fetchFoodOptions() {
         if let url = URL(string: "http://163.17.9.107/food/Dishes.php") {
@@ -173,20 +169,29 @@ struct EditPlanView: View {
 
     @ViewBuilder
     private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int) -> some View {
+        
         CustomButton(imageName: imageName, buttonText: buttonText) {
             currentCategoryIndex = categoryIndex
             isShowingDetail.wrappedValue.toggle()
+            
         }
         .sheet(isPresented: isShowingDetail) {
-            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image)!)
-            }))
+                    FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
+                        
+                        FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image)!)
+                    }))
+            .onDisappear {
+                if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                    self.selectedFoodData = selectedFood
+                    self.showAlert = true
+                }
+            }
         }
     }
-
-    func updatePlanOnServer(pID: String, disID: String) {
-        guard let url = URL(string: "http://163.17.9.107/food/UpdatePlan.php") else {
-            print("無效的 URL")
+//幫我寫一下搜尋功能，在EditPlanView中進行搜尋食物，並利用FoodSelectionView顯示搜尋結果
+    func updatePlanOnServer(pID: String?, disID: String) {
+        guard let url = URL(string: "http://163.17.9.107/food/Planupdate.php") else {
+            print("Invalid URL")
             return
         }
 
@@ -194,18 +199,26 @@ struct EditPlanView: View {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
-        let postData = "P_ID=\(pID)&Dis_ID=\(disID)"
-        print("POST 資料：\(postData)") // 確認要發送的資料
+        // 構造 POST 數據
+        var postData = "Dis_ID=\(disID)"
+        if let pID = pID {
+            postData += "&P_ID=\(pID)"
+        } else {
+            print("pID is nil, skipping update operation")
+            return
+        }
+
         request.httpBody = postData.data(using: .utf8)
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("錯誤：\(error)")
+                print("Error: \(error)")
                 return
             }
 
+            // 解析響應
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                print("回應：\(responseString)")
+                print("Response: \(responseString)")
                 if responseString.contains("成功") {
                     self.isNewPlan = false
                 }
@@ -232,6 +245,7 @@ struct EditPlanView: View {
                 return
             }
 
+            // 解析響應
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
                 if responseString.contains("計劃已成功保存到數據庫") {
                     completion(true, nil)
@@ -243,44 +257,46 @@ struct EditPlanView: View {
             }
         }.resume()
     }
+
     struct CustomToggle: View {
-        @Binding var isOn: Bool
-        
-        var body: some View {
-            Button(action: {
-                self.isOn.toggle()
-            }) {
-                VStack {
-                    Image(systemName: isOn ? "checkmark.square.fill" : "square")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                    Text(isOn ? "以食材搜索" : "以食物搜索")
-                        .font(.footnote)
-                }
-                .foregroundColor(isOn ? .orange : .gray)
-            }
-        }
-    }
+           @Binding var isOn: Bool
+           
+           var body: some View {
+               Button(action: {
+                   self.isOn.toggle()
+               }) {
+                   VStack {
+                       Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                           .resizable()
+                           .frame(width: 20, height: 20)
+                       Text(isOn ? "以食材搜索" : "以菜名搜索")
+                           .font(.footnote)
+                   }
+                   .foregroundColor(isOn ? .orange : .gray)
+               }
+           }
+       }
 
     func performSearch() {
-        if isSearchingByIngredient {
-            // 根據食材進行搜索
-            let searchTextLowercased = searchText.lowercased()
-            searchResults = foodDataFromServer
-                .filter { $0.foods.contains { $0.F_Name.lowercased().contains(searchTextLowercased) } }
-                .map { $0.toFoodOption() }
-            isShowingDetail = true
-        } else {
-            // 根據食物名稱進行搜索
-            let searchTextLowercased = searchText.lowercased()
-            searchResults = foodDataFromServer
-                .filter { $0.Dis_Name.lowercased().contains(searchTextLowercased) }
-                .map { $0.toFoodOption() }
-            isShowingDetail = true
+            if isSearchingByIngredient {
+                // 根據食材進行搜索
+                let searchTextLowercased = searchText.lowercased()
+                searchResults = foodDataFromServer
+                    .filter { dish in
+                        dish.foods?.contains { $0.F_Name.lowercased().contains(searchTextLowercased) } ?? false
+                    }
+                    .map { $0.toFoodOption() }
+                isShowingDetail = true
+            } else {
+                // 根據食物名稱進行搜索
+                let searchTextLowercased = searchText.lowercased()
+                searchResults = foodDataFromServer
+                    .filter { $0.Dis_Name.lowercased().contains(searchTextLowercased) }
+                    .map { $0.toFoodOption() }
+                isShowingDetail = true
+            }
         }
-    }
-
-
+    
     var body: some View {
         VStack {
         }
@@ -290,29 +306,32 @@ struct EditPlanView: View {
                 VStack(spacing:5) {
                     HStack(spacing:-20) {
                         TextField("搜尋食譜.....", text: $searchText, onCommit: {
-                            // 執行搜尋操作
-                            performSearch()
-                        })
-                        .padding()
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                                    // 執行搜尋操作
+                                                    performSearch()
+                                                })
+                                                .padding()
+                                                .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                        Button(action: {
-                            // 執行搜尋操作
-                            performSearch()
-                        }) {
-                            Image(systemName: "magnifyingglass")
-                                .padding()
-                        }
-                        CustomToggle(isOn: $isSearchingByIngredient)
-                            .padding()
+                                                Button(action: {
+                                                    // 執行搜尋操作
+                                                    performSearch()
+                                                }) {
+                                                    Image(systemName: "magnifyingglass")
+                                                        .padding()
+                                                }
+                                                CustomToggle(isOn: $isSearchingByIngredient)
+                                                    .padding()
 
-                    }
-                    .padding(.top, 10)
+                                            }
+                                            .padding(.top, 10)
+
                     
                     .onAppear {
                         fetchFoodOptions()
                     }
        
+                  
+                    // 在分類列表中使用 TempView 並傳遞分類索引
                     let name=["懶人","減肥","省錢","放縱","養生","今日推薦","聽天由命"]
                     let show2=[foodOptions1,foodOptions2,foodOptions3,foodOptions4,foodOptions5,foodOptions6]
                     VStack(spacing: 30) {
@@ -358,6 +377,19 @@ struct EditPlanView: View {
         }
         .sheet(isPresented: $isShowingDetail) {
             FoodSelectionView(isShowingDetail: $isShowingDetail, editedPlan: $editedPlan, foodOptions: $searchResults)
+                .onDisappear {
+                    if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                        // 選擇了食物，準備顯示警示框
+                        self.selectedFoodData = selectedFood
+                        self.showAlert = true
+                    } else {
+                        // 沒有選擇食物，不顯示警示框
+                        self.showAlert = false
+                    }
+                }
         }
+    
+
+               
     }
 }
