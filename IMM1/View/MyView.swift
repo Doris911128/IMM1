@@ -373,41 +373,51 @@ struct MyView: View
     }
 }
 
-struct NameSheetView: View
-{
+struct NameSheetView: View {
     @Binding var name: String
     @Binding var isPresented: Bool
     
-    @State private var newName = ""
+    @State private var newU_Name = ""
     
-    var body: some View
-    {
-        NavigationStack
-        {
-            Form
-            {
-                Section(header: Text("更改姓名"))
-                {
-                    TextField("新的姓名", text: $newName)
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("更改姓名")) {
+                    TextField("新的姓名", text: $newU_Name)
                 }
             }
             .navigationBarItems(
-                leading: Button("取消")
-                {
+                leading: Button("取消") {
                     isPresented = false
                 },
-                trailing: Button("保存")
-                {
-//                    //保存新的姓名到 RealTime，並刪除舊信息
-//                    realTime.updateUserNameAndDelete(id:"", U_Name: newName)
-//                    {
-//                        self.U_Name=self.newName
-//                    }
+                trailing: Button("保存") {
+                    guard let url = URL(string: "http://163.17.9.107/food/UpdateUsername.php") else {
+                        print("Invalid URL")
+                        return
+                    }
+                    
+                    let parameters = "newU_Name=\(newU_Name)"
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    request.httpBody = parameters.data(using: .utf8)
+                    
+                    URLSession.shared.dataTask(with: request) { data, response, error in
+                        guard let _ = data, error == nil else {
+                            print("Error: \(error?.localizedDescription ?? "Unknown error")")
+                            return
+                        }
+                        
+                        DispatchQueue.main.async {
+                            self.name = self.newU_Name
+                            self.isPresented = false
+                        }
+                    }.resume()
                 }
             )
         }
     }
 }
+
 
 struct MyView_Previews: PreviewProvider {
     static var previews: some View {
