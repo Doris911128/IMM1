@@ -7,7 +7,6 @@
 import SwiftUI
 import Foundation
 
-//MARK: 單一食譜顯示區塊
 struct RecipeBlock: View
 {
     let D_image: String
@@ -15,9 +14,9 @@ struct RecipeBlock: View
     let U_ID: String // 用於添加我的最愛
     let Dis_ID: String // 用於添加我的最愛
     @State private var isFavorited: Bool
-
-    // 初始化器访问级别修改为 internal 或 public
-    init(imageName: String, title: String, U_ID: String, Dis_ID: String, isFavorited: Bool = false) {
+    
+    init(imageName: String, title: String, U_ID: String, Dis_ID: String, isFavorited: Bool = false) 
+    {
         self.D_image = imageName
         self.Dis_Name = title
         self.U_ID = U_ID
@@ -30,12 +29,11 @@ struct RecipeBlock: View
         RoundedRectangle(cornerRadius: 10)
             .fill(Color(red: 0.961, green: 0.804, blue: 0.576))
             .frame(width: 330, height: 250)
-            .overlay
+            .overlay 
         {
             VStack
             {
-                AsyncImage(url: URL(string: D_image))
-                { phase in
+                AsyncImage(url: URL(string: D_image)) { phase in
                     if let image = phase.image
                     {
                         image.resizable()
@@ -65,11 +63,11 @@ struct RecipeBlock: View
                         .colorMultiply(.red.opacity(0.6))
                         .onTapGesture
                     {
+                        
                         withAnimation(.easeInOut.speed(3))
                         {
                             self.isFavorited.toggle()
-                            toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited)
-                            { result in
+                            toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
                                 switch result
                                 {
                                 case .success(let responseString):
