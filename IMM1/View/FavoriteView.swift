@@ -1,4 +1,5 @@
-//  Favorite.swift
+//想要載入中轉圈圈動畫
+//Favorite.swift
 //
 //  Created on 2023/8/18.
 //
@@ -10,6 +11,8 @@ struct FavoriteView: View
 {
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes? = nil
+    @State private var isLoading: Bool = true // 加载状态
+    @State private var loadingError: String? = nil // 加載错误信息
 
     func loadUFavData()
     {
@@ -17,6 +20,8 @@ struct FavoriteView: View
         else
         {
             print("生成的 URL 無效")
+            self.isLoading = false // 加载失败
+            self.loadingError = "無效的URL"
             return
         }
         
@@ -26,6 +31,30 @@ struct FavoriteView: View
         
         URLSession.shared.dataTask(with: request)
         { data, response, error in
+            DispatchQueue.main.async
+            {
+                self.isLoading = false // 数据加载完成
+            }
+
+            if let error = error
+            {
+                DispatchQueue.main.async
+                {
+                    self.loadingError = error.localizedDescription
+                }
+                return
+            }
+            
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200
+            else
+            {
+                DispatchQueue.main.async
+                {
+                    self.loadingError = "伺服器錯誤"
+                }
+                return
+            }
+
             if let data = data
             {
                 do
@@ -39,7 +68,10 @@ struct FavoriteView: View
                 }
                 catch
                 {
-                    print("Error decoding JSON: \(error)")
+                    DispatchQueue.main.async
+                    {
+                        self.loadingError = "JSON解析錯誤: \(error.localizedDescription)"
+                    }
                 }
             }
         }.resume()
@@ -56,23 +88,69 @@ struct FavoriteView: View
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 20)
-                
-                ScrollView(showsIndicators: false)
+
+                if isLoading
                 {
-                    LazyVStack
+                    //MARK: 想要載入中轉圈圈動畫
+                    VStack
                     {
-                        ForEach(dishesData, id: \.Dis_ID)
-                        { dish in
-                            NavigationLink(destination: Recipe_IP_View(Dis_ID: dish.Dis_ID))
-                            {
-                                RecipeBlock(
-                                    imageName: dish.D_image ?? "",
-                                    title: dish.Dis_Name,
-                                    U_ID: "", // 假設 U_ID 不再需要傳遞
-                                    Dis_ID: "\(dish.Dis_ID)"
-                                )
+                        Spacer()
+                        ProgressView("載入中...")
+                            .progressViewStyle(CircularProgressViewStyle())
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                else if let error = loadingError
+                {
+                    VStack
+                    {
+                        Text("載入失敗: \(error)")
+                            .font(.body)
+                            .foregroundColor(.red)
+                        Spacer().frame(height: 120)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                }
+                else if dishesData.isEmpty
+                {
+                    VStack
+                    {
+                        Text("暫未新增任何親最愛食譜")
+                            .font(.body)
+                            .foregroundColor(.gray)
+                        
+                        NavigationLink(destination: PastRecipesView())
+                        {
+                            Text("前往“過往食譜”添加更多＋＋")
+                                .font(.body)
+                                .foregroundColor(.blue)
+                                .underline()
+                        }
+                        Spacer().frame(height: 120)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                }
+                else
+                {
+                    ScrollView(showsIndicators: false)
+                    {
+                        LazyVStack
+                        {
+                            ForEach(dishesData, id: \.Dis_ID)
+                            { dish in
+                                NavigationLink(destination: Recipe_IP_View(Dis_ID: dish.Dis_ID))
+                                {
+                                    RecipeBlock(
+                                        imageName: dish.D_image ?? "",
+                                        title: dish.Dis_Name,
+                                        U_ID: "", // 假設 U_ID 不再需要傳遞
+                                        Dis_ID: "\(dish.Dis_ID)",
+                                        isFavorited: true // 將 isFavorited 設置為 true
+                                    )
+                                }
+                                .padding(.bottom, 10)
                             }
-                            .padding(.bottom, 10)
                         }
                     }
                 }

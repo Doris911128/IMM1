@@ -1,4 +1,4 @@
-//
+// 按下愛心食譜匯入資料庫暫時未成功！
 //  View.swift
 //  Graduation_Project
 //
@@ -50,47 +50,47 @@ extension View
     }
     
     // MARK: 愛心toggle
-    func toggleFavorite(U_ID: String, Dis_ID: String, isFavorited: Bool, completion: @escaping (Result<String, Error>) -> Void)
-    {
-        guard let url = URL(string: "http://163.17.9.107/food/Favorite.php")
-        else
-        {
+    func toggleFavorite(U_ID: String, Dis_ID: String, isFavorited: Bool, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/Favorite.php") else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        let bodyData = "Dis_ID=\(Dis_ID)&isFavorited=\(isFavorited)"
+        let bodyData = "Dis_ID=\(Dis_ID)&isFavorited=\(isFavorited)&U_ID=\(U_ID)" // 確保U_ID也被傳遞
         request.httpBody = bodyData.data(using: .utf8)
+        request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type") // 確保Content-Type頭被設置為application/x-www-form-urlencoded
         
-        URLSession.shared.dataTask(with: request)
-        { data, response, error in
-            if let error = error
-            {
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
                 completion(.failure(error))
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200
-            else
-            {
+            guard let httpResponse = response as? HTTPURLResponse else {
                 let statusError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
                 completion(.failure(statusError))
                 return
             }
             
-            if let data = data, let responseString = String(data: data, encoding: .utf8)
-            {
-                completion(.success(responseString))
-            }
-            else
-            {
-                let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
-                completion(.failure(dataError))
+            if httpResponse.statusCode == 200 {
+                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    completion(.success(responseString))
+                } else {
+                    let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
+                    completion(.failure(dataError))
+                }
+            } else {
+                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    print("Server error response: \(responseString)")
+                }
+                let serverError = NSError(domain: "", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Server error"])
+                completion(.failure(serverError))
             }
         }.resume()
     }
+
 
     // 檢查菜品是否已被收藏的方法
     func checkIfFavorited(U_ID: String, Dis_ID: String, completion: @escaping (Result<Bool, Error>) -> Void)

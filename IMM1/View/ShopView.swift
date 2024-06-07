@@ -1,56 +1,56 @@
+//ShopView
 import SwiftUI
 import Foundation
 
-// 修改 RecipeWrapper，添加 isSelected 屬性
-struct RecipeWrapper: Codable {
-    var sqlResult: Ingredient
-    var shopPlan: ShopPlan? // 將 shopPlan 改為可選的
-    var isSelected: Bool = false // 新添加的 isSelected 屬性
+// 定义模型结构体
+struct ResponseDa: Codable {
+    var data: [Ingredient]
+    var shopPlanData: [ShopPlan]
 
     enum CodingKeys: String, CodingKey {
-        case sqlResult = "sql_result"
-        case shopPlan = "shop_plan"
-    }
-
-    var planAmount: String? {
-        return shopPlan?.amount
+        case data
+        case shopPlanData = "shop_plan_data"
     }
 }
 
 struct ShopPlan: Codable {
+    var uid: String
+    var fid: String // 将这里的类型改为 String
     var amount: String
 
     enum CodingKeys: String, CodingKey {
+        case uid = "U_ID"
+        case fid = "F_ID"
         case amount = "SP_Amount"
     }
 }
 
 struct Ingredient: Identifiable, Codable {
     let id = UUID()
+    let pID: String
     let uid: String
-    var pID: String?
-    var fid: Int
-    var disID: Int?
+    let fid: Int
+    let disID: Int
     var amount: Int
-    var name: String
-    var unit: String
-    var stock: Int?
-    var P_DT: String? // 添加日期屬性
+    let name: String
+    let unit: String
+    var stock: Int
+    let P_DT: String
 
     enum CodingKeys: String, CodingKey {
-        case uid = "U_ID"
         case pID = "P_ID"
+        case uid = "U_ID"
         case fid = "F_ID"
         case disID = "Dis_ID"
         case amount = "A_Amount"
         case name = "F_Name"
         case unit = "F_Unit"
         case stock = "SK_SUM"
-        case P_DT = "P_DT" // 指定日期屬性的 CodingKey
+        case P_DT = "P_DT"
     }
 }
 
-// Network Manager
+// 定义网络管理器
 class ShopNetworkManager {
     func fetchAndAggregateRecipes(completion: @escaping (Result<[RecipeWrapper], Error>) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/Shop.php") else {
@@ -69,19 +69,27 @@ class ShopNetworkManager {
                 return
             }
 
-            // Debugging: print the received JSON data as a string
             print(String(data: data, encoding: .utf8) ?? "Data could not be printed")
 
             do {
-                var recipeWrappers = try JSONDecoder().decode([RecipeWrapper].self, from: data)
+                let responseData = try JSONDecoder().decode(ResponseDa.self, from: data)
+                
+                // 将原始数据转换为RecipeWrapper
+                var recipeWrappers: [RecipeWrapper] = responseData.data.map { ingredient in
+                    let shopPlan = responseData.shopPlanData.first { $0.fid == String(ingredient.fid) && $0.uid == ingredient.uid }
+                    return RecipeWrapper(sqlResult: ingredient, shopPlan: shopPlan)
+                }
 
-                // Aggregate recipes with the same name
+                // 打印解析后的数据以进行调试
+                for wrapper in recipeWrappers {
+                    print("Ingredient: \(wrapper.sqlResult.name), Unit: \(wrapper.sqlResult.unit), Plan Amount: \(wrapper.planAmount ?? "N/A")")
+                }
+
                 var aggregatedRecipes: [String: RecipeWrapper] = [:]
 
                 for wrapper in recipeWrappers {
                     let name = wrapper.sqlResult.name
                     if var existingWrapper = aggregatedRecipes[name] {
-                        // Update the amount and stock
                         existingWrapper.sqlResult.amount += wrapper.sqlResult.amount
                         existingWrapper.sqlResult.stock = (existingWrapper.sqlResult.stock ?? 0) + (wrapper.sqlResult.stock ?? 0)
                         aggregatedRecipes[name] = existingWrapper
@@ -90,7 +98,6 @@ class ShopNetworkManager {
                     }
                 }
 
-                // Convert to an array
                 let aggregatedArray = Array(aggregatedRecipes.values)
                 completion(.success(aggregatedArray))
             } catch {
@@ -100,23 +107,32 @@ class ShopNetworkManager {
     }
 }
 
+struct RecipeWrapper: Codable {
+    var sqlResult: Ingredient
+    var shopPlan: ShopPlan?
+    var isSelected: Bool = false
+
+    var planAmount: String? {
+        return shopPlan?.amount
+    }
+}
+
+
+// 定义视图
 struct RecipeView: View {
     @Binding var recipes: [RecipeWrapper]
     @State private var hiddenIngredients: Set<UUID> = []
     var onDeleteIngredient: (Ingredient) -> Void
-    var onIngredientSelection: (Int, String, Int) -> Void // 修改回調函數的參數
-
+    var onIngredientSelection: (Int, String, Int) -> Void
     @Binding var selectedIngredients: [Ingredient]
-    
-    // 使用字典来存储每个食材的输入值
     @State private var quantityInputs: [UUID: String] = [:]
 
     init(recipes: Binding<[RecipeWrapper]>, onDeleteIngredient: @escaping (Ingredient) -> Void, selectedIngredients: Binding<[Ingredient]>, onIngredientSelection: @escaping (Int, String, Int) -> Void) {
         self._recipes = recipes
         self.onDeleteIngredient = onDeleteIngredient
         self._hiddenIngredients = State(initialValue: [])
-        self._selectedIngredients = selectedIngredients // 將 selectedIngredients 綁定到屬性
-        self.onIngredientSelection = onIngredientSelection // 更新回調函數的參數
+        self._selectedIngredients = selectedIngredients
+        self.onIngredientSelection = onIngredientSelection
     }
 
     var body: some View {
@@ -134,22 +150,20 @@ struct RecipeView: View {
                                     Text(" \(wrapper.sqlResult.name)")
                                     HStack {
                                         Text("採購數量: \(wrapper.planAmount ?? "0")\(wrapper.sqlResult.unit)")
-                                            .padding(.trailing, -50) // 添加额外的右侧间距
+                                            .padding(.trailing, -50)
                                     }
                                 }
                                 .padding(.vertical, 8)
                                 Spacer()
-                                    .padding(.trailing, -10) // 添加右侧 padding
+                                    .padding(.trailing, -10)
                                 TextField("數量", text: Binding(
                                     get: {
-                                        // 当用户输入时，直接返回输入的值
                                         self.quantityInputs[wrapper.sqlResult.id] ?? (wrapper.planAmount ?? "")
                                     },
                                     set: { newValue in
-                                        // 当用户输入时，直接更新 quantityInputs
                                         self.quantityInputs[wrapper.sqlResult.id] = newValue
-                                }))
-
+                                    }
+                                ))
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(width: 80)
                                 .keyboardType(.numberPad)
@@ -157,7 +171,7 @@ struct RecipeView: View {
                                     .foregroundColor(wrapper.isSelected ? .green : .orange)
                                     .onTapGesture {
                                         toggleIngredientSelection(wrapper)
-                                }
+                                    }
                             }
                         }
                     }
@@ -169,35 +183,22 @@ struct RecipeView: View {
     }
 
     private func toggleIngredientSelection(_ wrapper: RecipeWrapper) {
-             // 更新 isSelected 属性的逻辑...
-             if let index = recipes.firstIndex(where: { $0.sqlResult.id == wrapper.sqlResult.id }) {
-                 // 获取默认值...
-                 let defaultQuantity = wrapper.planAmount ?? ""
-                 
-                 // 直接从 quantityInputs 中获取值，如果没有则使用默认值...
-                 let quantity = Int(quantityInputs[wrapper.sqlResult.id] ?? defaultQuantity) ?? 0
-                 recipes[index].sqlResult.amount = quantity
-                 
-                 recipes[index].isSelected.toggle()
-                 
-                 // 当用户勾选食材时，将其 UUID 添加到 hiddenIngredients 集合中...
-                 if recipes[index].isSelected {
-                     selectedIngredients.append(recipes[index].sqlResult)
-                     onIngredientSelection(recipes[index].sqlResult.fid, recipes[index].sqlResult.uid, recipes[index].sqlResult.amount)
-                     
-                     // 将食材的 UUID 添加到 hiddenIngredients 集合中...
-                     hiddenIngredients.insert(wrapper.sqlResult.id)
-                 } else {
-                     if let selectedIndex = selectedIngredients.firstIndex(where: { $0.id == wrapper.sqlResult.id }) {
-                         selectedIngredients.remove(at: selectedIndex)
-                     }
-                 }
-             }
-         }
-
-
-
-
+        if let index = recipes.firstIndex(where: { $0.sqlResult.id == wrapper.sqlResult.id }) {
+            let defaultQuantity = wrapper.planAmount ?? ""
+            let quantity = Int(quantityInputs[wrapper.sqlResult.id] ?? defaultQuantity) ?? 0
+            recipes[index].sqlResult.amount = quantity
+            recipes[index].isSelected.toggle()
+            if recipes[index].isSelected {
+                selectedIngredients.append(recipes[index].sqlResult)
+                onIngredientSelection(recipes[index].sqlResult.fid, recipes[index].sqlResult.uid, recipes[index].sqlResult.amount)
+                hiddenIngredients.insert(wrapper.sqlResult.id)
+            } else {
+                if let selectedIndex = selectedIngredients.firstIndex(where: { $0.id == wrapper.sqlResult.id }) {
+                    selectedIngredients.remove(at: selectedIndex)
+                }
+            }
+        }
+    }
 
     private func shouldHideIngredient(_ id: UUID) -> Bool {
         return hiddenIngredients.contains(id)
@@ -208,41 +209,35 @@ struct ShopView: View {
     @State private var recipes: [RecipeWrapper] = []
     @State private var isLoading = true
     @State private var selectedIngredients: [Ingredient] = []
-    @State private var userUID: String? // 用戶的 UID
-    
+    @State private var userUID: String?
+
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter
     }()
-    
+
     private var sevenDaysAgo: Date {
         return Calendar.current.date(byAdding: .day, value: -7, to: currentDate)!
     }
-    
+
     private var currentDate: Date {
         return Date()
     }
-    
-    // 在此處獲取和設置用戶的 UID
+
     func getUserUIDFromDatabase() {
-        // 在這裡從您的資料庫中獲取用戶的 UID
-        // 並將其存儲在 userUID 中
-        // 這裡僅為示例，您需要根據您的應用程序邏輯來實現
-        // 例如，如果您使用 Firebase，您可以通過 Auth.currentUser?.uid 獲取用戶的 UID
-        // 或者您可以使用自定義的身份驗證系統從自己的服務器獲取用戶的 UID
+        // 在這裡從資料庫中獲取用戶的 UID
     }
-    
-    // 在 ShopView 中添加 sendSelectedIngredientsToBackend 方法
+
     private func sendSelectedIngredientsToBackend() {
         // 在這裡實現將所選食材發送到後端的邏輯
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack {
                 Text("採購")
-                
+
                 if isLoading {
                     ProgressView("加載中...")
                 } else {
@@ -252,42 +247,35 @@ struct ShopView: View {
                             // 更新選定的食材...
                         },
                         selectedIngredients: $selectedIngredients,
-                        onIngredientSelection: handleIngredientSelection // 使用新的回調函數
+                        onIngredientSelection: handleIngredientSelection
                     )
                 }
             }
         }
         .onAppear {
-            getUserUIDFromDatabase() // 在視圖出現時從資料庫獲取用戶的 UID
+            getUserUIDFromDatabase()
             loadRecipes()
         }
-        // Send selected ingredients to backend when the view disappears
         .onDisappear {
             sendSelectedIngredientsToBackend()
         }
     }
-    
-    // 修改 handleIngredientSelection 方法，接受用戶的 UID 作為參數
+
     private func handleIngredientSelection(_ fid: Int, _ uid: String, _ sksum: Int) {
-        // 將值轉換成字典
         let jsonDict: [String: Any] = [
             "F_ID": fid,
             "U_ID": uid,
             "SK_SUM": sksum
         ]
-        
-        // 將字典轉換成 JSON 數據
+
         if let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict, options: []) {
-            // 調用 sendJSONDataToBackend 函數，將 JSON 數據發送到後端
             sendJSONDataToBackend(jsonData: jsonData)
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-                // 打印 JSON 字符串
                 print("JSON String:", jsonString)
             }
         }
     }
-    
-    
+
     private var sevenDaysLater: Date {
         return Calendar.current.date(byAdding: .day, value: 6, to: currentDate)!
     }
@@ -296,132 +284,56 @@ struct ShopView: View {
         return Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
     }
 
+    private func sendJSONDataToBackend(jsonData: Data) {
+        guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
+            print("無效的 URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("發送JSON數據時出錯: \(error)")
+                return
+            }
+
+            if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+                print("服務器響應錯誤: \(response.statusCode)")
+            }
+
+            if let data = data {
+                if let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) {
+                    print("服務器回應: \(jsonResponse)")
+                } else {
+                    print("無法解析JSON數據")
+                }
+            }
+        }
+
+        task.resume()
+    }
+
     private func loadRecipes() {
-        let currentDateStr = dateFormatter.string(from: oneDayBefore)
-        let sevenDaysLaterStr = dateFormatter.string(from: sevenDaysLater)
-        
-        print("Current Date String:", currentDateStr)
-        print("Seven Days Later String:", sevenDaysLaterStr)
-
-        guard let url = URL(string: "http://163.17.9.107/food/Shop.php?start_date=\(currentDateStr)&end_date=\(sevenDaysLaterStr)") else {
-            print("Invalid URL")
-            self.isLoading = false
-            return
-        }
-
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard error == nil else {
-                print("Error:", error!)
-                self.handleLoadingError()
-                return
-            }
-
-            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-                print("Invalid HTTP response")
-                self.handleLoadingError()
-                return
-            }
-
-            guard let data = data else {
-                print("No data received")
-                self.handleLoadingError()
-                return
-            }
-
-            do {
-                let recipeWrappers = try JSONDecoder().decode([RecipeWrapper].self, from: data)
-                // 包括今天及其前一天和后七天的食材
-                let filteredWrappers = recipeWrappers.filter { wrapper in
-                    if let pdtString = wrapper.sqlResult.P_DT,
-                       let pdtDate = dateFormatter.date(from: pdtString) {
-                        // 使用当前日期、前一天和未来七天的日期范围
-                        return pdtDate >= oneDayBefore && pdtDate <= sevenDaysLater
-                    }
-                    return false
+        ShopNetworkManager().fetchAndAggregateRecipes { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let recipes):
+                    self.recipes = recipes.sorted(by: { $0.sqlResult.name < $1.sqlResult.name }) // 按名称排序
+                    self.isLoading = false
+                case .failure(let error):
+                    print("Error loading recipes: \(error)")
+                    self.isLoading = false
                 }
-                self.aggregateRecipes(filteredWrappers)
-            } catch {
-                print("Error decoding JSON:", error)
-                self.handleLoadingError()
-            }
-        }.resume()
-    }
-
-
-
-
-    private func makeURL(startDate: String, endDate: String) -> URL? {
-        let urlString = "http://163.17.9.107/food/Shop.php?start_date=\(startDate)&end_date=\(endDate)"
-        return URL(string: urlString)
-    }
-    private func handleLoadingError() {
-        self.isLoading = false
-    }
-    private func aggregateRecipes(_ recipeWrappers: [RecipeWrapper]) {
-        var aggregatedRecipes: [String: RecipeWrapper] = [:]
-        
-        for wrapper in recipeWrappers {
-            let name = wrapper.sqlResult.name
-            if var existingWrapper = aggregatedRecipes[name] {
-                // 更新食材数量和库存
-                existingWrapper.sqlResult.amount += wrapper.sqlResult.amount
-                if let wrapperStock = wrapper.sqlResult.stock {
-                    existingWrapper.sqlResult.stock = (existingWrapper.sqlResult.stock ?? 0) + wrapperStock
-                }
-                // 更新计划数量（planAmount）
-                if let wrapperShopPlan = wrapper.shopPlan, let existingShopPlan = existingWrapper.shopPlan {
-                    if let wrapperAmount = Int(wrapperShopPlan.amount), let existingAmount = Int(existingShopPlan.amount) {
-                        existingWrapper.shopPlan?.amount = String(wrapperAmount + existingAmount)
-                    }
-                } else if let wrapperShopPlan = wrapper.shopPlan {
-                    existingWrapper.shopPlan = wrapperShopPlan
-                }
-                aggregatedRecipes[name] = existingWrapper
-            } else {
-                aggregatedRecipes[name] = wrapper
             }
         }
-        
-        // 将字典转换为数组并更新 `recipes`
-        self.recipes = Array(aggregatedRecipes.values)
-        self.isLoading = false
-    }
-}
-private func sendJSONDataToBackend(jsonData: Data) {
-    // 構建要發送的URL
-    guard let url = URL(string: "http://163.17.9.107/food/ShopStock.php") else {
-        print("Invalid URL")
-        return
     }
 
-    // 構建 HTTP 請求
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST" // 使用 POST 方法
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type") // 設置 Content-Type 為 JSON
-
-    // 將 JSON 數據設置為 HTTP 請求的主體
-    request.httpBody = jsonData
-
-    // 發送 HTTP 請求
-    URLSession.shared.dataTask(with: request) { data, response, error in
-        // 檢查是否有錯誤
-        if let error = error {
-            print("Error:", error)
-            return
-        }
-
-        // 檢查服務器響應
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            print("Invalid HTTP response")
-            return
-        }
-
-        // 成功響應
-        print("Data sent successfully")
-    }.resume()
 }
 
-// SwiftUI Preview
 struct ShopView_Previews: PreviewProvider {
     static var previews: some View {
         ShopView()

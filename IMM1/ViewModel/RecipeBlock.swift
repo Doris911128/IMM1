@@ -10,12 +10,20 @@ import Foundation
 //MARK: 單一食譜顯示區塊
 struct RecipeBlock: View
 {
-    let imageName: String
-    let title: String
+    let D_image: String
+    let Dis_Name: String
     let U_ID: String // 用於添加我的最愛
     let Dis_ID: String // 用於添加我的最愛
-    
-    @State private var isFavorited: Bool = false
+    @State private var isFavorited: Bool
+
+    // 初始化器访问级别修改为 internal 或 public
+    init(imageName: String, title: String, U_ID: String, Dis_ID: String, isFavorited: Bool = false) {
+        self.D_image = imageName
+        self.Dis_Name = title
+        self.U_ID = U_ID
+        self.Dis_ID = Dis_ID
+        self._isFavorited = State(initialValue: isFavorited)
+    }
     
     var body: some View
     {
@@ -26,7 +34,7 @@ struct RecipeBlock: View
         {
             VStack
             {
-                AsyncImage(url: URL(string: imageName))
+                AsyncImage(url: URL(string: D_image))
                 { phase in
                     if let image = phase.image
                     {
@@ -45,7 +53,7 @@ struct RecipeBlock: View
                 
                 HStack(alignment: .bottom)
                 {
-                    Text(title)
+                    Text(Dis_Name)
                         .foregroundColor(.black)
                         .font(.system(size: 24))
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -68,7 +76,6 @@ struct RecipeBlock: View
                                     print("Success: \(responseString)")
                                 case .failure(let error):
                                     print("Error: \(error.localizedDescription)")
-                                    
                                 }
                             }
                         }
@@ -80,19 +87,5 @@ struct RecipeBlock: View
             }
         }
         .padding(.horizontal, 20)
-        .onAppear
-        {
-            // 檢查是否已經被收藏
-            checkIfFavorited(U_ID: U_ID, Dis_ID: Dis_ID)
-            { result in
-                switch result
-                {
-                case .success(let favorited):
-                    self.isFavorited = favorited
-                case .failure(let error):
-                    print("Error: \(error.localizedDescription)")
-                }
-            }
-        }
     }
 }
