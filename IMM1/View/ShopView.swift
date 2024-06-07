@@ -1,8 +1,7 @@
-//ShopView
 import SwiftUI
 import Foundation
 
-// 定义模型结构体
+// Define model structs
 struct ResponseDa: Codable {
     var data: [Ingredient]
     var shopPlanData: [ShopPlan]
@@ -15,7 +14,7 @@ struct ResponseDa: Codable {
 
 struct ShopPlan: Codable {
     var uid: String
-    var fid: String // 将这里的类型改为 String
+    var fid: String
     var amount: String
 
     enum CodingKeys: String, CodingKey {
@@ -50,7 +49,7 @@ struct Ingredient: Identifiable, Codable {
     }
 }
 
-// 定义网络管理器
+// Define network manager
 class ShopNetworkManager {
     func fetchAndAggregateRecipes(completion: @escaping (Result<[RecipeWrapper], Error>) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/Shop.php") else {
@@ -65,7 +64,7 @@ class ShopNetworkManager {
             }
 
             guard let data = data else {
-                completion(.failure(NSError(domain: "", code: -2, userInfo: [NSLocalizedDescriptionKey: "未接收到数据"])))
+                completion(.failure(NSError(domain: "", code: -2, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
                 return
             }
 
@@ -74,13 +73,13 @@ class ShopNetworkManager {
             do {
                 let responseData = try JSONDecoder().decode(ResponseDa.self, from: data)
                 
-                // 将原始数据转换为RecipeWrapper
+                // Convert raw data to RecipeWrapper
                 var recipeWrappers: [RecipeWrapper] = responseData.data.map { ingredient in
                     let shopPlan = responseData.shopPlanData.first { $0.fid == String(ingredient.fid) && $0.uid == ingredient.uid }
                     return RecipeWrapper(sqlResult: ingredient, shopPlan: shopPlan)
                 }
 
-                // 打印解析后的数据以进行调试
+                // Print parsed data for debugging
                 for wrapper in recipeWrappers {
                     print("Ingredient: \(wrapper.sqlResult.name), Unit: \(wrapper.sqlResult.unit), Plan Amount: \(wrapper.planAmount ?? "N/A")")
                 }
@@ -91,7 +90,7 @@ class ShopNetworkManager {
                     let name = wrapper.sqlResult.name
                     if var existingWrapper = aggregatedRecipes[name] {
                         existingWrapper.sqlResult.amount += wrapper.sqlResult.amount
-                        existingWrapper.sqlResult.stock = (existingWrapper.sqlResult.stock ?? 0) + (wrapper.sqlResult.stock ?? 0)
+                        existingWrapper.sqlResult.stock += wrapper.sqlResult.stock
                         aggregatedRecipes[name] = existingWrapper
                     } else {
                         aggregatedRecipes[name] = wrapper
@@ -117,8 +116,7 @@ struct RecipeWrapper: Codable {
     }
 }
 
-
-// 定义视图
+// Define views
 struct RecipeView: View {
     @Binding var recipes: [RecipeWrapper]
     @State private var hiddenIngredients: Set<UUID> = []
@@ -143,7 +141,7 @@ struct RecipeView: View {
         } else {
             List {
                 ForEach(recipes, id: \.sqlResult.id) { wrapper in
-                    if !shouldHideIngredient(wrapper.sqlResult.id) {
+                    if !shouldHideIngredient(wrapper.sqlResult.id) && (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
                         Section(header: EmptyView()) {
                             HStack {
                                 VStack(alignment: .leading) {
@@ -204,6 +202,7 @@ struct RecipeView: View {
         return hiddenIngredients.contains(id)
     }
 }
+
 
 struct ShopView: View {
     @State private var recipes: [RecipeWrapper] = []
@@ -285,7 +284,7 @@ struct ShopView: View {
     }
 
     private func sendJSONDataToBackend(jsonData: Data) {
-        guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/ShopStock.php") else {
             print("無效的 URL")
             return
         }
@@ -303,14 +302,12 @@ struct ShopView: View {
 
             if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
                 print("服務器響應錯誤: \(response.statusCode)")
+                return
             }
 
-            if let data = data {
-                if let jsonResponse = try? JSONSerialization.jsonObject(with: data, options: []) {
-                    print("服務器回應: \(jsonResponse)")
-                } else {
-                    print("無法解析JSON數據")
-                }
+            // Handle server response here if needed
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                print("Response from server: \(responseString)")
             }
         }
 
@@ -322,7 +319,7 @@ struct ShopView: View {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let recipes):
-                    self.recipes = recipes.sorted(by: { $0.sqlResult.name < $1.sqlResult.name }) // 按名称排序
+                    self.recipes = recipes.sorted(by: { $0.sqlResult.name < $1.sqlResult.name }) // Sort by name
                     self.isLoading = false
                 case .failure(let error):
                     print("Error loading recipes: \(error)")
@@ -331,7 +328,6 @@ struct ShopView: View {
             }
         }
     }
-
 }
 
 struct ShopView_Previews: PreviewProvider {
