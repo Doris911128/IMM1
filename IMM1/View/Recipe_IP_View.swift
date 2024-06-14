@@ -74,10 +74,12 @@ struct Recipe_IP_View: View
 
         // 發起異步網絡請求
         URLSession.shared.dataTask(with: request) { data, response, error in
-                   guard let data = data, error == nil else {
-                       print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
-                       return
-                   }
+            guard let data = data, error == nil
+            else 
+            {
+                print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
+                return
+            }
 
             // 檢查並處理 HTTP 響應狀態碼
 //            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {

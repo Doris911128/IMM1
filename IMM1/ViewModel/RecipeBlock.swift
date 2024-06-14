@@ -33,7 +33,8 @@ struct RecipeBlock: View
         {
             VStack
             {
-                AsyncImage(url: URL(string: D_image)) { phase in
+                AsyncImage(url: URL(string: D_image)) 
+                { phase in
                     if let image = phase.image
                     {
                         image.resizable()

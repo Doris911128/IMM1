@@ -51,7 +51,8 @@ struct PastRecipesView: View {
     }
     
     // 加载菜单数据
-    func loadMenuData(keyword: String) {
+    func loadMenuData(keyword: String) 
+    {
         let urlString = "http://163.17.9.107/food/Dishes.php?keyword=\(keyword)"
         print("正在從此URL請求數據: \(urlString)")
 
@@ -67,17 +68,21 @@ struct PastRecipesView: View {
         request.addValue("application/json", forHTTPHeaderField: "Accept")
 
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
+            guard let data = data, error == nil 
+            else
+            {
                 print("网络请求错误: \(error?.localizedDescription ?? "未知错误")")
                 return
             }
 
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) 
+            {
                 print("HTTP 错误: \(httpResponse.statusCode)")
                 return
             }
 
-            do {
+            do 
+            {
                 let decoder = JSONDecoder()
                 let dishesData = try decoder.decode([Dishes].self, from: data)
                 DispatchQueue.main.async {

@@ -16,21 +16,18 @@ enum FontSize
 struct CookingAiView: View
 {
     // 示例數據
-    let dishesData: [Dishes] = [
-        Dishes(Dis_ID: 1, Dis_Name: "t蕃茄炒蛋", D_Cook: "http://163.17.9.107/food/dishes/1.txt", D_image: "http://163.17.9.107/food/images/1.jpg", D_Video: "xxxxxxxxx")
-    ]
-    //@State private var dishesData: [Dishes] = []
-    @State private var foodData: [Food] = []
-    @State private var amountData: [Amount] = []
+//    let dishesData: [Dishes] = [
+//        Dishes(Dis_ID: 1, Dis_Name: "t蕃茄炒蛋", D_Cook: "http://163.17.9.107/food/dishes/1.txt", D_image: "http://163.17.9.107/food/images/1.jpg", D_Video: "xxxxxxxxx")
+//    ]
+    @State private var dishesData: [Dishes] = []
     
-    var body: some View
+    var body: some View 
     {
-        NavigationView
+        NavigationView 
         {
-            
-            VStack(spacing: 0)
+            VStack(spacing: 0) 
             {
-                HStack
+                HStack 
                 {
                     Text(dishesData.first?.Dis_Name ?? "Unknown食譜名稱")
                         .font(.largeTitle)
@@ -42,11 +39,12 @@ struct CookingAiView: View
                 .background(Color.white)
                 .zIndex(1)
                 
-                ScrollView(.horizontal, showsIndicators: false)
+                ScrollView(.horizontal, showsIndicators: false) 
                 {
-                    HStack(spacing: 20)
+                    HStack(spacing: 20) 
                     {
-                        ForEach(dishesData, id: \.Dis_ID) { dish in
+                        ForEach(dishesData, id: \.Dis_ID) 
+                        { dish in
                             CardView(dish: dish)
                                 .frame(maxWidth: .infinity, alignment: .center) // 卡片水平居中
                         }
@@ -57,8 +55,55 @@ struct CookingAiView: View
             }
             .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
         }
+        .onAppear 
+        {
+            loadDishesData() // 畫面加載時加載菜譜數據
+        }
+    }
+    
+    // 從後端載入菜譜數據的方法
+    func loadDishesData() 
+    {
+        let urlString = "http://163.17.9.107/food/Dishes.php"
+        guard let url = URL(string: urlString) 
+        else
+        {
+            print("無效的 URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET" // 設定 HTTP 請求方法為 GET
+        request.addValue("application/json", forHTTPHeaderField: "Accept") // 請求頭部指定期望回應格式為 JSON
+
+        URLSession.shared.dataTask(with: request) 
+        { data, response, error in
+            guard let data = data, error == nil
+            else
+            {
+                print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
+                return
+            }
+
+            // 解析 JSON 數據
+            do 
+            {
+                let decoder = JSONDecoder()
+                let dishesData = try decoder.decode([Dishes].self, from: data)
+                DispatchQueue.main.async 
+                {
+                    self.dishesData = dishesData
+                }
+            } 
+            catch
+            {
+                print("JSON 解析錯誤: \(error)")
+            }
+        }.resume() // 繼續執行已暫停的請求
     }
 }
+
+
 struct CardView: View
 {
     let dish: Dishes
@@ -231,17 +276,10 @@ struct CardView: View
                     }
                 }
                 .padding(20)
-                .onAppear
+                .onAppear 
                 {
-                    if let cookDetails = dish.D_Cook
-                    {
-                        loadCookDetails(from: cookDetails)
-                    }
-                    else
-                    {
-                        print("D_Cook is nil")
-                    }
-                }
+                     loadCookDetails(from: dish.D_Cook ?? "")
+                 }
             }
         }
     }
