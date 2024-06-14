@@ -180,7 +180,7 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
                                     }) {
                                         Image(systemName: "plus.circle")
                                             .imageScale(.large)
-                                            .foregroundColor(.blue)
+                                            .foregroundColor(Color("BottonColor"))
                                     }
                                 }
                             ) {

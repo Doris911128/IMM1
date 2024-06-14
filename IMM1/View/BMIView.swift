@@ -157,7 +157,7 @@ struct BMIView: View
                 HStack
                 {
                     Text("BMI紀錄")
-                        .foregroundColor(Color("textcolor"))
+                        .foregroundColor(Color("BTColor"))
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x:-60)
@@ -169,7 +169,7 @@ struct BMIView: View
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                            .foregroundColor(Color("BottonColor"))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -193,7 +193,7 @@ struct BMIView: View
                             .annotation(position: .top) {
                                 Text("\(record.bmi, specifier: "%.2f")")
                                     .font(.system(size: 12))
-                                    .foregroundColor(Color("textcolor"))
+                                    .foregroundColor(Color("BTColor"))
                             }
                         }
                         .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : (displayMode == 1 ? CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)) : CGFloat(max(300, bmiRecordViewModel.averagesEveryThirtyRecordsSorted().count * 100))), height: 200)
@@ -211,7 +211,7 @@ struct BMIView: View
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, 20)
-                            .foregroundColor(Color("textcolor"))
+                            .foregroundColor(Color("TextColor"))
                         Picker("顯示模式", selection: $displayMode) {
                             Text("每日").tag(0)
                             Text("每7日").tag(1)
@@ -256,10 +256,10 @@ struct BMIView: View
                         }
                     }) {
                         Text("計算BMI")
-                            .foregroundColor(Color("textcolor"))
+                            .foregroundColor(Color("ButColor"))
                             .padding(10)
                             .frame(width: 300, height: 50)
-                            .background(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                            .background(Color("BottonColor"))
                             .cornerRadius(100)
                             .font(.title3)
                     }
@@ -368,7 +368,7 @@ struct BMIRecordDetailView: View
             Text("體重: \(String(format: "%.1f", record.W)) 公斤")
             Text("你的BMI為: \(String(format: "%.2f", record.bmi))")
             Text("BMI分類: \(bmiCategory)")
-                .foregroundColor(categoryColor)
+                .foregroundColor(Color("BottonColor"))
                 .font(.headline)
         }
         .navigationTitle("BMI 詳細資訊")

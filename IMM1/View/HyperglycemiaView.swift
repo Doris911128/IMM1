@@ -174,7 +174,7 @@ struct HyperglycemiaView: View
                 HStack
                 {
                     Text("血糖紀錄")
-                        .foregroundColor(Color("textcolor"))
+                        .foregroundColor(Color("ButColor"))
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x:-60)
@@ -185,7 +185,7 @@ struct HyperglycemiaView: View
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                            .foregroundColor(Color("BottonColor"))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -208,7 +208,7 @@ struct HyperglycemiaView: View
                                         .annotation(position: .top) {
                                             Text("\(record.hyperglycemia, specifier: "%.2f")")
                                                 .font(.system(size: 12))
-                                                .foregroundColor(Color("textcolor"))
+                                                .foregroundColor(Color("ButColor"))
                                         }
                                     }
                                     .chartForegroundStyleScale([
@@ -277,10 +277,10 @@ struct HyperglycemiaView: View
                             }
                         }) {
                             Text("紀錄血糖")
-                                .foregroundColor(Color("textcolor"))
+                                .foregroundColor(Color("ButColor"))
                                 .padding(10)
                                 .frame(width: 300, height: 50)
-                                .background(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                                .background(Color("BottonColor"))
                                 .cornerRadius(100)
                                 .font(.title3)
                         }

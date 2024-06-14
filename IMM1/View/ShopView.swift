@@ -166,7 +166,7 @@ struct RecipeView: View {
                                 .frame(width: 80)
                                 .keyboardType(.numberPad)
                                 Image(systemName: wrapper.isSelected ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(wrapper.isSelected ? .green : .orange)
+                                    .foregroundColor(Color("BottonColor"))
                                     .onTapGesture {
                                         toggleIngredientSelection(wrapper)
                                     }

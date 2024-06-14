@@ -137,7 +137,7 @@ struct HyperlipidemiaView: View
                 HStack
                 {
                     Text("血脂紀錄")
-                        .foregroundColor(Color("textcolor"))
+                        .foregroundColor(Color("ButColor"))
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x:-60)
@@ -148,7 +148,7 @@ struct HyperlipidemiaView: View
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                            .foregroundColor(Color("BottonColor"))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -171,7 +171,7 @@ struct HyperlipidemiaView: View
                                        .annotation(position: .top) {
                                            Text("\(record.hyperlipidemia, specifier: "%.2f")")
                                                .font(.system(size: 12))
-                                               .foregroundColor(Color("textcolor"))
+                                               .foregroundColor(Color("TextColor"))
                                        }
                                    }
                                    .chartForegroundStyleScale([
@@ -190,7 +190,7 @@ struct HyperlipidemiaView: View
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, 20)
-                            .foregroundColor(Color("textcolor"))
+                            .foregroundColor(Color("ButColor"))
                         Picker("显示模式", selection: $displayMode) {
                             Text("每日").tag(0)
                             Text("每7日").tag(1)
@@ -237,10 +237,10 @@ struct HyperlipidemiaView: View
                             }
                         }) {
                             Text("紀錄血脂")
-                                .foregroundColor(Color("textcolor"))
+                                .foregroundColor(Color("ButColor"))
                                 .padding(10)
                                 .frame(width: 300, height: 50)
-                                .background(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                                .background(Color("BottonColor"))
                                 .cornerRadius(100)
                                 .font(.title3)
                         }

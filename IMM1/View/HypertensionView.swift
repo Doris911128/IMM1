@@ -171,7 +171,7 @@ struct HypertensionView: View
                 HStack
                 {
                     Text("血壓紀錄")
-                        .foregroundColor(Color("textcolor"))
+                        .foregroundColor(Color("ButColor"))
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x: -60)
@@ -182,7 +182,7 @@ struct HypertensionView: View
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                            .foregroundColor(Color("BottonColor"))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -205,7 +205,7 @@ struct HypertensionView: View
                         .annotation(position: .top) {
                             Text("\(record.hypertension, specifier: "%.2f")")
                                 .font(.system(size: 12))
-                                .foregroundColor(Color("textcolor"))
+                                .foregroundColor(Color("ButColor"))
                         }
                     }
                     .chartForegroundStyleScale(["血壓值": .orange])
@@ -222,7 +222,7 @@ struct HypertensionView: View
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, 20)
-                            .foregroundColor(Color("textcolor"))
+                            .foregroundColor(Color("ButColor"))
                         Picker("显示模式", selection: $displayMode) {
                             Text("每日").tag(0)
                             Text("每7日").tag(1)
@@ -272,10 +272,10 @@ struct HypertensionView: View
                             }
                         }) {
                             Text("紀錄血壓")
-                                .foregroundColor(Color("textcolor"))
+                                .foregroundColor(Color("ButColor"))
                                 .padding(10)
                                 .frame(width: 300, height: 50)
-                                .background(Color(hue: 0.031, saturation: 0.803, brightness: 0.983))
+                                .background(Color("BottonColor"))
                                 .cornerRadius(100)
                                 .font(.title3)
                         }

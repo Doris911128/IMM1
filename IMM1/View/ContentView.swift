@@ -75,7 +75,7 @@ struct ContentView: View
                         Label("設置", systemImage: "gearshape.fill")
                     }
                 }
-                .tint(.orange) // 點選後的顏色
+                .tint(Color("BottonColor")) // 點選後的顏色
                 
             }
         }
