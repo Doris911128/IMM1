@@ -96,13 +96,13 @@ struct SigninView: View
                     }
                     .font(.title3)
                     
-                    NavigationLink(destination: SignupView(textselect: .constant(0)))
-                    {
-                        Text("尚未註冊嗎？請點擊我")
+                    
+                    
+                        Text("")
                             .font(.body)
                             .foregroundColor(Color(red: 0.574, green: 0.609, blue: 0.386))
                             .colorMultiply(.gray)
-                    }
+                    
                     
                     HStack
                     {
@@ -129,18 +129,15 @@ struct SigninView: View
                         
                         Spacer()
                         
-                        Button("忘記密碼？")
+                        NavigationLink(destination: SignupView(textselect: .constant(0)))
                         {
-                            forget.toggle()
+                            Text("尚未註冊嗎？請點擊我")
+                                .font(.body)
+                                .foregroundColor(Color(red: 0.574, green: 0.609, blue: 0.386))
+                                .colorMultiply(.gray)
                         }
-                        .font(.callout)
                     }
-                    .sheet(isPresented: $forget)
-                    {
-                        ForgetPasswordView()
-                            .presentationDetents([.medium])
-                            .presentationCornerRadius(30)
-                    }
+                    
                     
                     Button {
                         // 验证用户是否输入了帐号和密码

@@ -1,19 +1,19 @@
 // MARK: 計畫View
-    import SwiftUI
-    import Foundation
+import SwiftUI
+import Foundation
 
 struct PlanDeleteError: Error {
     let message: String
 }
 
-    struct Plan: Codable {
-        let P_ID: String
-        let U_ID: String
-        let Dis_ID: String
-        let P_DT: String
-        let P_Bought: String
-        let Dis_name: String
-    }
+struct Plan: Codable {
+    let P_ID: String
+    let U_ID: String
+    let Dis_ID: String
+    let P_DT: String
+    let P_Bought: String
+    let Dis_name: String
+}
 
 // 刪除計劃的方法
 func deletePlan(withID pID: String, day: String, at indices: IndexSet, completion: @escaping (Result<Void, Error>) -> Void) {
@@ -65,8 +65,6 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
             completion(.success(()))
 
             // 在成功的 case 中打印 responseString
-            
-
             print("Server response:", responseString)
         } else {
             let errorMessage = "Failed to delete plan. Server response: \(responseString)"
@@ -75,104 +73,155 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
     }.resume()
 }
 
-
-
-
-
-    struct PlanView: View {
-        // DateFormatter for formatting dates
-        private let dateFormatter: DateFormatter
-        @State private var deletionResult: Result<Void, Error>? = nil
-        @State private var plans: [String: [String]] = [:] // 修改此行，將型別改為 [String: [String]]
-        @State private var nameToIDMap: [String: String] = [:]
-
-        
-        
-        // DateFormatter for displaying dates in MM/DD format
-        private var displayDateFormatter: DateFormatter = {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MM/dd"
-            return formatter
-        }()
-        
-        func convertPlansToDictionary(plans: [Plan]) -> [String: [String]] {
-            var plansDict = [String: [String]]()
-            var idToNameMap = [String: String]()
-            var nameToIDMap = [String: String]() // 添加一个映射 Dis_name 到 P_ID 的字典
-            let currentDate = Calendar.current.startOfDay(for: Date())
-            let endDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)!
-                for plan in plans {
-                    idToNameMap[plan.P_ID] = plan.Dis_name
-                    nameToIDMap[plan.Dis_name] = plan.P_ID // 将 Dis_name 映射到 P_ID
-                }
-
-            // 遍歷七天內的日期，初始化字典中的鍵
-            for i in 0..<7 {
-                if let date = Calendar.current.date(byAdding: .day, value: i, to: currentDate) {
-                    let dateString = dateFormatter.string(from: date)
-                    plansDict[dateString] = []
-                }
-            }
-
-            // 將計畫數據添加到字典中
+struct PlanView: View {
+    // DateFormatter for formatting dates
+    private let dateFormatter: DateFormatter
+    @State private var deletionResult: Result<Void, Error>? = nil
+    @State private var plans: [String: [String]] = [:]
+    @State private var nameToIDMap: [String: String] = [:]
+    @State private var selectedDate: String?
+    @State private var showSingleDayView: Bool = false // 新增狀態變數
+    
+    // DateFormatter for displaying dates in MM/DD format
+    private var displayDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd"
+        return formatter
+    }()
+    private var displayDateFormatters: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd"
+        return formatter
+    }()
+    private var fullDateFormatter: DateFormatter = {
+         let formatter = DateFormatter()
+         formatter.dateFormat = "yyyy年M月d日"
+         return formatter
+     }()
+     private var dayOfWeekFormatter: DateFormatter = {
+         let formatter = DateFormatter()
+         formatter.dateFormat = "E"
+         formatter.locale = Locale(identifier: "en_US_POSIX")
+         return formatter
+     }()
+    func convertPlansToDictionary(plans: [Plan]) -> [String: [String]] {
+        var plansDict = [String: [String]]()
+        var idToNameMap = [String: String]()
+        var nameToIDMap = [String: String]() // 添加一个映射 Dis_name 到 P_ID 的字典
+        let currentDate = Calendar.current.startOfDay(for: Date())
+        let endDate = Calendar.current.date(byAdding: .day, value: 7, to: currentDate)!
             for plan in plans {
-                guard let planDate = dateFormatter.date(from: plan.P_DT) else {
-                    continue
+                idToNameMap[plan.P_ID] = plan.Dis_name
+                nameToIDMap[plan.Dis_name] = plan.P_ID // 将 Dis_name 映射到 P_ID
+            }
+
+        // 遍歷七天內的日期，初始化字典中的鍵
+        for i in 0..<7 {
+            if let date = Calendar.current.date(byAdding: .day, value: i, to: currentDate) {
+                let dateString = dateFormatter.string(from: date)
+                plansDict[dateString] = []
+            }
+        }
+
+        // 將計畫數據添加到字典中
+        for plan in plans {
+            guard let planDate = dateFormatter.date(from: plan.P_DT) else {
+                continue
+            }
+            // 檢查計畫日期是否在接下來的七天內，並添加到相應的日期中
+            if planDate >= currentDate && planDate <= endDate {
+                let date = dateFormatter.string(from: planDate)
+                if plansDict[date] == nil {
+                    plansDict[date] = []
                 }
-                // 檢查計畫日期是否在接下來的七天內，並添加到相應的日期中
-                if planDate >= currentDate && planDate <= endDate {
-                    let date = dateFormatter.string(from: planDate)
-                    if plansDict[date] == nil {
-                        plansDict[date] = []
+                let disName = plan.Dis_name
+                plansDict[date]?.append(disName) // 只將 Dis_Name 添加到相應的日期中
+            }
+        }
+        return plansDict
+    }
+
+    func isNewPlan(_ plan: String) -> Bool {
+        return plan != "新計畫"
+    }
+
+    func updatePlans() {
+        fetchPlansFromServer { fetchedPlans, error in
+            if let fetchedPlans = fetchedPlans {
+                DispatchQueue.main.async {
+                    self.plans = convertPlansToDictionary(plans: fetchedPlans)
+                    self.updateNameToIDMap(plans: fetchedPlans) // 更新 nameToIDMap
+                }
+            } else if let error = error {
+                print("Failed to fetch plans: \(error)")
+            }
+        }
+    }
+
+    func updateNameToIDMap(plans: [Plan]) {
+        var newMap = [String: String]()
+        for plan in plans {
+            newMap[plan.Dis_name] = plan.P_ID
+        }
+        self.nameToIDMap = newMap
+    }
+
+    init() {
+        dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading){
+                Text("今天是 \(Date(), formatter: fullDateFormatter)")
+                    .font(.headline)
+                    .padding(.top, 20)
+                    .padding(.leading, 20)
+                ScrollView(.horizontal) {
+                    HStack {
+                        ForEach(0..<7, id: \.self) { offset in
+                            let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+                            let dateString = dateFormatter.string(from: date)
+                            let dayOfWeek = dayOfWeekFormatter.string(from: date)
+                            Button(action: {
+                                if selectedDate == dateString {
+                                    // 按下相同的按鈕，切換顯示模式並重置選中日期
+                                    showSingleDayView.toggle()
+                                    if !showSingleDayView {
+                                        selectedDate = nil
+                                    }
+                                } else {
+                                    // 按下不同的按鈕，設置選中的日期並顯示單一天的視圖
+                                    selectedDate = dateString
+                                    showSingleDayView = true
+                                }
+                            }) {
+                                VStack {
+                                    Text(displayDateFormatter.string(from: date))
+                                        .font(.headline)
+                                    Text(dayOfWeek)
+                                        .font(.subheadline)
+                                }
+                                .padding()
+                                .background(selectedDate == dateString && showSingleDayView ? Color.orange : Color.gray.opacity(0.2))
+                                .foregroundColor(selectedDate == dateString && showSingleDayView ? .white : .black)
+                                .clipShape(Capsule())
+                            }
+
+                        }
                     }
-                    let disName = plan.Dis_name
-                    plansDict[date]?.append(disName) // 只將 Dis_Name 添加到相應的日期中
+                    .padding()
                 }
-            }
-            return plansDict
-        }
-
-
-        func isNewPlan(_ plan: String) -> Bool {
-            return plan != "新計畫"
-        }
-
-        func updatePlans() {
-            fetchPlansFromServer { fetchedPlans, error in
-                if let fetchedPlans = fetchedPlans {
-                    DispatchQueue.main.async {
-                        self.plans = convertPlansToDictionary(plans: fetchedPlans)
-                        self.updateNameToIDMap(plans: fetchedPlans) // 更新 nameToIDMap
-                    }
-                } else if let error = error {
-                    print("Failed to fetch plans: \(error)")
-                }
-            }
-        }
-
-        func updateNameToIDMap(plans: [Plan]) {
-            var newMap = [String: String]()
-            for plan in plans {
-                newMap[plan.Dis_name] = plan.P_ID
-            }
-            self.nameToIDMap = newMap
-        }
-
-
-        init() {
-            dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-        }
-
-        var body: some View {
-            NavigationStack {
-                VStack {
-                    Text("計畫")
-                    List {
-                        ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
+                .padding(.horizontal)
+                
+                List {
+                    ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
+                        // 只顯示選中的日期或顯示所有日期
+                        if !showSingleDayView || selectedDate == day {
                             Section(header:
                                 HStack {
-                                    Text(self.displayDateFormatter.string(from: dateFormatter.date(from: day)!)).font(.title)
+                                    Text(self.displayDateFormatters.string(from: dateFormatter.date(from: day)!)).font(.title)
                                     Text(getDayLabelText(for: day)) // 顯示 "第一天" 到 "第七天" 的文本
                                     Spacer()
                                     Button(action: {
@@ -204,9 +253,8 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
                                         guard let deletedPlanID = nameToIDMap[deletedPlanName] else {
                                             print("Error: Deleted plan ID not found for name \(deletedPlanName)")
                                             return
-                                    }
+                                        }
 
-                                        
                                         deletePlan(withID: deletedPlanID, day: day, at: indices) { result in
                                             switch result {
                                             case .success:
@@ -233,35 +281,31 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
                             }
                         }
                     }
-                    .scrollIndicators(.hidden)
                 }
-            }
-            .onAppear {
-                updatePlans() // 在視圖顯示時獲取計畫
+
+                .scrollIndicators(.hidden)
             }
         }
-
-
-        // MARK: 根據日期獲取 "第一天" 到 "第七天" 的文本
-        private func getDayLabelText(for date: String) -> String {
-            guard let index = Array(plans.keys.sorted(by: <)).firstIndex(of: date) else {
-                return ""
-            }
-            let dayNumber = (index % 7) + 1
-            return "第\(dayNumber)天"
+        .onAppear {
+            updatePlans() // 在視圖顯示時獲取計畫
         }
     }
 
-
-
-
-    struct PlanView_Previews: PreviewProvider
-    {
-        static var previews: some View
-        {
-            PlanView()
+    // MARK: 根據日期獲取 "第一天" 到 "第七天" 的文本
+    private func getDayLabelText(for date: String) -> String {
+        guard let index = Array(plans.keys.sorted(by: <)).firstIndex(of: date) else {
+            return ""
         }
+        let dayNumber = (index % 7) + 1
+        return "第\(dayNumber)天"
     }
+}
+
+struct PlanView_Previews: PreviewProvider {
+    static var previews: some View {
+        PlanView()
+    }
+}
 
 func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) {
      guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
@@ -297,4 +341,4 @@ func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) {
              completion(nil, error)
          }
      }.resume()
- }
+}
