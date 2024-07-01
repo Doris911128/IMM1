@@ -1,5 +1,6 @@
 import SwiftUI
 
+
 struct Cook: Codable, Identifiable {
     let id = UUID()
     let P_ID: String
@@ -39,97 +40,152 @@ struct CookPlan: Codable, Identifiable {
         case D_image
     }
 }
-
 struct CookView: View {
     @State private var plans: [CookPlan] = []
     @State private var isEditing = false
-
-    var body: some View {
-        NavigationStack {
+    
+    struct RecipeBlock: View {
+        let D_image: String
+        let Dis_Name: String
+        let U_ID: String
+        let Dis_ID: String
+        @State private var isFavorited: Bool
+        
+        init(imageName: String, title: String, U_ID: String, Dis_ID: String, isFavorited: Bool = false) {
+            self.D_image = imageName
+            self.Dis_Name = title
+            self.U_ID = U_ID
+            self.Dis_ID = Dis_ID
+            self._isFavorited = State(initialValue: isFavorited)
+        }
+        
+        var body: some View {
             VStack {
-                Text("烹飪")
-                    .offset(x: 0, y: 23)
-                    .padding(.bottom, 30)
+                ZStack(alignment: .topTrailing) {
+                    AsyncImage(url: URL(string: D_image)) { phase in
+                        if let image = phase.image {
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 330, height: 450)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                        } else {
+                            Color.gray
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    
+                    Button(action: {
+                        withAnimation(.easeInOut.speed(3)) {
+                            self.isFavorited.toggle()
+                            toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
+                                switch result {
+                                case .success(let responseString):
+                                    print("Success: \(responseString)")
+                                case .failure(let error):
+                                    print("Error: \(error.localizedDescription)")
+                                }
+                            }
+                        }
+                    }) {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.orange.opacity(0.3))
+                            .frame(width: 50, height: 50)
+                            .overlay(
+                                Image(systemName: self.isFavorited ? "heart.fill" : "heart")
+                                    .font(.title)
+                                    .foregroundColor(.red)
+                            )
+                    }
+                    .offset(x: -135, y: 510) // 調整按鈕位置
+                    .padding(.trailing, 10)
+                    .symbolEffect(.bounce, value: self.isFavorited)
+                }
                 
-//                HStack {
-//                    Spacer()
-//                    if isEditing {
-//                        Button(action: {
-//                            isEditing.toggle()
-//                        }) {
-//                            Text("完成")
-//                        }
-//                        .padding(.trailing, 20)
-//                    } else {
-//                        Button(action: {
-//                            isEditing.toggle()
-//                        }) {
-//                            Text("編輯")
-//                        }
-//                        .padding(.trailing, 20)
-//                    }
-//                }
+                HStack(alignment: .bottom) {
+                    Text(Dis_Name)
+                        .foregroundColor(.black)
+                        .font(.system(size: 24))
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.horizontal, 10)
+                }
+                .offset(y: -5)
             }
-            .padding(.top, -23)
-            
-            ScrollView {
-                LazyVStack(spacing: 20) {
+            .padding(.horizontal, 20)
+            .offset(y: -40)
+        }
+    }
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                // 日期顯示部分
+                HStack {
                     ForEach(computeDays(), id: \.self) { day in
-                        let dateString = day.dateString
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("\(dateString)")
-                                .font(.headline)
-//                                .offset(x:-130,y:0)
-                            let dayPlans = plans.filter { $0.P_DT == dateString }
-                            if dayPlans.isEmpty {
-                                Text("尚無計畫").font(.subheadline).foregroundColor(.gray)
-                                    .offset(x:20,y:0)
-
-                            } else {
-                                ForEach(dayPlans, id: \.P_ID) { CookPlan in
-                                    HStack {
-                                        NavigationLink(destination: MenuView(Dis_ID: Int(CookPlan.Dis_ID) ?? 0)) {
-                                            RecipeBlock(imageName: CookPlan.D_image, title: CookPlan.Dis_name, U_ID: CookPlan.U_ID, Dis_ID: CookPlan.Dis_ID)
-                                        }
-                                        
-                                        if isEditing {
-                                            Button(action: {
-                                                if let index = plans.firstIndex(where: { $0.P_ID == CookPlan.P_ID }) {
-                                                    plans.remove(at: index)
+                        Text(day.dateString)
+                            .font(.system(size: 20, weight: .bold))
+                            .padding(.top, 10)
+                    }
+                }
+                
+                ScrollViewReader { scrollView in
+                    ScrollView(.horizontal) {
+                        LazyHStack(spacing: 20) {
+                            ForEach(computeDays(), id: \.self) { day in
+                                let dateString = day.dateString
+                                
+                                VStack(alignment: .leading, spacing: 10) {
+                                    let dayPlans = plans.filter { $0.P_DT == dateString }
+                                    if dayPlans.isEmpty {
+                                        Text("尚無計畫")
+                                            .font(.subheadline)
+                                            .foregroundColor(.gray)
+                                    } else {
+                                        LazyHStack(spacing: 10) {
+                                            ForEach(dayPlans, id: \.P_ID) { CookPlan in
+                                                HStack {
+                                                    NavigationLink(destination: MenuView(Dis_ID: Int(CookPlan.Dis_ID) ?? 0)) {
+                                                        RecipeBlock(imageName: CookPlan.D_image, title: CookPlan.Dis_name, U_ID: CookPlan.U_ID, Dis_ID: CookPlan.Dis_ID)
+                                                    }
+                                                    
+                                                    if isEditing {
+                                                        Button(action: {
+                                                            if let index = plans.firstIndex(where: { $0.P_ID == CookPlan.P_ID }) {
+                                                                plans.remove(at: index)
+                                                            }
+                                                        }) {
+                                                            Image(systemName: "minus.circle")
+                                                                .foregroundColor(.red)
+                                                        }
+                                                    }
                                                 }
-                                            }) {
-                                                Image(systemName: "minus.circle")
-                                                    .foregroundColor(.red)
                                             }
                                         }
                                     }
                                 }
+                                .id(dateString)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .onAppear {
+                        fetchCookPlansFromServer { fetchedPlans, error in
+                            if let fetchedPlans = fetchedPlans {
+                                DispatchQueue.main.async {
+                                    self.plans = fetchedPlans
+                                }
+                            } else if let error = error {
+                                print("Failed to fetch plans: \(error)")
                             }
                         }
                     }
+                    .scrollIndicators(.hidden)
+                    .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
                 }
             }
-            .onAppear {
-                fetchCookPlansFromServer { fetchedPlans, error in
-                    if let fetchedPlans = fetchedPlans {
-                        DispatchQueue.main.async {
-                            self.plans = fetchedPlans
-                        }
-                    } else if let error = error {
-                        print("Failed to fetch plans: \(error)")
-                    }
-                }
-            }
-            .scrollIndicators(.hidden)
-            .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
-            
-//            NavigationLink(destination: NowView()) {
-//                Text("立即煮")
-//                    .padding()
-//            }
         }
     }
-
+    
     func computeDays() -> [Day] {
         var days: [Day] = []
         if let targetDate = Calendar.current.date(byAdding: .day, value: 0, to: Date()) {
@@ -142,7 +198,7 @@ struct CookView: View {
         }
         return days
     }
-
+    
     struct Day: Hashable {
         let dateString: String
         let dayIndex: Int

@@ -157,13 +157,14 @@ struct BMIView: View
                 HStack
                 {
                     Text("BMI紀錄")
-                        .foregroundColor(Color("BTColor"))
+                        .foregroundColor(Color.black)
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x:-60)
                     
                     Button(action:
                             {
+                        
                         //self.connect(name: "Dynamics")
                         isShowingList.toggle()
                     }) {
@@ -193,14 +194,18 @@ struct BMIView: View
                             .annotation(position: .top) {
                                 Text("\(record.bmi, specifier: "%.2f")")
                                     .font(.system(size: 12))
-                                    .foregroundColor(Color("BTColor"))
+                                    .foregroundColor(Color.black)
                             }
                         }
                         .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : (displayMode == 1 ? CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)) : CGFloat(max(300, bmiRecordViewModel.averagesEveryThirtyRecordsSorted().count * 100))), height: 200)
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加边框
+                        .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5) // 添加阴影
                     }
                     .padding()
+                    
                 }
-
+                
                 
                 
                 
@@ -288,43 +293,52 @@ struct BMIView: View
                     self.dismissKeyboard()
                 }
                 .padding(.bottom, 25)
-            }.offset(y:-60)
+            }.offset(y:23)
         }
     }
 }
 
-struct BMIRecordsListView: View
-{
+struct BMIRecordsListView: View {
     @Binding var records: [BMIRecord]
     @ObservedObject var temperatureSensorViewModel: TemperatureSensorViewModel
     
-    init(records: Binding<[BMIRecord]>, temperatureSensorViewModel: TemperatureSensorViewModel)
-    {
+    init(records: Binding<[BMIRecord]>, temperatureSensorViewModel: TemperatureSensorViewModel) {
         self._records = records
         self.temperatureSensorViewModel = temperatureSensorViewModel
     }
     
-    var body: some View
-    {
-        NavigationStack
-        {
-            List
-            {
-                ForEach(records)
-                {
-                    record in
-                    NavigationLink(destination: BMIRecordDetailView(record: record))
-                    {
-                        Text("\(formattedDate(record.date)): \(record.bmi, specifier: "%.2f")")
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(records) { record in
+                    NavigationLink(destination: BMIRecordDetailView(record: record)) {
+                        HStack {
+                            bmiImage(for: record)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 30, height: 30)
+                                .padding(8)
+                                .background(Color(UIColor.systemGray6))
+                                .cornerRadius(5)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .stroke(Color.orange, lineWidth: 1)
+                                )
+                                .padding(.trailing, 8)
+                            VStack(alignment: .leading) {
+                                Text(BMIRecordDetailView.bmiCategory(for: record))  // 使用静态方法
+                                Text("\(formattedDate(record.date)): \(record.bmi, specifier: "%.2f")")
+                                    .foregroundColor(.gray)  // 设置为浅灰色
+                                    .font(.system(size: 14))  // 自定义字体大小
+                            }
+                        }
                     }
                 }
                 .onDelete(perform: deleteRecord)
             }
             .navigationTitle("BMI紀錄列表")
-            .toolbar
-            {
-                ToolbarItem(placement: .navigationBarTrailing)
-                {
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
             }
@@ -332,16 +346,34 @@ struct BMIRecordsListView: View
     }
     
     // MARK: 刪除
-    private func deleteRecord(at offsets: IndexSet)
-    {
+    private func deleteRecord(at offsets: IndexSet) {
         records.remove(atOffsets: offsets)
         
-        if let sensorIndex = temperatureSensorViewModel.allSensors.firstIndex(where: { $0.id == "BMI" }) // 更新TemperatureSensor的records
-        {
+        if let sensorIndex = temperatureSensorViewModel.allSensors.firstIndex(where: { $0.id == "BMI" }) {
+            // 更新TemperatureSensor的records
             temperatureSensorViewModel.allSensors[sensorIndex].records = records
         }
     }
+    
+    private func bmiImage(for record: BMIRecord) -> Image {
+        switch BMIRecordDetailView.bmiCategory(for: record) {
+        case "過瘦":
+            return Image("too_thin")
+        case "標準":
+            return Image("standard")
+        case "過重":
+            return Image("heavy")
+        case "輕度肥胖":
+            return Image("too_heavy")
+        case "中度肥胖":
+            return Image("mild_obesuty")
+        default:
+            return Image("sever_obesuty")
+        }
+    }
 }
+
+
 
 extension Double
 {
@@ -352,32 +384,50 @@ extension Double
     }
 }
 
-struct BMIRecordDetailView: View
-{
+struct BMIRecordDetailView: View {
     var record: BMIRecord
-    var body: some View
-    {
-        VStack
-        {
+    
+    var body: some View {
+        VStack {
             bmiImage
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 100, height: 100)
+                .frame(width: 200, height: 200) // 放大圖片
                 .padding()
-            Text("身高: \(String(format: "%.1f", record.H)) 公分")
-            Text("體重: \(String(format: "%.1f", record.W)) 公斤")
-            Text("你的BMI為: \(String(format: "%.2f", record.bmi))")
-            Text("BMI分類: \(bmiCategory)")
+                .cornerRadius(100)
+                .overlay(
+                    Circle()
+                        .stroke(LinearGradient(
+                            gradient: Gradient(colors: [categoryColor, .white]),
+                            startPoint: .top,
+                            endPoint: .bottom),
+                            lineWidth: 4) // 細邊框
+                )
+                .padding()
+                .offset(y: -50) // 向上移動圖片
+            Text("身高：\(String(format: "%.1f", record.H)) 公分")
+                .font(.title) // 放大字體
+                .padding(.bottom,5)
+            Text("體重：\(String(format: "%.1f", record.W)) 公斤")
+                .font(.title) // 放大字體
+                .padding(.bottom,5)
+            Text("BMI：\(String(format: "%.2f", record.bmi))")
+                .font(.title) // 放大字體
+                .padding(.bottom,5)
+            Text("分類：\(bmiCategory)")
                 .foregroundColor(Color("BottonColor"))
-                .font(.headline)
+                .font(.title) // 放大字體
+                .padding(.bottom,5)
         }
         .navigationTitle("BMI 詳細資訊")
     }
     
-    private var bmiCategory: String
-    {
-        switch record.bmi
-        {
+    var bmiCategory: String {
+        BMIRecordDetailView.bmiCategory(for: record)
+    }
+    
+    static func bmiCategory(for record: BMIRecord) -> String {
+        switch record.bmi {
         case ..<18.5:
             return "過瘦"
         case 18.5..<24:
@@ -393,10 +443,8 @@ struct BMIRecordDetailView: View
         }
     }
     
-    private var bmiImage: Image
-    {
-        switch bmiCategory
-        {
+    private var bmiImage: Image {
+        switch bmiCategory {
         case "過瘦":
             return Image("too_thin")
         case "標準":
@@ -412,12 +460,10 @@ struct BMIRecordDetailView: View
         }
     }
     
-    private var categoryColor: Color
-    {
-        switch record.bmi
-        {
+    private var categoryColor: Color {
+        switch record.bmi {
         case ..<18.5:
-            return .blue
+            return Color(red: 0.5, green: 0.5, blue: 0.2)
         case 18.5..<24:
             return .green
         case 24..<27:
@@ -431,6 +477,7 @@ struct BMIRecordDetailView: View
         }
     }
 }
+
 
 
 struct BMIView_Previews: PreviewProvider

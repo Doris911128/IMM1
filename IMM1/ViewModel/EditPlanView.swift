@@ -74,16 +74,16 @@ struct EditPlanView: View
         }
     }
     // Function to fetch food options from the server
-    func fetchFoodOptions() 
+    func fetchFoodOptions()
     {
         if let url = URL(string: "http://163.17.9.107/food/Dishes.php")
         {
-            fetchFoodData(from: url) 
+            fetchFoodData(from: url)
             { foodData, error in
                 if let error = error
                 {
                     print("Error occurred: \(error)")
-                } else if let dishes = foodData 
+                } else if let dishes = foodData
                 {
                     print("Fetched food data: \(dishes)")
                     self.foodDataFromServer = dishes
@@ -146,7 +146,7 @@ struct EditPlanView: View
         {
             isShowingDetail7.toggle()
         }
-        .sheet(isPresented: $isShowingDetail7) 
+        .sheet(isPresented: $isShowingDetail7)
         {
             VStack
             {
@@ -160,10 +160,10 @@ struct EditPlanView: View
     }
     
     // 定義一個從指定 URL 獲取計劃數據的函數
-    func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> Void) 
+    func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> Void)
     {
         URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error 
+            if let error = error
             {
                 completion(nil, error)
                 return
@@ -176,12 +176,12 @@ struct EditPlanView: View
                 return
             }
             
-            do 
+            do
             {
                 let decoder = JSONDecoder()
                 let planData = try decoder.decode(PlanData.self, from: data)
                 completion(planData, nil)
-            } 
+            }
             catch
             {
                 completion(nil, error)
@@ -189,16 +189,16 @@ struct EditPlanView: View
         }.resume()
     }
     
-    func fetchPlanData() 
+    func fetchPlanData()
     {
         if let url = URL(string: "http://163.17.9.107/food/Plan.php")
         {
-            fetchPlanData(from: url) 
+            fetchPlanData(from: url)
             { planData, error in
                 if let error = error
                 {
                     print("在獲取計劃數據時發生錯誤：\(error)")
-                } 
+                }
                 else if let planData = planData
                 {
                     print("獲取的計劃數據：\(planData)")
@@ -214,13 +214,17 @@ struct EditPlanView: View
     @ViewBuilder
     private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int) -> some View
     {
-        
+        let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red]
+
         CustomButton(imageName: imageName, buttonText: buttonText)
         {
             currentCategoryIndex = categoryIndex
             isShowingDetail.wrappedValue.toggle()
             
         }
+
+        .background(backgroundColors[categoryIndex].opacity(0.5)) // 背景色
+        .cornerRadius(10)
         .sheet(isPresented: isShowingDetail)
         {
             FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map{ foodData in
@@ -255,7 +259,7 @@ struct EditPlanView: View
         var postData = "Dis_ID=\(disID)"
         if let pID = pID {
             postData += "&P_ID=\(pID)"
-        } 
+        }
         else
         {
             print("pID is nil, skipping update operation")
@@ -452,12 +456,12 @@ struct EditPlanView: View
                     if let selectedFood = selectedFoodData
                     {
                         updatePlanOnServer(pID: "nJqERSSPjn", disID: String(selectedFood.Dis_ID))
-                        savePlanToServer(P_ID: "", U_ID: "", Dis_ID: String(selectedFood.Dis_ID), P_DT: day, P_Bought: "") 
+                        savePlanToServer(P_ID: "", U_ID: "", Dis_ID: String(selectedFood.Dis_ID), P_DT: day, P_Bought: "")
                         { success, errorMessage in
-                            if success 
+                            if success
                             {
                                 print("計劃成功保存到伺服器")
-                            } 
+                            }
                             else
                             {
                                 print("保存計劃的結果：\(errorMessage ?? "出問題")")

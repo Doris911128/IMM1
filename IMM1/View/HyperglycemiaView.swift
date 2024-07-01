@@ -174,7 +174,7 @@ struct HyperglycemiaView: View
                 HStack
                 {
                     Text("血糖紀錄")
-                        .foregroundColor(Color("ButColor"))
+                        .foregroundColor(Color.black)
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x:-60)
@@ -208,7 +208,7 @@ struct HyperglycemiaView: View
                                         .annotation(position: .top) {
                                             Text("\(record.hyperglycemia, specifier: "%.2f")")
                                                 .font(.system(size: 12))
-                                                .foregroundColor(Color("ButColor"))
+                                                .foregroundColor(Color.black)
                                         }
                                     }
                                     .chartForegroundStyleScale([
@@ -216,6 +216,9 @@ struct HyperglycemiaView: View
                                     ])
                                     .frame(width: max(350, Double(chartData.count) * 65), height: 200)
                                     .padding(.top, 20)
+                                    .padding()
+                                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加边框
+                                    .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5) // 添加阴影
                                 }
                                 .padding()
                 VStack
@@ -226,7 +229,7 @@ struct HyperglycemiaView: View
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, 20)
-                            .foregroundColor(Color("textcolor"))
+                            .foregroundColor(Color.black)
                         Picker("显示模式", selection: $displayMode) {
                             Text("每日").tag(0)
                             Text("每7日").tag(1)
@@ -310,7 +313,7 @@ struct HyperglycemiaView: View
                 )
             }
         }
-        .offset(y: -98)
+        //.offset(y: -98)
     }
 }
 

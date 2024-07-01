@@ -1,10 +1,10 @@
-//血壓（Blood Pressure）的英文縮寫是 BP
+// 血壓（Blood Pressure）的英文縮寫是 BP
 
 // MARK: 血壓View
 import SwiftUI
 import Charts
 
-struct HypertensionRecord: Identifiable, Codable //血壓紀錄
+struct HypertensionRecord: Identifiable, Codable // 血壓紀錄
 {
     var id = UUID()  // 在这里生成 UUID，不依赖 JSON 提供的 ID
     var hypertension: Double
@@ -20,8 +20,7 @@ struct HypertensionRecord: Identifiable, Codable //血壓紀錄
         self.date = date
     }
     
-    init(from decoder: Decoder) throws
-    {
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let hypertensionString = try container.decode(String.self, forKey: .hypertension)
         guard let hypertensionDouble = Double(hypertensionString) else {
@@ -42,20 +41,19 @@ struct HypertensionRecord: Identifiable, Codable //血壓紀錄
     }
 }
 
-struct HypertensionTemperatureSensor: Identifiable //包含ID和高血壓相關紀錄數組
+struct HypertensionTemperatureSensor: Identifiable // 包含ID和高血壓相關紀錄數組
 {
     var id: String
     var records: [HypertensionRecord]
 }
 
-var HypertensionallSensors: [HypertensionTemperatureSensor] = //存取TemperatureSensor數據
+var HypertensionallSensors: [HypertensionTemperatureSensor] = // 存取TemperatureSensor數據
 [
     .init(id: "血壓值", records: [])
 ]
 
 // MARK: 日期func
-private func formattedDate(_ date: Date) -> String
-{
+private func formattedDate(_ date: Date) -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = "MM-dd HH:mm"  // 加入秒
     formatter.locale = Locale(identifier: "en_US_POSIX") // 使用 POSIX 以保證日期格式的嚴格匹配
@@ -171,7 +169,7 @@ struct HypertensionView: View
                 HStack
                 {
                     Text("血壓紀錄")
-                        .foregroundColor(Color("ButColor"))
+                        .foregroundColor(Color.black)
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x: -60)
@@ -205,12 +203,15 @@ struct HypertensionView: View
                         .annotation(position: .top) {
                             Text("\(record.hypertension, specifier: "%.2f")")
                                 .font(.system(size: 12))
-                                .foregroundColor(Color("ButColor"))
+                                .foregroundColor(Color.black)
                         }
                     }
                     .chartForegroundStyleScale(["血壓值": .orange])
                     .frame(width: max(350, Double(chartData.count) * 65), height: 200)
                     .padding(.top, 20)
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加边框
+                    .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5) // 添加阴影
                 }
                 .padding()
                 
@@ -222,7 +223,7 @@ struct HypertensionView: View
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.leading, 20)
-                            .foregroundColor(Color("ButColor"))
+                            .foregroundColor(Color.black)
                         Picker("显示模式", selection: $displayMode) {
                             Text("每日").tag(0)
                             Text("每7日").tag(1)
@@ -305,7 +306,7 @@ struct HypertensionView: View
                 )
             }
         }
-        .offset(y: -98)
+//        .offset(y: -98)
     }
 }
 

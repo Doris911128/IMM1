@@ -18,7 +18,32 @@ struct FoodSelectionView: View {
     @Binding var editedPlan: String
     @Binding var foodOptions: [FoodOption]
     @Environment(\.presentationMode) var presentationMode
-
+   
+    struct RecipeBlock: View {
+            var imageName: String
+            var title: String
+            var U_ID: String
+            var Dis_ID: String
+            
+            var body: some View {
+                VStack {
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100) // 設置圖片大小
+                        .cornerRadius(10)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
+                    Text(title)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(5)
+                .frame(width: 120) // 設置整個 RecipeBlock 的寬度
+            }
+        }
     var body: some View {
         VStack {
             ScrollView {
@@ -28,14 +53,6 @@ struct FoodSelectionView: View {
                         self.isShowingDetail.toggle()
                     }) {
                         ZStack {
-                            Rectangle()
-                                .fill(Color.orange)
-                                .frame(width: UIScreen.main.bounds.width - 40, height: 150)
-                                .cornerRadius(10)
-                                .opacity(0.8)
-                                .offset(y: 40)
-                                .font(.title)
-
                             AsyncImage(url: foodOption.backgroundImage) { phase in
                                 switch phase {
                                 case .empty:
@@ -44,8 +61,22 @@ struct FoodSelectionView: View {
                                     image
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: UIScreen.main.bounds.width - 40, height: 150)
+                                        .frame(width: UIScreen.main.bounds.width - 40, height: 250)
                                         .cornerRadius(10)
+                                    VStack(alignment: .leading) {
+                                        HStack {
+                                            Text(foodOption.name)
+                                                .font(.title)
+                                                .foregroundColor(.white)
+                                                .padding(.horizontal)
+                                                .padding(.vertical, 10)
+                                                .bold()
+                                                .cornerRadius(8)
+                                                .shadow(radius: 4)
+                                                .offset(x: 0, y: -80) // 调整文字位置
+                                            Spacer()
+                                        }
+                                    }
                                 case .failure:
                                     Text("Failed to load image")
                                 }
@@ -53,16 +84,12 @@ struct FoodSelectionView: View {
 
                             VStack {
                                 Spacer()
-                                Label(foodOption.name, systemImage: "")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
                                     .padding()
-                                    .offset(y: 45)
                             }
                         }
                     }
                     .buttonStyle(BorderlessButtonStyle())
-                    .padding(.bottom, 60)
+                    .padding(.bottom, -50) // 调整按钮间距
                 }
             }
             .scrollIndicators(.hidden)
