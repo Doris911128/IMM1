@@ -2,11 +2,13 @@
 import SwiftUI
 import Foundation
 
-struct PlanDeleteError: Error {
+struct PlanDeleteError: Error 
+{
     let message: String
 }
 
-struct Plan: Codable {
+struct Plan: Codable 
+{
     let P_ID: String
     let U_ID: String
     let Dis_ID: String
@@ -34,14 +36,18 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
     let parameters = "delete=true&P_ID=\(encodedPID)"
     request.httpBody = parameters.data(using: .utf8)
 
-    URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error = error {
+    URLSession.shared.dataTask(with: request) 
+    { data, response, error in
+        if let error = error
+        {
             completion(.failure(error))
             return
         }
 
         guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+              (200...299).contains(httpResponse.statusCode) 
+        else
+        {
             let errorMessage = "Invalid HTTP response: \(String(describing: response))"
             completion(.failure(NSError(domain: "HTTPError", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
             return

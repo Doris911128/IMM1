@@ -1,3 +1,4 @@
+//食譜份數暫時未新增因要更動版面
 import SwiftUI
 import Foundation
 
@@ -212,7 +213,7 @@ struct EditPlanView: View
     }
     
     @ViewBuilder
-    private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int) -> some View
+    private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View
     {
         let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red]
 
@@ -220,17 +221,14 @@ struct EditPlanView: View
         {
             currentCategoryIndex = categoryIndex
             isShowingDetail.wrappedValue.toggle()
-            
         }
-
         .background(backgroundColors[categoryIndex].opacity(0.5)) // 背景色
         .cornerRadius(10)
         .sheet(isPresented: isShowingDetail)
         {
-            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map{ foodData in
-                
+            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
                 FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image)!)
-            }))
+            }), categoryTitle: categoryTitle)
             .onDisappear
             {
                 if let selectedFood = findSelectedFoodData(for: editedPlan)
@@ -241,6 +239,7 @@ struct EditPlanView: View
             }
         }
     }
+
     //幫我寫一下搜尋功能，在EditPlanView中進行搜尋食物，並利用FoodSelectionView顯示搜尋結果
     func updatePlanOnServer(pID: String?, disID: String)
     {
@@ -419,29 +418,27 @@ struct EditPlanView: View
                     
                     
                     // 在分類列表中使用 TempView 並傳遞分類索引
-                    let name=["懶人","減肥","省錢","放縱","養生","今日推薦","我的最愛","聽天由命"]
-                    let show2=[foodOptions1,foodOptions2,foodOptions3,foodOptions4,foodOptions5,foodOptions6,foodOptions7]
-                    VStack(spacing: 30)
-                    {
-                        ForEach(name.indices, id: \.self)
-                        { index in
-                            if index == 7
-                            {
+                    let names = ["懶人", "減肥", "省錢", "放縱", "養生", "今日推薦", "我的最愛", "聽天由命"]
+                    let showOptions = [foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6, foodOptions7]
+
+                    VStack(spacing: 30) {
+                        ForEach(names.indices, id: \.self) { index in
+                            if index == 7 {
                                 fateButton
-                            }
-                            else
-                            {
+                            } else {
                                 self.TempView(
-                                    imageName: name[index],
-                                    buttonText: name[index],
+                                    imageName: names[index],
+                                    buttonText: names[index],
                                     isShowingDetail: $show1[index],
-                                    foodOptions: show2[index],
-                                    categoryIndex: index
+                                    foodOptions: showOptions[index],
+                                    categoryIndex: index,
+                                    categoryTitle: names[index]
                                 )
                             }
                         }
                     }
                     .padding()
+
                 }
             }
         }
@@ -475,23 +472,19 @@ struct EditPlanView: View
                 }
             )
         }
-        .sheet(isPresented: $isShowingDetail)
-        {
-            FoodSelectionView(isShowingDetail: $isShowingDetail, editedPlan: $editedPlan, foodOptions: $searchResults)
-                .onDisappear
-            {
-                if let selectedFood = findSelectedFoodData(for: editedPlan)
-                {
-                    // 選擇了食物，準備顯示警示框
-                    self.selectedFoodData = selectedFood
-                    self.showAlert = true
+        .sheet(isPresented: $isShowingDetail) {
+            FoodSelectionView(isShowingDetail: $isShowingDetail, editedPlan: $editedPlan, foodOptions: $searchResults, categoryTitle: "搜索结果")
+                .onDisappear {
+                    if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                        // 選擇了食物，準備顯示警示框
+                        self.selectedFoodData = selectedFood
+                        self.showAlert = true
+                    } else {
+                        // 沒有選擇食物，不顯示警示框
+                        self.showAlert = false
+                    }
                 }
-                else
-                {
-                    // 沒有選擇食物，不顯示警示框
-                    self.showAlert = false
-                }
-            }
         }
+
     }
 }

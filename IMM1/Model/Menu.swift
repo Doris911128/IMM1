@@ -17,6 +17,7 @@ struct Dishes: Codable
     let D_Cook: String? //煮法
     let D_image: String //照片
     let D_Video: String? //影片
+    let Dis_serving: String? //份數
     var category: String? // MARK: 由EditPlanView.swift 中更新分類
     var foods: [Food]?
     var amounts: [Amount]?
@@ -28,6 +29,7 @@ struct Dishes: Codable
         D_Cook: String  = "",
         D_image: String  = "",
         D_Video: String  = "",
+        Dis_serving: String  = "",
         category: String = "",
         foods: [Food] = [],
         amounts: [Amount] = []
@@ -38,6 +40,7 @@ struct Dishes: Codable
         self.D_Cook = D_Cook
         self.D_image = D_image
         self.D_Video = D_Video
+        self.Dis_serving = Dis_serving
         self.category = category
         self.foods = foods
         self.amounts = amounts
