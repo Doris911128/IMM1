@@ -145,11 +145,11 @@ struct FavoriteView: View
                                         imageName: dish.D_image ?? "",
                                         title: dish.Dis_Name,
                                         U_ID: "", // 假設 U_ID 不再需要傳遞
-                                        Dis_ID: "\(dish.Dis_ID)",
+                                        Dis_ID: dish.Dis_ID,
                                         isFavorited: true // 將 isFavorited 設置為 true
                                     )
                                 }
-                                .padding(.bottom, 10)
+                                //.padding(.bottom, 10)
                             }
                         }
                     }

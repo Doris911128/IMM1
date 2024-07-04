@@ -293,7 +293,7 @@ struct MyView: View
                             // MARK: 飲食偏好->暫時食譜顯示
                             HStack
                             {
-                                NavigationLink(destination: MenuView(Dis_ID: self.disID)) {
+                                NavigationLink(destination: MenuView(U_ID: " ", Dis_ID: self.disID)) {
                                     InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
                                 }
                             }

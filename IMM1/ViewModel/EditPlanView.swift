@@ -1,51 +1,40 @@
 //食譜份數暫時未新增因要更動版面
+// EditPlanView
 import SwiftUI
 import Foundation
 
 // 定義從服務器獲取的計劃數據結構
-struct PlanData: Codable
-{
+struct PlanData: Codable {
     let P_ID: String
-    // 根據需要添加其他屬性
 }
 
-// Define a function to fetch food data from a specified URL
-func fetchFoodData(from url: URL, completion: @escaping ([Dishes]?, Error?) -> Void)
-{
+// 定義一個從指定 URL 獲取計劃數據的函數
+func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> Void) {
     URLSession.shared.dataTask(with: url) { data, response, error in
-        if let error = error
-        {
+        if let error = error {
             completion(nil, error)
             return
         }
-        
-        guard let data = data
-        else
-        {
+
+        guard let data = data else {
             completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
             return
         }
-        
-        do
-        {
+
+        do {
             let decoder = JSONDecoder()
-            let foodData = try decoder.decode([Dishes].self, from: data)
-            completion(foodData, nil)
-        }
-        catch
-        {
+            let planData = try decoder.decode(PlanData.self, from: data)
+            completion(planData, nil)
+        } catch {
             completion(nil, error)
         }
     }.resume()
 }
 
-// Define the EditPlanView SwiftUI view
-struct EditPlanView: View
-{
-    
+struct EditPlanView: View {
     var day: String
     var planIndex: Int
-    
+
     @State private var dishesData: [Dishes] = []
     @State private var show1: [Bool] = [false, false, false, false, false, false, false, false]
     @State private var searchText: String = ""
@@ -53,7 +42,7 @@ struct EditPlanView: View
     @State private var isShowingDetail = false
     @State private var foodDataFromServer: [Dishes] = []
     @State private var foodOptions: [Dishes] = []
-    @Binding var plans: [String: [String]]
+    @Binding var plans: [String: [Plan]]
     @State private var isNewPlan = true
     @State private var planID: String = ""
     @State private var showAlert = false
@@ -61,31 +50,26 @@ struct EditPlanView: View
     @State private var currentCategoryIndex: Int? = nil
     @State private var isSaveAlertShowing = false
     @State private var isSearchingByIngredient = false
-    
+
     @State private var searchResults: [FoodOption] = []
     @Environment(\.presentationMode) var presentationMode
+
     // 選擇食物的函數
-    func selectFood(food: Dishes)
-    {
+    func selectFood(food: Dishes) {
         selectedFoodData = food
         showAlert = true
-        if let categoryIndex = currentCategoryIndex
-        {
+        if let categoryIndex = currentCategoryIndex {
             show1[categoryIndex] = false // 隱藏分類介面
         }
     }
+
     // Function to fetch food options from the server
-    func fetchFoodOptions()
-    {
-        if let url = URL(string: "http://163.17.9.107/food/Dishes.php")
-        {
-            fetchFoodData(from: url)
-            { foodData, error in
-                if let error = error
-                {
+    func fetchFoodOptions() {
+        if let url = URL(string: "http://163.17.9.107/food/Dishes.php") {
+            fetchFoodData(from: url) { foodData, error in
+                if let error = error {
                     print("Error occurred: \(error)")
-                } else if let dishes = foodData
-                {
+                } else if let dishes = foodData {
                     print("Fetched food data: \(dishes)")
                     self.foodDataFromServer = dishes
                     self.foodOptions = dishes
@@ -98,59 +82,50 @@ struct EditPlanView: View
                     self.foodOptions7 = dishes
                 }
             }
-        }
-        else
-        {
+        } else {
             print("Invalid URL")
         }
     }
-    
+
     // MARK: 懶人選項
     @State private var foodOptions1: [Dishes] = []
-    
+
     // MARK: 減肥選項
     @State private var foodOptions2: [Dishes] = []
-    
+
     // MARK: 省錢選項
     @State private var foodOptions3: [Dishes] = []
-    
+
     // MARK: 放縱選項
     @State private var foodOptions4: [Dishes] = []
-    
+
     // MARK: 養生選項
     @State private var foodOptions5: [Dishes] = []
-    
+
     // MARK: 我的最愛
     @State private var foodOptions6: [Dishes] = []
-    
+
     // MARK: 今日推薦選項
     @State private var foodOptions7: [Dishes] = []
-    
+
     @State private var isShowingDetail7 = false
-    func findSelectedFoodData(for name: String) -> Dishes?
-    {
+    func findSelectedFoodData(for name: String) -> Dishes? {
         // 根據食物名稱在從服務器獲取的數據中找到對應的食物資料
-        for food in foodDataFromServer
-        {
-            if food.Dis_Name == name
-            {
+        for food in foodDataFromServer {
+            if food.Dis_Name == name {
                 return food
             }
         }
         return nil
     }
-    
+
     // MARK: 聽天由命選項的View
-    private var fateButton: some View
-    {
-        CustomButton(imageName: "聽天由命", buttonText: "聽天由命")
-        {
+    private var fateButton: some View {
+        CustomButton(imageName: "聽天由命", buttonText: "聽天由命") {
             isShowingDetail7.toggle()
         }
-        .sheet(isPresented: $isShowingDetail7)
-        {
-            VStack
-            {
+        .sheet(isPresented: $isShowingDetail7) {
+            VStack {
                 Spacer()
                 SpinnerView()
                     .background(Color.white)
@@ -159,80 +134,23 @@ struct EditPlanView: View
             .edgesIgnoringSafeArea(.all)
         }
     }
-    
-    // 定義一個從指定 URL 獲取計劃數據的函數
-    func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> Void)
-    {
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error
-            {
-                completion(nil, error)
-                return
-            }
-            
-            guard let data = data
-            else
-            {
-                completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
-                return
-            }
-            
-            do
-            {
-                let decoder = JSONDecoder()
-                let planData = try decoder.decode(PlanData.self, from: data)
-                completion(planData, nil)
-            }
-            catch
-            {
-                completion(nil, error)
-            }
-        }.resume()
-    }
-    
-    func fetchPlanData()
-    {
-        if let url = URL(string: "http://163.17.9.107/food/Plan.php")
-        {
-            fetchPlanData(from: url)
-            { planData, error in
-                if let error = error
-                {
-                    print("在獲取計劃數據時發生錯誤：\(error)")
-                }
-                else if let planData = planData
-                {
-                    print("獲取的計劃數據：\(planData)")
-                }
-            }
-        }
-        else
-        {
-            print("無效的 URL")
-        }
-    }
-    
+
     @ViewBuilder
-    private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View
-    {
+    private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
         let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red]
 
-        CustomButton(imageName: imageName, buttonText: buttonText)
-        {
+        CustomButton(imageName: imageName, buttonText: buttonText) {
             currentCategoryIndex = categoryIndex
             isShowingDetail.wrappedValue.toggle()
         }
         .background(backgroundColors[categoryIndex].opacity(0.5)) // 背景色
         .cornerRadius(10)
-        .sheet(isPresented: isShowingDetail)
-        {
+        .sheet(isPresented: isShowingDetail) {
             FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
                 FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image)!)
             }), categoryTitle: categoryTitle)
-            .onDisappear
-            {
-                if let selectedFood = findSelectedFoodData(for: editedPlan)
-                {
+            .onDisappear {
+                if let selectedFood = findSelectedFoodData(for: editedPlan) {
                     self.selectedFoodData = selectedFood
                     self.showAlert = true
                 }
@@ -240,109 +158,80 @@ struct EditPlanView: View
         }
     }
 
-    //幫我寫一下搜尋功能，在EditPlanView中進行搜尋食物，並利用FoodSelectionView顯示搜尋結果
-    func updatePlanOnServer(pID: String?, disID: String)
-    {
-        guard let url = URL(string: "http://163.17.9.107/food/Planupdate.php")
-        else
-        {
+    func updatePlanOnServer(pID: String?, disID: Int) {
+        guard let url = URL(string: "http://163.17.9.107/food/Planupdate.php") else {
             print("Invalid URL")
             return
         }
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        
-        // 構造 POST 數據
+
         var postData = "Dis_ID=\(disID)"
         if let pID = pID {
             postData += "&P_ID=\(pID)"
-        }
-        else
-        {
+        } else {
             print("pID is nil, skipping update operation")
             return
         }
-        
+
         request.httpBody = postData.data(using: .utf8)
-        
-        URLSession.shared.dataTask(with: request)
-        { data, response, error in
-            if let error = error
-            {
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
                 print("Error: \(error)")
                 return
             }
-            
-            // 解析響應
-            if let data = data, let responseString = String(data: data, encoding: .utf8)
-            {
+
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
                 print("Response: \(responseString)")
-                if responseString.contains("成功")
-                {
+                if responseString.contains("成功") {
                     self.isNewPlan = false
                 }
             }
         }.resume()
     }
-    
-    func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: String, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void)
-    {
-        guard let url = URL(string: "http://163.17.9.107/food/Plan.php")
-        else
-        {
+
+    func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: Int, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
             completion(false, "無效的 URL")
             return
         }
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        
+
         let postData = "P_ID=\(P_ID)&U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&P_DT=\(P_DT)&P_Bought=\(P_Bought)"
         request.httpBody = postData.data(using: .utf8)
-        
-        URLSession.shared.dataTask(with: request)
-        { data, response, error in
-            if let error = error
-            {
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
                 completion(false, "錯誤: \(error.localizedDescription)")
                 return
             }
-            
-            // 解析響應
-            if let data = data, let responseString = String(data: data, encoding: .utf8)
-            {
-                if responseString.contains("計劃已成功保存到數據庫")
-                {
+
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                if responseString.contains("計劃已成功保存到數據庫") {
                     completion(true, nil)
-                }
-                else
-                {
+                } else {
                     completion(false, responseString)
                 }
-            }
-            else
-            {
+            } else {
                 completion(false, "未從服務器收到數據")
             }
         }.resume()
     }
-    
-    struct CustomToggle: View
-    {
+
+    struct CustomToggle: View {
         @Binding var isOn: Bool
-        
-        var body: some View
-        {
-            Button(action:
-            {
+
+        var body: some View {
+            Button(action: {
                 self.isOn.toggle()
-            })
-            {
-                VStack
-                {
+            }) {
+                VStack {
                     Image(systemName: isOn ? "checkmark.square.fill" : "square")
                         .resizable()
                         .frame(width: 20, height: 20)
@@ -353,24 +242,19 @@ struct EditPlanView: View
             }
         }
     }
-    
-    func performSearch()
-    {
-        if isSearchingByIngredient
-        {
-            // 根據食材進行搜索
+
+    func performSearch() {
+        if isSearchingByIngredient {
             let searchTextLowercased = searchText.lowercased()
             searchResults = foodDataFromServer
                 .filter { dish in
-                    dish.foods?.contains
-                    { $0.F_Name.lowercased().contains(searchTextLowercased) } ?? false
+                    dish.foods?.contains {
+                        $0.F_Name.lowercased().contains(searchTextLowercased)
+                    } ?? false
                 }
                 .map { $0.toFoodOption() }
             isShowingDetail = true
-        }
-        else
-        {
-            // 根據食物名稱進行搜索
+        } else {
             let searchTextLowercased = searchText.lowercased()
             searchResults = foodDataFromServer
                 .filter { $0.Dis_Name.lowercased().contains(searchTextLowercased) }
@@ -378,46 +262,32 @@ struct EditPlanView: View
             isShowingDetail = true
         }
     }
-    
-    var body: some View
-    {
-        NavigationView
-        {
-            ScrollView
-            {
-                VStack(spacing:5)
-                {
-                    HStack(spacing:-20)
-                    {
-                        TextField("搜尋食譜.....", text: $searchText, onCommit:
-                                    {
-                            // 執行搜尋操作
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 5) {
+                    HStack(spacing: -20) {
+                        TextField("搜尋食譜.....", text: $searchText, onCommit: {
                             performSearch()
                         })
                         .padding()
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        
+
                         Button(action: {
-                            // 執行搜尋操作
                             performSearch()
-                        })
-                        {
+                        }) {
                             Image(systemName: "magnifyingglass")
                                 .padding()
                         }
                         CustomToggle(isOn: $isSearchingByIngredient)
                             .padding()
-                        
                     }
                     .padding(.top, 10)
-                    
-                    
                     .onAppear {
                         fetchFoodOptions()
                     }
-                    
-                    
-                    // 在分類列表中使用 TempView 並傳遞分類索引
+
                     let names = ["懶人", "減肥", "省錢", "放縱", "養生", "今日推薦", "我的最愛", "聽天由命"]
                     let showOptions = [foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6, foodOptions7]
 
@@ -438,53 +308,61 @@ struct EditPlanView: View
                         }
                     }
                     .padding()
-
                 }
             }
         }
-        .alert(isPresented: $showAlert)
-        {
+        .alert(isPresented: $showAlert) {
             Alert(
                 title: Text("保存計劃"),
                 message: Text("是否保存當前選擇的菜品：\(selectedFoodData?.Dis_Name ?? "")"),
-                primaryButton: .default(Text("保存"))
-                {
+                primaryButton: .default(Text("保存")) {
                     presentationMode.wrappedValue.dismiss()
-                    if let selectedFood = selectedFoodData
-                    {
-                        updatePlanOnServer(pID: "nJqERSSPjn", disID: String(selectedFood.Dis_ID))
-                        savePlanToServer(P_ID: "", U_ID: "", Dis_ID: String(selectedFood.Dis_ID), P_DT: day, P_Bought: "")
-                        { success, errorMessage in
-                            if success
-                            {
+                    if let selectedFood = selectedFoodData {
+                        updatePlanOnServer(pID: plans[day]?[planIndex].P_ID, disID: selectedFood.Dis_ID)
+                        savePlanToServer(P_ID: plans[day]?[planIndex].P_ID ?? "", U_ID: "", Dis_ID: selectedFood.Dis_ID, P_DT: day, P_Bought: "") { success, errorMessage in
+                            if success {
                                 print("計劃成功保存到伺服器")
-                            }
-                            else
-                            {
+                            } else {
                                 print("保存計劃的結果：\(errorMessage ?? "出問題")")
                             }
                         }
                     }
                 },
-                secondaryButton: .cancel(Text("取消"))
-                {
-                    
-                }
+                secondaryButton: .cancel(Text("取消")) {}
             )
         }
         .sheet(isPresented: $isShowingDetail) {
             FoodSelectionView(isShowingDetail: $isShowingDetail, editedPlan: $editedPlan, foodOptions: $searchResults, categoryTitle: "搜索结果")
                 .onDisappear {
                     if let selectedFood = findSelectedFoodData(for: editedPlan) {
-                        // 選擇了食物，準備顯示警示框
                         self.selectedFoodData = selectedFood
                         self.showAlert = true
                     } else {
-                        // 沒有選擇食物，不顯示警示框
                         self.showAlert = false
                     }
                 }
         }
-
     }
+}
+
+func fetchFoodData(from url: URL, completion: @escaping ([Dishes]?, Error?) -> Void) {
+    URLSession.shared.dataTask(with: url) { data, response, error in
+        if let error = error {
+            completion(nil, error)
+            return
+        }
+
+        guard let data = data else {
+            completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
+            return
+        }
+
+        do {
+            let decoder = JSONDecoder()
+            let foodData = try decoder.decode([Dishes].self, from: data)
+            completion(foodData, nil)
+        } catch {
+            completion(nil, error)
+        }
+    }.resume()
 }

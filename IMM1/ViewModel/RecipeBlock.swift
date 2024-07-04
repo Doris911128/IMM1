@@ -11,11 +11,11 @@ struct RecipeBlock: View
 {
     let D_image: String
     let Dis_Name: String
-    let U_ID: String // 用於添加我的最愛
-    let Dis_ID: String // 用於添加我的最愛
+    let U_ID: String
+    let Dis_ID: Int
     @State private var isFavorited: Bool
     
-    init(imageName: String, title: String, U_ID: String, Dis_ID: String, isFavorited: Bool = false) 
+    init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0, isFavorited: Bool = false)
     {
         self.D_image = imageName
         self.Dis_Name = title
@@ -26,65 +26,75 @@ struct RecipeBlock: View
     
     var body: some View
     {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(Color(red: 0.961, green: 0.804, blue: 0.576))
-            .frame(width: 330, height: 250)
-            .overlay 
+        VStack
         {
-            VStack
+            ZStack(alignment: .topTrailing)
             {
-                AsyncImage(url: URL(string: D_image)) 
-                { phase in
+                AsyncImage(url: URL(string: D_image)) { phase in
                     if let image = phase.image
                     {
-                        image.resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 330, height: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: UIScreen.main.bounds.width - 40, height: 250)
+                            .cornerRadius(10)
+                            
+                            
                     }
                     else
                     {
                         Color.gray
                     }
                 }
+                .padding(.top,50)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                .offset(y: -6)
                 
-                HStack(alignment: .bottom)
+                Button(action:
                 {
-                    Text(Dis_Name)
-                        .foregroundColor(.black)
-                        .font(.system(size: 24))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 10)
-                    
-                    Image(systemName: self.isFavorited ? "heart.fill" : "heart")
-                        .font(.title)
-                        .foregroundStyle(.orange)
-                        .colorMultiply(.red.opacity(0.6))
-                        .onTapGesture
+                    withAnimation(.easeInOut.speed(3))
                     {
-                        
-                        withAnimation(.easeInOut.speed(3))
-                        {
-                            self.isFavorited.toggle()
-                            toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
-                                switch result
-                                {
-                                case .success(let responseString):
-                                    print("Success: \(responseString)")
-                                case .failure(let error):
-                                    print("Error: \(error.localizedDescription)")
-                                }
+                        self.isFavorited.toggle()
+                        toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
+                            switch result
+                            {
+                            case .success(let responseString):
+                                print("Success: \(responseString)")
+                            case .failure(let error):
+                                print("Error: \(error.localizedDescription)")
                             }
                         }
                     }
-                    .padding(.trailing, 10)
-                    .symbolEffect(.bounce, value: self.isFavorited)
+                })
+                {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.orange)
+                        .frame(width: 50, height: 50)
+                        .overlay(
+                            Image(systemName: self.isFavorited ? "heart.fill" : "heart")
+                                .font(.title)
+                                .foregroundColor(.red)
+                        )
                 }
-                .offset(y: -5)
+                .offset(y: 230)
+                .padding(.trailing, 10)
+                .symbolEffect(.bounce, value: self.isFavorited)
             }
+            
+            HStack(alignment: .bottom) {
+                Text(Dis_Name)
+                    .font(.title)
+                    .foregroundColor(.white)
+                    .padding(.horizontal)
+                    .padding(.vertical, 10)
+                    .bold()
+                    .cornerRadius(8)
+                    .shadow(radius: 4)
+                    .offset(x: 0, y: -80) // 调整文字位置
+                    Spacer()
+            }
+            .offset(y: -5)
         }
         .padding(.horizontal, 20)
+        .offset(y: -40)
     }
-}
+}//食譜模板區塊

@@ -3,7 +3,6 @@
 import Foundation
 
 class User: ObservableObject, Decodable {
-    
     @Published var id: String
     @Published var account: String
     // MARK: 註解密碼部分1
@@ -17,7 +16,7 @@ class User: ObservableObject, Decodable {
     @Published var sweet: String
     @Published var bitter: String
     @Published var hot: String
-
+    
     // MARK: 初始化
     init(id: String = "",
          account: String = "",
@@ -30,11 +29,10 @@ class User: ObservableObject, Decodable {
          acid: String = "0.0",
          sweet: String = "0.0",
          bitter: String = "0.0",
-         hot: String = "0.0")
-    {
+         hot: String = "0.0") {
         self.id = id
         self.account = account
-        //self.password = password// MARK: 註解密碼部分2
+        //self.password = password // MARK: 註解密碼部分2
         self.name = name
         self.gender = gender
         self.birthday = birthday
@@ -46,31 +44,29 @@ class User: ObservableObject, Decodable {
         self.hot = hot
     }
     
-    // MARK: 可失败的初始化方法
+    // MARK: 可失敗的初始化方法
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.id = try container.decode(String.self, forKey: .id)
-        self.account = try container.decodeIfPresent(String.self, forKey: .account) ?? "" // 解码U_Acc字段，如果不存在则赋为空字符串
-        // MARK: 註解密碼部分3
-        //self.password = try container.decode(String.self, forKey: .password)
+        self.account = try container.decodeIfPresent(String.self, forKey: .account) ?? "" // 解碼U_Acc字段，如果不存在則賦空字串
+        //self.password = try container.decode(String.self, forKey: .password) // MARK: 註解密碼部分3
         self.name = try container.decode(String.self, forKey: .name)
         self.gender = try container.decode(String.self, forKey: .gender)
         self.birthday = try container.decode(String.self, forKey: .birthday)
-        self.height = try container.decodeIfPresent(String.self, forKey: .height) ?? "" // 身高字段可为空
-        self.weight = try container.decodeIfPresent(String.self, forKey: .weight) ?? "" // 体重字段可为空
-        self.acid = try container.decodeIfPresent(String.self, forKey: .acid) ?? "" // 酸度字段可为空
-        self.sweet = try container.decodeIfPresent(String.self, forKey: .sweet) ?? "" // 甜度字段可为空
-        self.bitter = try container.decodeIfPresent(String.self, forKey: .bitter) ?? "" // 苦度字段可为空
-        self.hot = try container.decodeIfPresent(String.self, forKey: .hot) ?? "" // 辣度字段可为空
+        self.height = try container.decodeIfPresent(String.self, forKey: .height) ?? "" // 身高字段可為空
+        self.weight = try container.decodeIfPresent(String.self, forKey: .weight) ?? "" // 體重字段可為空
+        self.acid = try container.decodeIfPresent(String.self, forKey: .acid) ?? "" // 酸度字段可為空
+        self.sweet = try container.decodeIfPresent(String.self, forKey: .sweet) ?? "" // 甜度字段可為空
+        self.bitter = try container.decodeIfPresent(String.self, forKey: .bitter) ?? "" // 苦度字段可為空
+        self.hot = try container.decodeIfPresent(String.self, forKey: .hot) ?? "" // 辣度字段可為空
     }
-
     
-    // MARK: 枚举定义编码键
+    // MARK: 枚舉定義編碼鍵
     enum CodingKeys: String, CodingKey {
         case id = "U_ID"
         case account = "U_Acc"
-        //case password = "U_Pas"        // MARK: 註解密碼部分4
+        //case password = "U_Pas" // MARK: 註解密碼部分4
         case name = "U_Name"
         case gender = "U_Gen"
         case birthday = "U_Bir"
@@ -82,7 +78,7 @@ class User: ObservableObject, Decodable {
         case hot = "hot"
     }
     
-    // 更新用户信息的方法
+    // 更新用戶信息的方法
     func update(with userInfo: User) {
         DispatchQueue.main.async {
             self.name = userInfo.name
@@ -96,32 +92,29 @@ class User: ObservableObject, Decodable {
             self.hot = userInfo.hot
         }
     }
-
     
-    // MARK: 从后端获取用户信息并更新视图
-        func fetchUserInfo(completion: @escaping (User?) -> Void) {
-            guard let url = URL(string: "http://163.17.9.107/food/Login.php") else {
-                print("Invalid URL")
+    // MARK: 從後端獲取用戶信息並更新視圖
+    func fetchUserInfo(completion: @escaping (User?) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/Login.php") else {
+            print("Invalid URL")
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            guard let data = data else {
+                print("No data received: \(error?.localizedDescription ?? "Unknown error")")
                 completion(nil)
                 return
             }
             
-            URLSession.shared.dataTask(with: url) { data, response, error in
-                guard let data = data else {
-                    print("No data received: \(error?.localizedDescription ?? "Unknown error")")
-                    completion(nil)
-                    return
-                }
-                
-                do
-                {
-                    let userInfo = try JSONDecoder().decode(User.self, from: data)
-                    completion(userInfo)
-                } catch
-                {
-                    print("Error decoding user info: \(error.localizedDescription)")
-                    completion(nil)
-                }
-            }.resume()
-        }
+            do {
+                let userInfo = try JSONDecoder().decode(User.self, from: data)
+                completion(userInfo)
+            } catch {
+                print("Error decoding user info: \(error.localizedDescription)")
+                completion(nil)
+            }
+        }.resume()
     }
+}

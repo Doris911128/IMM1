@@ -7,31 +7,37 @@
 
 import SwiftUI
 
-extension Dishes {
-    func toFoodOption() -> FoodOption {
+extension Dishes 
+{
+    func toFoodOption() -> FoodOption 
+    {
         return FoodOption(name: self.Dis_Name, backgroundImage: URL(string: self.D_image)!)
     }
 }
 
-struct FoodSelectionView: View {
+struct FoodSelectionView: View 
+{
     @Binding var isShowingDetail: Bool
     @Binding var editedPlan: String
     @Binding var foodOptions: [FoodOption]
     var categoryTitle: String
     @Environment(\.presentationMode) var presentationMode
-   
-    struct RecipeBlock: View {
+
+    struct RecipeBlock: View 
+    {
         var imageName: String
         var title: String
         var U_ID: String
-        var Dis_ID: String
-        
-        var body: some View {
-            VStack {
+        var Dis_ID: Int
+
+        var body: some View 
+        {
+            VStack
+            {
                 Image(imageName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 100, height: 100) // 設置圖片大小
+                    .frame(width: 100, height: 100)
                     .cornerRadius(10)
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -42,13 +48,16 @@ struct FoodSelectionView: View {
                     .multilineTextAlignment(.center)
             }
             .padding(5)
-            .frame(width: 120) // 設置整個 RecipeBlock 的寬度
+            .frame(width: 120)
         }
     }
-    
-    var body: some View {
-        VStack {
-            HStack {
+
+    var body: some View 
+    {
+        VStack 
+        {
+            HStack 
+            {
                 Text(categoryTitle)
                     .font(.system(size: 40))
                     .bold()
@@ -56,10 +65,12 @@ struct FoodSelectionView: View {
                 Spacer()
             }
             .padding(.top)
-            
-            ScrollView {
+
+            ScrollView 
+            {
                 ForEach(foodOptions, id: \.name) { foodOption in
-                    Button(action: {
+                    Button(action: 
+                    {
                         self.editedPlan = foodOption.name
                         self.isShowingDetail.toggle()
                     }) {
@@ -74,8 +85,10 @@ struct FoodSelectionView: View {
                                         .scaledToFill()
                                         .frame(width: UIScreen.main.bounds.width - 40, height: 250)
                                         .cornerRadius(10)
-                                    VStack(alignment: .leading) {
-                                        HStack {
+                                    VStack(alignment: .leading) 
+                                    {
+                                        HStack 
+                                        {
                                             Text(foodOption.name)
                                                 .font(.title)
                                                 .foregroundColor(.white)
@@ -84,7 +97,7 @@ struct FoodSelectionView: View {
                                                 .bold()
                                                 .cornerRadius(8)
                                                 .shadow(radius: 4)
-                                                .offset(x: 0, y: -80) // 调整文字位置
+                                                .offset(x: 0, y: -80)
                                             Spacer()
                                         }
                                     }
@@ -99,13 +112,14 @@ struct FoodSelectionView: View {
                         }
                     }
                     .buttonStyle(BorderlessButtonStyle())
-                    .padding(.bottom, -50) // 调整按钮间距
+                    .padding(.bottom, -50)
                 }
             }
             .scrollIndicators(.hidden)
         }
         .padding(20)
-        .onAppear {
+        .onAppear 
+        {
             print("Food options: \(foodOptions)")
         }
     }

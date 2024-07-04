@@ -9,6 +9,16 @@ import Foundation
 
 struct MenuView: View
 {
+    init(U_ID: String, Dis_ID: Int = 0, isFavorited: Bool = false)
+    {
+        self.U_ID = U_ID
+        self.Dis_ID = Dis_ID
+        self._isFavorited = State(initialValue: isFavorited)
+    }
+    let U_ID: String // 用於添加我的最愛
+    let Dis_ID: Int // 用於添加我的最愛
+    @State private var isFavorited: Bool
+
     @State private var dishesData: [Dishes] = []
     @State private var foodData: [Food] = []
     @State private var amountData: [Amount] = []
@@ -16,7 +26,7 @@ struct MenuView: View
     @State private var cookingMethod: String? // 新增一個狀態來儲存從URL加載的烹飪方法
     @State private var selectedDish: Dishes?
     
-    var Dis_ID: Int // 從外部接收 Dish ID
+    //var Dis_ID: Int // 從外部接收 Dish ID
     
 //    private var selectedDish: Dishes? //var selectedDish: Dishes?
 //    {
@@ -430,5 +440,5 @@ struct CustomCorners: Shape
 
 #Preview
 {
-    MenuView(Dis_ID: 1)
+    MenuView(U_ID:"ofmyRwDdZy",Dis_ID: 1)
 }

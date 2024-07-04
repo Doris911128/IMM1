@@ -50,7 +50,7 @@ extension View
     }
     
     // MARK: 愛心toggle
-    func toggleFavorite(U_ID: String, Dis_ID: String, isFavorited: Bool, completion: @escaping (Result<String, Error>) -> Void) 
+    func toggleFavorite(U_ID: String, Dis_ID: Int, isFavorited: Bool, completion: @escaping (Result<String, Error>) -> Void)
     {
         guard let url = URL(string: "http://163.17.9.107/food/Favorite.php") 
         else

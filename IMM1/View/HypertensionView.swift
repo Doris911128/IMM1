@@ -4,9 +4,8 @@
 import SwiftUI
 import Charts
 
-struct HypertensionRecord: Identifiable, Codable // 血壓紀錄
-{
-    var id = UUID()  // 在这里生成 UUID，不依赖 JSON 提供的 ID
+struct HypertensionRecord: Identifiable, Codable {
+    var id = UUID()
     var hypertension: Double
     var date: Date
     
@@ -30,7 +29,7 @@ struct HypertensionRecord: Identifiable, Codable // 血壓紀錄
         
         let dateString = try container.decode(String.self, forKey: .date)
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"  // 更新格式以包含秒
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         if let date = formatter.date(from: dateString) {
@@ -39,34 +38,44 @@ struct HypertensionRecord: Identifiable, Codable // 血壓紀錄
             throw DecodingError.dataCorruptedError(forKey: .date, in: container, debugDescription: "日期字符串與格式器預期的格式不匹配。")
         }
     }
+    
+    var category: String {
+        switch hypertension {
+        case ..<90:
+            return "過低"
+        case 90..<121:
+            return "正常"
+        case 121..<139:
+            return "偏高"
+        case 139..<159:
+            return "過高"
+        default:
+            return "過高"
+        }
+    }
 }
 
-struct HypertensionTemperatureSensor: Identifiable // 包含ID和高血壓相關紀錄數組
-{
+struct HypertensionTemperatureSensor: Identifiable {
     var id: String
     var records: [HypertensionRecord]
 }
 
-var HypertensionallSensors: [HypertensionTemperatureSensor] = // 存取TemperatureSensor數據
-[
+var HypertensionallSensors: [HypertensionTemperatureSensor] = [
     .init(id: "血壓值", records: [])
 ]
 
-// MARK: 日期func
 private func formattedDate(_ date: Date) -> String {
     let formatter = DateFormatter()
-    formatter.dateFormat = "MM-dd HH:mm"  // 加入秒
-    formatter.locale = Locale(identifier: "en_US_POSIX") // 使用 POSIX 以保證日期格式的嚴格匹配
-    formatter.timeZone = TimeZone(secondsFromGMT: 0) // 根據需要調整時區
-    
+    formatter.dateFormat = "MM-dd HH:mm"
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
     return formatter.string(from: date)
 }
 
-struct HypertensionView: View
-{
-    let upperLimit: Double = 400.0 //輸入最大值
+struct HypertensionView: View {
+    let upperLimit: Double = 400.0
     
-    @State private var displayMode: Int = 0  // 0 表示每日，1 表示每七日
+    @State private var displayMode: Int = 0
     @State private var hypertension: String = ""
     @State private var chartData: [HypertensionRecord] = []
     @State private var isShowingList: Bool = false
@@ -120,7 +129,7 @@ struct HypertensionView: View
         
         URLSession.shared.dataTask(with: request) { (data, _, error) in
             if let data = data {
-                print(String(decoding: data, as: UTF8.self))  // 打印原始 JSON 数据
+                print(String(decoding: data, as: UTF8.self))
                 do {
                     let responseArray = try JSONDecoder().decode([HypertensionRecord].self, from: data)
                     DispatchQueue.main.async {
@@ -140,7 +149,7 @@ struct HypertensionView: View
         let url = URL(string: "http://163.17.9.107/food/\(name).php")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        let postData = "BP=\(bp)&action=\(action)"  // 確保 action 參數也被發送
+        let postData = "BP=\(bp)&action=\(action)"
         request.httpBody = postData.data(using: .utf8)
         
         URLSession.shared.dataTask(with: request) { (data, response, error) in
@@ -160,22 +169,17 @@ struct HypertensionView: View
         }.resume()
     }
 
-    var body: some View
-    {
-        NavigationStack
-        {
-            VStack
-            {
-                HStack
-                {
+    var body: some View {
+        NavigationStack {
+            VStack {
+                HStack {
                     Text("血壓紀錄")
                         .foregroundColor(Color.black)
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x: -60)
                     
-                    Button(action:
-                            {
+                    Button(action: {
                         isShowingList.toggle()
                     }) {
                         Image(systemName: "list.dash")
@@ -210,15 +214,13 @@ struct HypertensionView: View
                     .frame(width: max(350, Double(chartData.count) * 65), height: 200)
                     .padding(.top, 20)
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加边框
-                    .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5) // 添加阴影
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
+                    .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5)
                 }
                 .padding()
                 
-                VStack
-                {
-                    HStack
-                    {
+                VStack {
+                    HStack {
                         Text("血壓值輸入")
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -232,43 +234,30 @@ struct HypertensionView: View
                         .pickerStyle(MenuPickerStyle())
                         .padding()
                     }
-                    VStack(spacing: -5)
-                    {
+                    VStack(spacing: -5) {
                         TextField("請輸入血壓值", text: $hypertension)
                             .padding()
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .frame(width: 330)
-                            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) {
-                                _ in
-                            }
-                            .onChange(of: hypertension)
-                        {
-                            newValue in
-                            if let newValue = Double(newValue), newValue > upperLimit
-                            {
-                                showAlert = true //當輸入的值超過上限時，會顯示警告
-                                hypertension = String(upperLimit) //將輸入值截斷為上限值
-                            }
-                        }
-                        
-                        Button(action:
-                                {
-                            if let hypertensionValue = Double(hypertension)
-                            {
-                                self.sendBPData(name: "BP", bp: hypertensionValue, action:"insert" )
-                                self.connect(name: "BP", action: "fetch")
-                                if let index = chartData.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: Date()) }) //檢查是否已經有當天的紀錄存在
-                                {
-                                    chartData[index].hypertension = hypertensionValue //如果有，則更新當天的值
-                                    
+                            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in }
+                            .onChange(of: hypertension) { newValue in
+                                if let newValue = Double(newValue), newValue > upperLimit {
+                                    showAlert = true
+                                    hypertension = String(upperLimit)
                                 }
-                                else
-                                {
-                                    let newRecord = HypertensionRecord(hypertension: hypertensionValue) //否則新增一條紀錄
+                            }
+                        
+                        Button(action: {
+                            if let hypertensionValue = Double(hypertension) {
+                                self.sendBPData(name: "BP", bp: hypertensionValue, action:"insert")
+                                self.connect(name: "BP", action: "fetch")
+                                if let index = chartData.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: Date()) }) {
+                                    chartData[index].hypertension = hypertensionValue
+                                } else {
+                                    let newRecord = HypertensionRecord(hypertension: hypertensionValue)
                                     chartData.append(newRecord)
                                 }
-                                
                                 hypertension = ""
                             }
                         }) {
@@ -289,16 +278,13 @@ struct HypertensionView: View
                 }
                 .offset(y: 10)
             }
-            .onAppear{
+            .onAppear {
                 self.connect(name: "BP", action: "fetch")
             }
-            .sheet(isPresented: $isShowingList)
-            {
+            .sheet(isPresented: $isShowingList) {
                 HypertensionRecordsListView(records: $chartData)
             }
-            // MARK: 超過上限警告
-            .alert(isPresented: $showAlert)
-            {
+            .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text("警告"),
                     message: Text("輸入的血壓值最高為400，請重新輸入。"),
@@ -306,103 +292,152 @@ struct HypertensionView: View
                 )
             }
         }
-//        .offset(y: -98)
     }
 }
 
-struct HypertensionRecordsListView: View
-{
+struct HypertensionRecordsListView: View {
     @Binding var records: [HypertensionRecord]
-    
-    var body: some View
-    {
-        NavigationStack
-        {
-            List
-            {
-                ForEach(records)
-                {
-                    record in
-                    NavigationLink(destination: EditHypertensionRecordView(record: $records[records.firstIndex(where: { $0.id == record.id })!]))
-                    {
-                        Text("\(formattedDate(record.date)): \(record.hypertension, specifier: "%.2f")")
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(records) { record in
+                    NavigationLink(destination: HypertensionRecordDetailView(record: record)) {
+                        HStack {
+                            hypertensionImage(for: record)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 30, height: 30)
+                                .padding(8)
+                                .background(Color(UIColor.systemGray6))
+                                .cornerRadius(5)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .stroke(Color.orange, lineWidth: 1)
+                                )
+                                .padding(.trailing, 8)
+                                .foregroundColor(categoryColor(for: record))
+                            VStack(alignment: .leading) {
+                                Text(record.category)
+                                Text("\(formattedDate(record.date)): \(record.hypertension, specifier: "%.2f")")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14))
+                            }
+                        }
                     }
                 }
                 .onDelete(perform: deleteRecord)
             }
             .navigationTitle("血壓紀錄列表")
-            .toolbar
-            {
-                ToolbarItem(placement: .navigationBarTrailing)
-                {
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
             }
         }
     }
-    // MARK: 列表刪除功能_歷史紀錄刪除
-    private func deleteRecord(at offsets: IndexSet)
-    {
+
+    private func deleteRecord(at offsets: IndexSet) {
         records.remove(atOffsets: offsets)
     }
-}
 
-// MARK: 編輯
-struct EditHypertensionRecordView: View
-{
-    @Binding var record: HypertensionRecord
-    @State private var editedHypertension: String = ""
-    @State private var originalHypertension: Double = 0.0
-    @State private var showAlert: Bool = false
-    @Environment(\.presentationMode) var presentationMode
-    
-    var body: some View
-    {
-        VStack
-        {
-            TextField("血壓值", text: $editedHypertension)
-                .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .keyboardType(.numberPad)
-                .onAppear
-            {
-                editedHypertension = String(record.hypertension)
-                originalHypertension = record.hypertension
-            }
-            
-            Button("保存")
-            {
-                if let editedValue = Double(editedHypertension)
-                {
-                    if editedValue <= 400.0
-                    {
-                        record.hypertension = editedValue
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    else
-                    {
-                        showAlert = true //用戶修改的值超過400，顯示警告
-                    }
-                }
-            }
-            .padding()
+    private func hypertensionImage(for record: HypertensionRecord) -> Image {
+        switch record.category {
+        case "過低":
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        case "正常":
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        case "偏高":
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        case "過高":
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        default:
+            return Image(systemName: "waveform.path.ecg.rectangle")
         }
-        .navigationTitle("編輯血壓值")
-        .alert(isPresented: $showAlert) //超過上限警告
-        {
-            Alert(
-                title: Text("警告"),
-                message: Text("輸入的血壓值最高為400，請重新輸入。"),
-                dismissButton: .default(Text("確定"))
-            )
+    }
+
+    private func categoryColor(for record: HypertensionRecord) -> Color {
+        switch record.category {
+        case "過低":
+            return Color.blue
+        case "正常":
+            return Color.green
+        case "偏高":
+            return Color.yellow
+        case "過高":
+            return Color.red
+        default:
+            return Color.gray
         }
     }
 }
 
-struct HypertensionView_Previews: PreviewProvider
-{
-    static var previews: some View
-    {
+struct HypertensionRecordDetailView: View {
+    var record: HypertensionRecord
+
+    var body: some View {
+        VStack {
+            hypertensionImage(for: record)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 200, height: 200)
+                .padding()
+                .cornerRadius(100)
+                .foregroundColor(categoryColor(for: record))
+                .overlay(
+                    Circle()
+                        .stroke(LinearGradient(
+                            gradient: Gradient(colors: [categoryColor(for: record), .white]),
+                            startPoint: .top,
+                            endPoint: .bottom),
+                            lineWidth: 4)
+                )
+                .padding()
+                .offset(y: -50)
+            Text("血壓：\(String(format: "%.2f", record.hypertension))")
+                .font(.title)
+                .padding(.bottom, 5)
+            Text("分類：\(record.category)")
+                .foregroundColor(Color("BottonColor"))
+                .font(.title)
+                .padding(.bottom, 5)
+        }
+        .navigationTitle("血壓 詳細資訊")
+    }
+
+    private func hypertensionImage(for record: HypertensionRecord) -> Image {
+        switch record.category {
+        case "過低":
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        case "正常":
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        case "偏高":
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        case "過高":
+            return Image(systemName: "waveform.path.ecg.rectanglee")
+        default:
+            return Image(systemName: "waveform.path.ecg.rectangle")
+        }
+    }
+
+    private func categoryColor(for record: HypertensionRecord) -> Color {
+        switch record.category {
+        case "過低":
+            return Color.blue
+        case "正常":
+            return Color.green
+        case "偏高":
+            return Color.yellow
+        case "過高":
+            return Color.red
+        default:
+            return Color.gray
+        }
+    }
+}
+
+struct HypertensionView_Previews: PreviewProvider {
+    static var previews: some View {
         HypertensionView()
     }
 }

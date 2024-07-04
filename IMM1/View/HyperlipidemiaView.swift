@@ -11,8 +11,7 @@ import SwiftUI
 import Charts
 
 // MARK: 血脂紀錄
-struct HyperlipidemiaRecord: Identifiable,Codable
-{
+struct HyperlipidemiaRecord: Identifiable, Codable {
     var id = UUID()
     var hyperlipidemia: Double
     var date: Date
@@ -22,23 +21,22 @@ struct HyperlipidemiaRecord: Identifiable,Codable
         case date = "BL_DT"
     }
     
-    init(hyperlipidemia: Double,date: Date = Date())
-    {
+    init(hyperlipidemia: Double, date: Date = Date()) {
         self.hyperlipidemia = hyperlipidemia
         self.date = date
     }
-    init(from decoder: Decoder) throws
-    {
+    
+    init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let hyperlipidemiaString = try container.decode(String.self, forKey: .hyperlipidemia)
         guard let hyperlipidemiaDouble = Double(hyperlipidemiaString) else {
             throw DecodingError.dataCorruptedError(forKey: .hyperlipidemia, in: container, debugDescription: "血脂值應為可轉換為Double的字符串。")
         }
-        hyperlipidemia = hyperlipidemiaDouble
+        self.hyperlipidemia = hyperlipidemiaDouble
         
         let dateString = try container.decode(String.self, forKey: .date)
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd "
+        formatter.dateFormat = "yyyy-MM-dd"
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         if let date = formatter.date(from: dateString) {
@@ -47,11 +45,21 @@ struct HyperlipidemiaRecord: Identifiable,Codable
             throw DecodingError.dataCorruptedError(forKey: .date, in: container, debugDescription: "日期字符串與格式器預期的格式不匹配。")
         }
     }
+    
+    var category: String {
+        switch hyperlipidemia {
+        case ..<200:
+            return "正常"
+        case 200..<241:
+            return "偏高"
+        default:
+            return "過高"
+        }
+    }
 }
 
 // MARK: 包含ID和高血脂相關紀錄數組
-struct HyperlipidemiaTemperatureSensor: Identifiable
-{
+struct HyperlipidemiaTemperatureSensor: Identifiable {
     var id: String
     var records: [HyperlipidemiaRecord]
 }
@@ -62,22 +70,19 @@ var HyperlipidemiaallSensors: [HyperlipidemiaTemperatureSensor] = [
 ]
 
 // MARK: 日期func
-private func formattedDate(_ date: Date) -> String
-{
+private func formattedDate(_ date: Date) -> String {
     let formatter = DateFormatter()
     formatter.dateFormat = "MM-dd"
     formatter.locale = Locale(identifier: "en_US_POSIX")
     return formatter.string(from: date)
 }
 
-struct HyperlipidemiaView: View
-{
+struct HyperlipidemiaView: View {
     let upperLimit: Double = 500.0
     @State private var displayMode: Int = 0  // 0 表示每日，1 表示每七日
     @State private var hyperlipidemia: String = ""
     @State private var chartData: [HyperlipidemiaRecord] = []
     @State private var isShowingList: Bool = false //列表控制
-    @State private var scrollToBottom: Bool = false
     @State private var showAlert: Bool = false//
     
     func connect(name: String, action: String) {
@@ -103,13 +108,13 @@ struct HyperlipidemiaView: View
             }
         }.resume()
     }
+    
     func sendBPData(name: String, bl: Double, action: String) {
         let url = URL(string: "http://163.17.9.107/food/\(name).php")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         let postData = "BL=\(bl)&action=\(action)"  // 確保 action 參數也被發送
         request.httpBody = postData.data(using: .utf8)
-        
         
         URLSession.shared.dataTask(with: request) { (data, response, error) in
             guard let data = data, error == nil else {
@@ -126,24 +131,19 @@ struct HyperlipidemiaView: View
                 print("Failed to decode JSON: \(error)")
             }
         }.resume()
-        
     }
-    var body: some View
-    {
-        NavigationStack
-        {
-            VStack
-            {
-                HStack
-                {
+
+    var body: some View {
+        NavigationStack {
+            VStack {
+                HStack {
                     Text("血脂紀錄")
                         .foregroundColor(Color.black)
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
-                        .offset(x:-60)
+                        .offset(x: -60)
                     
-                    Button(action:
-                            {
+                    Button(action: {
                         isShowingList.toggle()
                     }) {
                         Image(systemName: "list.dash")
@@ -154,42 +154,37 @@ struct HyperlipidemiaView: View
                             .padding(.trailing, 20)
                             .imageScale(.large)
                     }
-                    .offset(x:10)
+                    .offset(x: 10)
                 }
                 ScrollView(.horizontal) {
-                                   Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
-                                       LineMark(
-                                           x: .value("Date", formattedDate(record.date)),
-                                           y: .value("Hyperlipidemia", record.hyperlipidemia)
-                                       )
-                                       .lineStyle(.init(lineWidth: 3))
+                    Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                        LineMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Value", record.hyperlipidemia)
+                        )
+                        .lineStyle(.init(lineWidth: 3))
 
-                                       PointMark(
-                                           x: .value("Date", formattedDate(record.date)),
-                                           y: .value("Hyperlipidemia", record.hyperlipidemia)
-                                       )
-                                       .annotation(position: .top) {
-                                           Text("\(record.hyperlipidemia, specifier: "%.2f")")
-                                               .font(.system(size: 12))
-                                               .foregroundColor(Color.black)
-                                       }
-                                   }
-                                   .chartForegroundStyleScale([
-                                       "血脂值": .orange
-                                   ])
-                                   .frame(width: max(350, Double(chartData.count) * 65), height: 200)
-                                   .padding(.top, 20)
-                                   .padding()
-                                   .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加边框
-                                   .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5) // 添加阴影
-                               }
-                               .padding()
+                        PointMark(
+                            x: .value("Date", formattedDate(record.date)),
+                            y: .value("Value", record.hyperlipidemia)
+                        )
+                        .annotation(position: .top) {
+                            Text("\(record.hyperlipidemia, specifier: "%.2f")")
+                                .font(.system(size: 12))
+                                .foregroundColor(Color.black)
+                        }
+                    }
+                    .chartForegroundStyleScale(["血脂值": .orange])
+                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                    .padding(.top, 20)
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
+                    .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5)
+                }
+                .padding()
                 
-                
-                VStack
-                {
-                    HStack
-                    {
+                VStack {
+                    HStack {
                         Text("血脂值輸入") //血脂值輸入
                             .font(.system(size: 20, weight: .semibold))
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -210,33 +205,24 @@ struct HyperlipidemiaView: View
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .frame(width: 330)
-                            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification))
-                        {_ in}
-                            .onChange(of: hyperlipidemia)
-                        { newValue in
-                            if let newValue = Double(newValue), newValue > upperLimit
-                            {
-                                showAlert = true //當輸入的值超過上限時，會顯示警告
-                                hyperlipidemia = String(upperLimit) //將輸入值截斷為上限值
-                            }
-                        }
-                        Button(action:
-                                {
-                            if let hyperlipidemiaValue = Double(hyperlipidemia)
-                            {
-                                self.sendBPData(name: "BL", bl: hyperlipidemiaValue, action:"insert" )
-                                self.connect(name: "BL", action: "fetch")
-                                if let index = chartData.firstIndex(where:{ Calendar.current.isDate($0.date, inSameDayAs: Date()) }) //檢查是否已經有當天的紀錄存在
-                                {
-                                    chartData[index].hyperlipidemia = hyperlipidemiaValue //如果有，則更新當天的值
-                                    
+                            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in }
+                            .onChange(of: hyperlipidemia) { newValue in
+                                if let newValue = Double(newValue), newValue > upperLimit {
+                                    showAlert = true //當輸入的值超過上限時，會顯示警告
+                                    hyperlipidemia = String(upperLimit) //將輸入值截斷為上限值
                                 }
-                                else
-                                {
-                                    let newRecord = HyperlipidemiaRecord(hyperlipidemia: hyperlipidemiaValue) //否則新增一條紀錄
+                            }
+                        
+                        Button(action: {
+                            if let hyperlipidemiaValue = Double(hyperlipidemia) {
+                                self.sendBPData(name: "BL", bl: hyperlipidemiaValue, action:"insert")
+                                self.connect(name: "BL", action: "fetch")
+                                if let index = chartData.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: Date()) }) {
+                                    chartData[index].hyperlipidemia = hyperlipidemiaValue //更新當天的值
+                                } else {
+                                    let newRecord = HyperlipidemiaRecord(hyperlipidemia: hyperlipidemiaValue) //新增一條紀錄
                                     chartData.append(newRecord)
                                 }
-                                
                                 hyperlipidemia = ""
                             }
                         }) {
@@ -257,15 +243,13 @@ struct HyperlipidemiaView: View
                 }
                 .offset(y: 10)
             }
-            .onAppear{
+            .onAppear {
                 self.connect(name: "BL", action: "fetch")
             }
-            .sheet(isPresented: $isShowingList)
-            {
+            .sheet(isPresented: $isShowingList) {
                 HyperlipidemiaRecordsListView(records: $chartData)
             }
-            .alert(isPresented: $showAlert) //超過上限警告
-            {
+            .alert(isPresented: $showAlert) { //超過上限警告
                 Alert(
                     title: Text("警告"),
                     message: Text("輸入的血脂值最高為500，請重新輸入。"),
@@ -273,8 +257,8 @@ struct HyperlipidemiaView: View
                 )
             }
         }
-       // .offset(y: -98)
     }
+    
     private func averagesEverySevenRecords() -> [HyperlipidemiaRecord] {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HyperlipidemiaRecord] = []
@@ -294,121 +278,165 @@ struct HyperlipidemiaView: View
 
         return results
     }
+    
     private func averagesEveryThirtyRecords() -> [HyperlipidemiaRecord] {
-            let sortedRecords = chartData.sorted { $0.date < $1.date }
-            var results: [HyperlipidemiaRecord] = []
-            let batchSize = 30
+        let sortedRecords = chartData.sorted { $0.date < $1.date }
+        var results: [HyperlipidemiaRecord] = []
+        let batchSize = 30
 
-            for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
-                let batchEnd = min(batchStart + batchSize, sortedRecords.count)
-                let batch = Array(sortedRecords[batchStart..<batchEnd])
-                let totalHyperlipidemia = batch.reduce(0.0) { $0 + $1.hyperlipidemia }
-                if !batch.isEmpty {
-                    let averageHyperlipidemia = totalHyperlipidemia / Double(batch.count)
-                    let recordDate = batch.first!.date
-                    let avgRecord = HyperlipidemiaRecord(hyperlipidemia: averageHyperlipidemia, date: recordDate)
-                    results.append(avgRecord)
-                }
+        for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+            let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+            let batch = Array(sortedRecords[batchStart..<batchEnd])
+            let totalHyperlipidemia = batch.reduce(0.0) { $0 + $1.hyperlipidemia }
+            if !batch.isEmpty {
+                let averageHyperlipidemia = totalHyperlipidemia / Double(batch.count)
+                let recordDate = batch.first!.date
+                let avgRecord = HyperlipidemiaRecord(hyperlipidemia: averageHyperlipidemia, date: recordDate)
+                results.append(avgRecord)
             }
-
-            return results
         }
+
+        return results
+    }
 }
 
 // MARK: 列表記錄
-struct HyperlipidemiaRecordsListView: View
-{
+struct HyperlipidemiaRecordsListView: View {
     @Binding var records: [HyperlipidemiaRecord]
-    
-    var body: some View
-    {
-        NavigationStack
-        {
-            List
-            {
-                ForEach(records)
-                {
-                    record in
-                    NavigationLink(destination: EditHyperlipidemiaRecordView(record: $records[records.firstIndex(where: { $0.id == record.id })!])) {
-                        Text("\(formattedDate(record.date)): \(record.hyperlipidemia, specifier: "%.2f")")
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(records) { record in
+                    NavigationLink(destination: HyperlipidemiaRecordDetailView(record: record)) {
+                        HStack {
+                            hyperlipidemiaImage(for: record)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 30, height: 30)
+                                .padding(8)
+                                .background(Color(UIColor.systemGray6))
+                                .cornerRadius(5)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 5)
+                                        .stroke(Color.orange, lineWidth: 1)
+                                )
+                                .padding(.trailing, 8)
+                                .foregroundColor(categoryColor(for: record))
+                            VStack(alignment: .leading) {
+                                Text(record.category)
+                                Text("\(formattedDate(record.date)): \(record.hyperlipidemia, specifier: "%.2f")")
+                                    .foregroundColor(.gray)
+                                    .font(.system(size: 14))
+                            }
+                        }
                     }
                 }
                 .onDelete(perform: deleteRecord)
             }
             .navigationTitle("血脂紀錄列表")
-            .toolbar
-            {
-                ToolbarItem(placement: .navigationBarTrailing)
-                {
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
             }
         }
     }
-    
-    private func deleteRecord(at offsets: IndexSet)
-    {
+
+    private func deleteRecord(at offsets: IndexSet) {
         records.remove(atOffsets: offsets)
+    }
+
+    private func hyperlipidemiaImage(for record: HyperlipidemiaRecord) -> Image {
+        switch record.category {
+        case "正常":
+            return Image(systemName: "drop.circle")
+        case "偏高":
+            return Image(systemName: "drop.circle")
+        case "過高":
+            return Image(systemName: "drop.circle")
+        default:
+            return Image(systemName: "drop.circle")
+        }
+    }
+
+    private func categoryColor(for record: HyperlipidemiaRecord) -> Color {
+        switch record.category {
+        case "正常":
+            return Color.green
+        case "偏高":
+            return Color.yellow
+        case "過高":
+            return Color.red
+        default:
+            return Color.red
+        }
     }
 }
 
 // MARK: 編輯血脂紀錄視圖
-struct EditHyperlipidemiaRecordView: View
-{
-    @Binding var record: HyperlipidemiaRecord
-    
-    @State private var editedHyperlipidemia: String = ""
-    @State private var originalHypertension: Double = 0.0
-    @State private var showAlert: Bool = false
-    
-    @Environment(\.presentationMode) var presentationMode
-    
-    var body: some View
-    {
-        VStack
-        {
-            TextField("血脂值", text: $editedHyperlipidemia)
+struct HyperlipidemiaRecordDetailView: View {
+    var record: HyperlipidemiaRecord
+
+    var body: some View {
+        VStack {
+            hyperlipidemiaImage(for: record)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 200, height: 200)
                 .padding()
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .keyboardType(.numberPad)
-                .onAppear
-            {
-                editedHyperlipidemia = String(record.hyperlipidemia)
-            }
-            
-            Button("保存")
-            {
-                if let editedValue = Double(editedHyperlipidemia)
-                {
-                    if editedValue <= 500 //檢查是否超過上限
-                    
-                    {
-                        record.hyperlipidemia = editedValue
-                        presentationMode.wrappedValue.dismiss()
-                    } else //超過上限時顯示警告
-                    {
-                        showAlert = true
-                    }
-                }
-            }
-            .padding()
+                .cornerRadius(100)
+                .foregroundColor(categoryColor(for: record))
+                .overlay(
+                    Circle()
+                        .stroke(LinearGradient(
+                            gradient: Gradient(colors: [categoryColor(for: record), .white]),
+                            startPoint: .top,
+                            endPoint: .bottom),
+                            lineWidth: 4)
+                )
+                .padding()
+                .offset(y: -50)
+            Text("血脂：\(String(format: "%.2f", record.hyperlipidemia))")
+                .font(.title)
+                .padding(.bottom, 5)
+            Text("分類：\(record.category)")
+                .foregroundColor(Color("BottonColor"))
+                .font(.title)
+                .padding(.bottom, 5)
         }
-        .navigationTitle("編輯血脂值")
-        .alert(isPresented: $showAlert) //超過上限時顯示警告
-        {
-            Alert(
-                title: Text("警告"),
-                message: Text("輸入的血脂值最高為500，請重新輸入。"),
-                dismissButton: .default(Text("確定"))
-            )
+        .navigationTitle("血脂 詳細資訊")
+    }
+
+    private func hyperlipidemiaImage(for record: HyperlipidemiaRecord) -> Image {
+        switch record.category {
+        case "正常":
+            return Image(systemName: "drop.circle")
+        case "偏高":
+            return Image(systemName: "drop.circle")
+        case "過高":
+            return Image(systemName: "drop.circle")
+        default:
+            return Image(systemName: "drop.circle")
+        }
+    }
+
+    private func categoryColor(for record: HyperlipidemiaRecord) -> Color {
+        switch record.category {
+        case "正常":
+            return Color.green
+        case "偏高":
+            return Color.yellow
+        case "過高":
+            return Color.red
+        default:
+            return Color.red
         }
     }
 }
 
-struct HyperlipidemiaView_Previews: PreviewProvider
-{
-    static var previews: some View
-    {
+struct HyperlipidemiaView_Previews: PreviewProvider {
+    static var previews: some View {
         HyperlipidemiaView()
     }
 }
