@@ -67,7 +67,7 @@ struct RecipeBlock: View
                 })
                 {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.orange)
+                        .fill(Color.white.opacity(0.2))
                         .frame(width: 50, height: 50)
                         .overlay(
                             Image(systemName: self.isFavorited ? "heart.fill" : "heart")

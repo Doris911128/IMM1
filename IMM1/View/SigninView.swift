@@ -7,7 +7,7 @@ struct SigninView: View
     @AppStorage("signin") private var signin: Bool = false
     @AppStorage("rememberMe") private var rememberMe: Bool = false
     @AppStorage("U_ID") private var storedU_ID: String = "" // 用于存储
-    
+    @State private var scale: CGFloat = 1.0
     @State private var U_Acc: String = ""
     @State private var U_Pas: String = ""
     @State private var result: (Bool, String) = (false, "")
@@ -73,12 +73,19 @@ struct SigninView: View
             {
                 VStack(spacing: 20)
                 {
-                    Circle()
-                        .fill(.gray)
-                        .scaledToFit()
-                        .frame(width: 150)
-                        .padding(.bottom, 50)
                     
+                    Image("登入Logo")
+                                .resizable()
+                                .frame(width: 150, height: 150)
+                                .clipShape(Circle())
+                                .scaleEffect(scale) // Use the state variable for scaling
+                                .background(Color.clear) // Set the background color to clear
+                                .animation(.easeInOut(duration: 1.0), value: scale) // Apply animation
+                                .onAppear {
+                                    scale = 1.8 // Change the scale value to trigger animation
+                                }
+                                .padding(.bottom, 50)
+                                         
                     VStack(spacing: 30)
                     {
                         TextField("帳號...",text: $U_Acc)

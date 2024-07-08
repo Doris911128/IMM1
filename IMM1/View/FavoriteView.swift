@@ -149,7 +149,7 @@ struct FavoriteView: View
                                         isFavorited: true // 將 isFavorited 設置為 true
                                     )
                                 }
-                                //.padding(.bottom, 10)
+                                .padding(.bottom, -70)
                             }
                         }
                     }
