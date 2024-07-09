@@ -155,6 +155,12 @@ struct PlanView: View {
         formatter.locale = Locale(identifier: "en_US_POSIX")
         return formatter
     }()
+    private var dayOfWeekFormatters: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "E"
+            formatter.locale = Locale(identifier: "zh_tw") // 設置為中文
+            return formatter
+        }()
     func convertPlansToDictionary(plans: [Plan]) -> [String: [Plan]] {
         var plansDict = [String: [Plan]]()
         var idToNameMap = [String: String]()
@@ -221,37 +227,48 @@ struct PlanView: View {
         dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
     }
-    //body有修改過
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading){
+    
+    var body: some View
+    {
+        NavigationStack
+        {
+            VStack(alignment: .leading)
+            {
                 Text("今天是 \(Date(), formatter: fullDateFormatter)")
                     .font(.headline)
                     .padding(.top, 20)
                     .padding(.leading, 20)
-                ScrollView(.horizontal) {
-                    HStack {
-                        ForEach(0..<7, id: \.self) { offset in
+                ScrollView(.horizontal)
+                {
+                    HStack
+                    {
+                        ForEach(0..<7, id: \.self)
+                        { offset in
                             let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
                             let dateString = dateFormatter.string(from: date)
                             let dayOfWeek = dayOfWeekFormatter.string(from: date)
                             Button(action: {
-                                if selectedDate == dateString {
+                                if selectedDate == dateString
+                                {
                                     showSingleDayView.toggle()
-                                    if (!showSingleDayView) {
+                                    if (!showSingleDayView)
+                                    {
                                         selectedDate = nil
                                     }
-                                } else {
+                                } else
+                                {
                                     selectedDate = dateString
                                     showSingleDayView = true
                                 }
                             }) {
-                                VStack {
+                                VStack
+                                {
                                     Text(displayDateFormatter.string(from: date))
                                         .font(.headline)
                                     Text(dayOfWeek)
                                         .font(.subheadline)
                                 }
+                                .frame(width: 35, height: 50)
                                 .padding()
                                 .background(selectedDate == dateString && showSingleDayView ? Color.orange : Color.gray.opacity(0.2))
                                 .foregroundColor(selectedDate == dateString && showSingleDayView ? .white : .black)
@@ -263,61 +280,78 @@ struct PlanView: View {
                     .padding(.horizontal)
                 }
                 
-                List {
+                List
+                {
                     ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
-                        if !showSingleDayView || selectedDate == day {
+                        if !showSingleDayView || selectedDate == day
+                        {
                             Section(header:
-                                        HStack {
+                                        
+                                       
+                            HStack
+                            {
                                 Text(self.displayDateFormatters.string(from: dateFormatter.date(from: day)!)).font(.title)
                                 Text(getDayLabelText(for: day))
                                 Spacer()
                                 Button(action: {
                                     plans[day]?.append(Plan(P_ID: UUID().uuidString, U_ID: "", Dis_ID: 0, P_DT: day, P_Bought: "", Dis_name: "新計畫"))
-                                }) {
+                                }) 
+                                {
                                     Image(systemName: "plus.circle")
                                         .imageScale(.large)
                                         .foregroundColor(Color("BottonColor"))
                                 }
                             }
                             ) {
-                                if let dayPlans = plans[day] {
+                                if let dayPlans = plans[day] 
+                                {
                                     // 修改 body 中 NavigationLink 的 .disabled 條件
                                     ForEach(dayPlans.indices, id: \.self) { index in
                                         let plan = dayPlans[index]
                                         let isEditable = isNewPlan(plan) // 檢查是否是新計畫
                                         let dishImageURL = URL(string: dishes[plan.Dis_name] ?? "") // 添加這行
                                         
-                                        HStack {
+                                        HStack 
+                                        {
                                             if let imageURL = dishImageURL { // 添加這部分
                                                 AsyncImage(url: imageURL) { image in
                                                     image.resizable()
                                                         .aspectRatio(contentMode: .fill)
                                                         .frame(width: 50, height: 50)
                                                         .clipShape(Circle())
-                                                } placeholder: {
+                                                } placeholder: 
+                                                {
                                                     ProgressView()
                                                 }
                                             }
                                             
-                                            NavigationLink(destination: isEditable ? EditPlanView(day: day, planIndex: index, plans: $plans) : nil) {
+                                            NavigationLink(destination: isEditable ? EditPlanView(day: day, planIndex: index, plans: $plans) : nil) 
+                                            {
                                                 Text(plan.Dis_name) // 修改這裡，使用 plan.Dis_name
                                                     .font(.headline)
                                             }
                                             .disabled(!isEditable) // 禁用點擊進入功能
                                         }
                                     }
-                                    .onDelete { indices in
-                                        guard let deletedPlan = plans[day]?[indices.first ?? 0] else {
+                                    .onDelete 
+                                    { indices in
+                                        guard let deletedPlan = plans[day]?[indices.first ?? 0]
+                                        else
+                                        {
                                             print("Error: Deleted plan not found")
                                             return
                                         }
                                         
-                                        deletePlan(withID: deletedPlan.P_ID, day: day, at: indices) { result in
-                                            switch result {
+                                        deletePlan(withID: deletedPlan.P_ID, day: day, at: indices) 
+                                        { result in
+                                            switch result
+                                            {
                                             case .success:
                                                 print("成功刪除計畫:", deletedPlan.P_ID)
-                                                DispatchQueue.main.async {
-                                                    if var dayPlans = self.plans[day] {
+                                                DispatchQueue.main.async 
+                                                {
+                                                    if var dayPlans = self.plans[day]
+                                                    {
                                                         dayPlans.remove(atOffsets: indices)
                                                         self.plans[day] = dayPlans
                                                     }
@@ -325,7 +359,8 @@ struct PlanView: View {
                                                 
                                             case .failure(let error):
                                                 print("Failed with error:", error)
-                                                if let planDeleteError = error as? PlanDeleteError {
+                                                if let planDeleteError = error as? PlanDeleteError 
+                                                {
                                                     print("計劃刪除錯誤訊息:", planDeleteError.message)
                                                 }
                                             }
@@ -341,18 +376,24 @@ struct PlanView: View {
                 
             }
         }
-        .onAppear {
+        .onAppear 
+        {
             updatePlans()
-            fetchDishesFromServer { fetchedDishes, error in
-                if let fetchedDishes = fetchedDishes {
-                    DispatchQueue.main.async {
+            fetchDishesFromServer 
+            { fetchedDishes, error in
+                if let fetchedDishes = fetchedDishes
+                {
+                    DispatchQueue.main.async 
+                    {
                         var newDishes = [String: String]()
-                        for dish in fetchedDishes {
+                        for dish in fetchedDishes 
+                        {
                             newDishes[dish.Dis_Name] = dish.D_image
                         }
                         self.dishes = newDishes
                     }
-                } else if let error = error {
+                } else if let error = error 
+                {
                     print("Failed to fetch dishes: \(error)")
                 }
             }
@@ -360,51 +401,64 @@ struct PlanView: View {
     }
     
     private func getDayLabelText(for date: String) -> String {
-        guard let index = Array(plans.keys.sorted(by: <)).firstIndex(of: date) else {
-            return ""
+            guard let dateObject = dateFormatter.date(from: date) else {
+                return ""
+            }
+
+            let dayOfWeek = dayOfWeekFormatters.string(from: dateObject)
+            return dayOfWeek
         }
-        let dayNumber = (index % 7) + 1
-        return "第\(dayNumber)天"
-    }
 }
 
-struct PlanView_Previews: PreviewProvider {
-    static var previews: some View {
+struct PlanView_Previews: PreviewProvider 
+{
+    static var previews: some View 
+    {
         PlanView()
-        
     }
 }
 
-func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) {
-    guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
+func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) 
+{
+    guard let url = URL(string: "http://163.17.9.107/food/Plan.php")
+    else
+    {
         print("Invalid URL")
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
     }
     
-    URLSession.shared.dataTask(with: url) { (data, response, error) in
-        if let error = error {
+    URLSession.shared.dataTask(with: url) 
+    { (data, response, error) in
+        if let error = error
+        {
             completion(nil, error)
             return
         }
         
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 
+        else
+        {
             print("Error: Invalid HTTP response")
             completion(nil, NSError(domain: "HTTPError", code: 0, userInfo: nil))
             return
         }
         
-        guard let jsonData = data else {
+        guard let jsonData = data
+        else
+        {
             print("Error: No data received")
             completion(nil, NSError(domain: "NoDataError", code: 0, userInfo: nil))
             return
         }
         
-        do {
+        do 
+        {
             let decoder = JSONDecoder()
             let plans = try decoder.decode([Plan].self, from: jsonData)
             completion(plans, nil)
-        } catch {
+        } catch 
+        {
             print("Error decoding JSON: \(error)")
             completion(nil, error)
         }

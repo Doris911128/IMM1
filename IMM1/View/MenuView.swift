@@ -408,9 +408,22 @@ struct MenuView: View
                 Button(action:
                 {
                     //您的操作代碼在這裡
+                    withAnimation(.easeInOut.speed(3))
+                    {
+                        self.isFavorited.toggle()
+                        toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
+                            switch result
+                            {
+                            case .success(let responseString):
+                                print("Success: \(responseString)")
+                            case .failure(let error):
+                                print("Error: \(error.localizedDescription)")
+                            }
+                        }
+                    }
                 })
                 {
-                    Image(systemName: "heart")
+                    Image(systemName: self.isFavorited ? "heart.fill" : "heart")
                         .font(.title2)
                         .foregroundStyle(.orange) //設定愛心為橘色
                 }

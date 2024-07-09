@@ -38,10 +38,7 @@ struct RecipeBlock: View
                             .scaledToFill()
                             .frame(width: UIScreen.main.bounds.width - 40, height: 250)
                             .cornerRadius(10)
-                            
-                            
-                    }
-                    else
+                    }else
                     {
                         Color.gray
                     }
@@ -80,7 +77,8 @@ struct RecipeBlock: View
                 .symbolEffect(.bounce, value: self.isFavorited)
             }
             
-            HStack(alignment: .bottom) {
+            HStack(alignment: .bottom) 
+            {
                 Text(Dis_Name)
                     .font(.title)
                     .foregroundColor(.white)

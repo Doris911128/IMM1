@@ -1,36 +1,46 @@
 // CookView
 import SwiftUI
 
-func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Void) {
-    guard let url = URL(string: "http://163.17.9.107/food/Cook.php") else {
+func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Void) 
+{
+    guard let url = URL(string: "http://163.17.9.107/food/Cook.php") 
+    else 
+    {
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
     }
     
     URLSession.shared.dataTask(with: url) { data, response, error in
-        if let error = error {
+        if let error = error 
+        {
             completion(nil, error)
             return
         }
         
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 
+        else
+        {
             completion(nil, NSError(domain: "HTTPError", code: 0, userInfo: nil))
             return
         }
         
-        guard let data = data else {
+        guard let data = data 
+        else
+        {
             completion(nil, NSError(domain: "NoDataError", code: 0, userInfo: nil))
             return
         }
         
         do {
-            if let jsonString = String(data: data, encoding: .utf8) {
+            if let jsonString = String(data: data, encoding: .utf8) 
+            {
                 print("Fetched JSON: \(jsonString)")
             }
             
             let plans = try JSONDecoder().decode([CookPlan].self, from: data)
             completion(plans, nil)
-        } catch {
+        } catch 
+        {
             completion(nil, error)
         }
     }.resume()

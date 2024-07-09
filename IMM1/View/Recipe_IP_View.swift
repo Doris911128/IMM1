@@ -1,3 +1,5 @@
+//  過往食譜點進去後出現的單篇食譜畫面
+
 //  食譜份數暫時未新增因要更動版面
 //  食譜內頁顯示(食譜圖片、煮法、食材數量)
 //  Recipe_IP.swift
@@ -11,14 +13,23 @@ import Foundation
 
 struct Recipe_IP_View: View
 {
+    init(U_ID: String, Dis_ID: Int = 0, isFavorited: Bool = false)
+    {
+        self.U_ID = U_ID
+        self.Dis_ID = Dis_ID
+        self._isFavorited = State(initialValue: isFavorited)
+    }
+    let U_ID: String // 用於添加我的最愛
+    let Dis_ID: Int // 用於添加我的最愛
+    @State private var isFavorited: Bool
+    
     @State private var dishesData: [Dishes] = []
     @State private var foodData: [Food] = []
     @State private var amountData: [Amount] = []
     
     @State private var cookingMethod: String? // 新增一個狀態來儲存從URL加載的烹飪方法
     @State private var selectedDish: Dishes?
-    
-    var Dis_ID: Int // 從外部接收 Dish ID
+
     
 //    private var selectedDish: Dishes? //var selectedDish: Dishes?
 //    {
@@ -380,10 +391,22 @@ struct Recipe_IP_View: View
             {
                 Button(action:
                 {
-                    //您的操作代碼在這裡
+                    withAnimation(.easeInOut.speed(3))
+                    {
+                        self.isFavorited.toggle()
+                        toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
+                            switch result
+                            {
+                            case .success(let responseString):
+                                print("Success: \(responseString)")
+                            case .failure(let error):
+                                print("Error: \(error.localizedDescription)")
+                            }
+                        }
+                    }
                 })
                 {
-                    Image(systemName: "heart")
+                    Image(systemName: self.isFavorited ? "heart.fill" : "heart")
                         .font(.title2)
                         .foregroundStyle(.orange) //設定愛心為橘色
                 }
@@ -400,5 +423,5 @@ struct Recipe_IP_View: View
 
 #Preview
 {
-    Recipe_IP_View(Dis_ID: 1)
+    Recipe_IP_View(U_ID:"ofmyRwDdZy",Dis_ID: 1)
 }

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct FavoriteView: View
 {
+    let U_ID: String // 用於添加我的最愛
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes? = nil
     @State private var isLoading: Bool = true // 加载状态
@@ -139,7 +140,7 @@ struct FavoriteView: View
                         {
                             ForEach(dishesData, id: \.Dis_ID)
                             { dish in
-                                NavigationLink(destination: Recipe_IP_View(Dis_ID: dish.Dis_ID))
+                                NavigationLink(destination: Recipe_IP_View(U_ID: "", Dis_ID: dish.Dis_ID))
                                 {
                                     RecipeBlock(
                                         imageName: dish.D_image ?? "",
