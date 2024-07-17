@@ -79,11 +79,27 @@ struct EditPlanView: View {
                     self.foodOptions4 = dishes
                     self.foodOptions5 = dishes
                     self.foodOptions6 = dishes
-                    self.foodOptions7 = dishes
+                    // 单独获取用户收藏
+                    fetchUserFavorites()
                 }
             }
         } else {
             print("Invalid URL")
+        }
+    }
+
+    func fetchUserFavorites() {
+        if let url = URL(string: "http://163.17.9.107/food/UserFavorites.php") {
+            fetchFoodData(from: url) { foodData, error in
+                if let error = error {
+                    print("Error fetching favorites: \(error)")
+                } else if let favorites = foodData {
+                    print("Fetched favorite dishes: \(favorites)")
+                    self.foodOptions7 = favorites
+                }
+            }
+        } else {
+            print("Invalid URL for favorites")
         }
     }
 
@@ -143,11 +159,11 @@ struct EditPlanView: View {
             currentCategoryIndex = categoryIndex
             isShowingDetail.wrappedValue.toggle()
         }
-        .background(backgroundColors[categoryIndex].opacity(0.5)) // 背景色
+        .background(backgroundColors[categoryIndex].opacity(0.5)) // 背景颜色
         .cornerRadius(10)
         .sheet(isPresented: isShowingDetail) {
             FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "N/A") // 更新這一行
+                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
             }), categoryTitle: categoryTitle)
             .onDisappear {
                 if let selectedFood = findSelectedFoodData(for: editedPlan) {
@@ -157,6 +173,7 @@ struct EditPlanView: View {
             }
         }
     }
+
 
 
 
