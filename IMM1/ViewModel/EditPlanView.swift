@@ -147,7 +147,7 @@ struct EditPlanView: View {
         .cornerRadius(10)
         .sheet(isPresented: isShowingDetail) {
             FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image)!)
+                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "N/A") // 更新這一行
             }), categoryTitle: categoryTitle)
             .onDisappear {
                 if let selectedFood = findSelectedFoodData(for: editedPlan) {
@@ -157,6 +157,8 @@ struct EditPlanView: View {
             }
         }
     }
+
+
 
     func updatePlanOnServer(pID: String?, disID: Int) {
         guard let url = URL(string: "http://163.17.9.107/food/Planupdate.php") else {
@@ -359,8 +361,8 @@ func fetchFoodData(from url: URL, completion: @escaping ([Dishes]?, Error?) -> V
 
         do {
             let decoder = JSONDecoder()
-            let foodData = try decoder.decode([Dishes].self, from: data)
-            completion(foodData, nil)
+            let dishesData = try decoder.decode([Dishes].self, from: data)
+            completion(dishesData, nil)
         } catch {
             completion(nil, error)
         }

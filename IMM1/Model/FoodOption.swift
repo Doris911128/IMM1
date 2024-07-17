@@ -13,7 +13,9 @@ import SwiftUI
 //    var name: String
 //    var backgroundImage: String
 //}
-struct FoodOption {
+struct FoodOption: Identifiable {
+    var id = UUID()
     var name: String
     var backgroundImage: URL
+    var serving: String
 }

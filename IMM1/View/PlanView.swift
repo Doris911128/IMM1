@@ -6,21 +6,18 @@ struct Dish: Codable
 {
     let Dis_Name: String
     let D_image: String
+    let Dis_serving: String
 }
 
-func fetchDishesFromServer(completion: @escaping ([Dish]?, Error?) -> Void)
-{
-    guard let url = URL(string: "http://163.17.9.107/food/Dishes.php")
-    else
-    {
+func fetchDishesFromServer(completion: @escaping ([Dish]?, Error?) -> Void) {
+    guard let url = URL(string: "http://163.17.9.107/food/Dishes.php") else {
         print("Invalid URL")
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
     }
     
     URLSession.shared.dataTask(with: url) { (data, response, error) in
-        if let error = error
-        {
+        if let error = error {
             completion(nil, error)
             return
         }
@@ -47,6 +44,7 @@ func fetchDishesFromServer(completion: @escaping ([Dish]?, Error?) -> Void)
         }
     }.resume()
 }
+
 
 struct PlanDeleteError: Error
 {
@@ -132,7 +130,8 @@ struct PlanView: View {
     @State private var selectedDate: String?
     @State private var showSingleDayView: Bool = false // 新增狀態變數
     @State private var dishes: [String: String] = [:] // 新增變數來儲存 Dis_Name 和 D_image 的映射
-    
+    @State private var dishServings: [String: String] = [:] // 新增變數來儲存 Dis_Name 和 Dis_serving 的映射
+
     // DateFormatter for displaying dates in MM/DD format 用於顯示日期的 DateFormatter
     private var displayDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -287,15 +286,15 @@ struct PlanView: View {
                         {
                             Section(header:
                                         
-                                       
-                            HStack
-                            {
+                                        
+                                        HStack
+                                    {
                                 Text(self.displayDateFormatters.string(from: dateFormatter.date(from: day)!)).font(.title)
                                 Text(getDayLabelText(for: day))
                                 Spacer()
                                 Button(action: {
                                     plans[day]?.append(Plan(P_ID: UUID().uuidString, U_ID: "", Dis_ID: 0, P_DT: day, P_Bought: "", Dis_name: "新計畫"))
-                                }) 
+                                })
                                 {
                                     Image(systemName: "plus.circle")
                                         .imageScale(.large)
@@ -303,7 +302,7 @@ struct PlanView: View {
                                 }
                             }
                             ) {
-                                if let dayPlans = plans[day] 
+                                if let dayPlans = plans[day]
                                 {
                                     // 修改 body 中 NavigationLink 的 .disabled 條件
                                     ForEach(dayPlans.indices, id: \.self) { index in
@@ -311,7 +310,7 @@ struct PlanView: View {
                                         let isEditable = isNewPlan(plan) // 檢查是否是新計畫
                                         let dishImageURL = URL(string: dishes[plan.Dis_name] ?? "") // 添加這行
                                         
-                                        HStack 
+                                        HStack
                                         {
                                             if let imageURL = dishImageURL { // 添加這部分
                                                 AsyncImage(url: imageURL) { image in
@@ -319,21 +318,29 @@ struct PlanView: View {
                                                         .aspectRatio(contentMode: .fill)
                                                         .frame(width: 50, height: 50)
                                                         .clipShape(Circle())
-                                                } placeholder: 
+                                                } placeholder:
                                                 {
                                                     ProgressView()
                                                 }
                                             }
                                             
-                                            NavigationLink(destination: isEditable ? EditPlanView(day: day, planIndex: index, plans: $plans) : nil) 
+                                            NavigationLink(destination: isEditable ? EditPlanView(day: day, planIndex: index, plans: $plans) : nil)
                                             {
-                                                Text(plan.Dis_name) // 修改這裡，使用 plan.Dis_name
-                                                    .font(.headline)
+                                                VStack(alignment: .leading) { // 將文字設定為向下
+                                                    Text(plan.Dis_name)
+                                                        .font(.headline)
+                                                    if let serving = dishServings[plan.Dis_name] {
+                                                        Text(serving)
+                                                            .font(.subheadline)
+                                                            .foregroundColor(.black)
+                                                    }
+                                                }
                                             }
                                             .disabled(!isEditable) // 禁用點擊進入功能
+                                            
                                         }
                                     }
-                                    .onDelete 
+                                    .onDelete
                                     { indices in
                                         guard let deletedPlan = plans[day]?[indices.first ?? 0]
                                         else
@@ -342,13 +349,13 @@ struct PlanView: View {
                                             return
                                         }
                                         
-                                        deletePlan(withID: deletedPlan.P_ID, day: day, at: indices) 
+                                        deletePlan(withID: deletedPlan.P_ID, day: day, at: indices)
                                         { result in
                                             switch result
                                             {
                                             case .success:
                                                 print("成功刪除計畫:", deletedPlan.P_ID)
-                                                DispatchQueue.main.async 
+                                                DispatchQueue.main.async
                                                 {
                                                     if var dayPlans = self.plans[day]
                                                     {
@@ -359,7 +366,7 @@ struct PlanView: View {
                                                 
                                             case .failure(let error):
                                                 print("Failed with error:", error)
-                                                if let planDeleteError = error as? PlanDeleteError 
+                                                if let planDeleteError = error as? PlanDeleteError
                                                 {
                                                     print("計劃刪除錯誤訊息:", planDeleteError.message)
                                                 }
@@ -376,24 +383,21 @@ struct PlanView: View {
                 
             }
         }
-        .onAppear 
-        {
+        .onAppear {
             updatePlans()
-            fetchDishesFromServer 
-            { fetchedDishes, error in
-                if let fetchedDishes = fetchedDishes
-                {
-                    DispatchQueue.main.async 
-                    {
+            fetchDishesFromServer { fetchedDishes, error in
+                if let fetchedDishes = fetchedDishes {
+                    DispatchQueue.main.async {
                         var newDishes = [String: String]()
-                        for dish in fetchedDishes 
-                        {
+                        var newDishServings = [String: String]() // 添加這行
+                        for dish in fetchedDishes {
                             newDishes[dish.Dis_Name] = dish.D_image
+                            newDishServings[dish.Dis_Name] = dish.Dis_serving // 添加這行
                         }
                         self.dishes = newDishes
+                        self.dishServings = newDishServings // 添加這行
                     }
-                } else if let error = error 
-                {
+                } else if let error = error {
                     print("Failed to fetch dishes: \(error)")
                 }
             }
@@ -410,15 +414,15 @@ struct PlanView: View {
         }
 }
 
-struct PlanView_Previews: PreviewProvider 
+struct PlanView_Previews: PreviewProvider
 {
-    static var previews: some View 
+    static var previews: some View
     {
         PlanView()
     }
 }
 
-func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void) 
+func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void)
 {
     guard let url = URL(string: "http://163.17.9.107/food/Plan.php")
     else
@@ -428,7 +432,7 @@ func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void)
         return
     }
     
-    URLSession.shared.dataTask(with: url) 
+    URLSession.shared.dataTask(with: url)
     { (data, response, error) in
         if let error = error
         {
@@ -436,7 +440,7 @@ func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void)
             return
         }
         
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200
         else
         {
             print("Error: Invalid HTTP response")
@@ -452,12 +456,12 @@ func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void)
             return
         }
         
-        do 
+        do
         {
             let decoder = JSONDecoder()
             let plans = try decoder.decode([Plan].self, from: jsonData)
             completion(plans, nil)
-        } catch 
+        } catch
         {
             print("Error decoding JSON: \(error)")
             completion(nil, error)
