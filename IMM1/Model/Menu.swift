@@ -10,10 +10,11 @@ import Foundation
 
 //解析JSON的
 // MARK: 菜譜結構
-struct Dishes: Codable
+struct Dishes: Codable, Identifiable
 {
+    var id: Int { Dis_ID }
     let Dis_ID: Int //ID
-    let Dis_Name: String //名稱
+    var Dis_Name: String //名稱
     let D_Cook: String? //煮法
     let D_image: String //照片
     let D_Video: String? //影片
@@ -46,6 +47,18 @@ struct Dishes: Codable
         self.amounts = amounts
     }
 }
+// 過往食譜結構
+struct PastRecipe: Identifiable, Decodable {
+    var id: Int { Dis_ID }
+    var Dis_ID: Int
+    var Dis_serving: String
+    var Dis_Name: String
+    var D_Cook: String
+    var D_image: String
+    var D_Video: String
+}
+
+
 
 //let dishesData: [Dishes] = [
 //    Dishes(Dis_ID: 1, Dis_Name: "t蕃茄炒蛋", D_Cook: "http://163.17.9.107/food/dishes/1.txt", D_image: "http://163.17.9.107/food/images/1.jpg", D_Video: "xxxxxxxxx"), Dishes(Dis_ID: 2, Dis_Name: "t荷包蛋", D_Cook: "http://163.17.9.107/food/dishes/2.txt", D_image: "http://163.17.9.107/food/images/2.jpg", D_Video: "xxxxxxxxx")
@@ -103,4 +116,3 @@ struct Amount: Codable
 //    Amount(A_ID:2,Dis_ID: 1,F_ID: 2,A_Amount:2),
 //    Amount(A_ID:3,Dis_ID: 1,F_ID: 7,A_Amount:0.3)
 //]
-
