@@ -276,6 +276,13 @@ struct MyView: View
                         // MARK: 設定_內容
                         Section(header:Text("設置"))
                         {
+                            // MARK: 健康
+                            HStack
+                            {
+                                NavigationLink(destination: DynamicView()) {
+                                    InformationLabel(image: "chart.xyaxis.line", label: "健康")
+                                }
+                            }
                             // MARK: 過往食譜
                             HStack
                             {

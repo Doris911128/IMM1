@@ -73,11 +73,11 @@ struct EditPlanView: View {
                     print("Fetched food data: \(dishes)")
                     self.foodDataFromServer = dishes
                     self.foodOptions = dishes
-                    self.foodOptions1 = Array(dishes[0...4])
-                    self.foodOptions2 = [dishes[2]]
-                    self.foodOptions3 = dishes.filter { ["7", "9", "11"].contains(String($0.Dis_ID)) }
-                    self.foodOptions4 = dishes
-                    self.foodOptions5 = dishes
+                    self.foodOptions1 = dishes.filter { ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "15", "21", "22", "24", "27", "28"].contains(String($0.Dis_ID)) }
+                    self.foodOptions2 = dishes.filter { ["2","3", "12","13", "22", "24", "28"].contains(String($0.Dis_ID)) }
+                    self.foodOptions3 = dishes.filter { ["1", "2", "3", "9", "10", "11", "13", "15", "17", "22", "23", "24", "26", "28"].contains(String($0.Dis_ID)) }
+                    self.foodOptions4 = dishes.filter { ["4", "6", "7" ,"14", "16", "18", "19", "20", "23", "25"].contains(String($0.Dis_ID)) }
+                    self.foodOptions5 = dishes.filter { ["1", "2", "3", "17", "19", "22", "26","28"].contains(String($0.Dis_ID)) }
                     self.foodOptions6 = dishes
                     // 单独获取用户收藏
                     fetchUserFavorites()
@@ -118,10 +118,10 @@ struct EditPlanView: View {
     // MARK: 養生選項
     @State private var foodOptions5: [Dishes] = []
 
-    // MARK: 我的最愛
+    // MARK: 今日推薦選項
     @State private var foodOptions6: [Dishes] = []
 
-    // MARK: 今日推薦選項
+    // MARK: 我的最愛
     @State private var foodOptions7: [Dishes] = []
 
     @State private var isShowingDetail7 = false
@@ -136,20 +136,20 @@ struct EditPlanView: View {
     }
 
     // MARK: 聽天由命選項的View
-    private var fateButton: some View {
-        CustomButton(imageName: "聽天由命", buttonText: "聽天由命") {
-            isShowingDetail7.toggle()
-        }
-        .sheet(isPresented: $isShowingDetail7) {
-            VStack {
-                Spacer()
-                SpinnerView()
-                    .background(Color.white)
-                    .cornerRadius(10)
-            }
-            .edgesIgnoringSafeArea(.all)
-        }
-    }
+//    private var fateButton: some View {
+//        CustomButton(imageName: "聽天由命", buttonText: "聽天由命") {
+//            isShowingDetail7.toggle()
+//        }
+//        .sheet(isPresented: $isShowingDetail7) {
+//            VStack {
+//                Spacer()
+//                SpinnerView()
+//                    .background(Color.white)
+//                    .cornerRadius(10)
+//            }
+//            .edgesIgnoringSafeArea(.all)
+//        }
+//    }
 
     @ViewBuilder
     private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
@@ -307,13 +307,13 @@ struct EditPlanView: View {
                         fetchFoodOptions()
                     }
 
-                    let names = ["懶人", "減肥", "省錢", "放縱", "養生", "今日推薦", "我的最愛", "聽天由命"]
+                    let names = ["懶人", "減肥", "省錢", "放縱", "素食", "今日推薦", "我的最愛", "聽天由命"]
                     let showOptions = [foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6, foodOptions7]
 
                     VStack(spacing: 30) {
                         ForEach(names.indices, id: \.self) { index in
-                            if index == 7 {
-                                fateButton
+                            if index == 7{
+//                                fateButton
                             } else {
                                 self.TempView(
                                     imageName: names[index],

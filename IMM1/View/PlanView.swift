@@ -277,7 +277,7 @@ struct PlanView: View {
                         .padding(5)
                     }
                     .padding(.horizontal)
-                }
+                }.scrollIndicators(.hidden)
                 
                 List
                 {

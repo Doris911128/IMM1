@@ -61,11 +61,11 @@ struct ContentView: View
                         Label("烹飪", systemImage: "fork.knife")
                     }
                     
-                    DynamicView()
+                    AIView()
                         .tag(3)
                         .tabItem
                     {
-                        Label("健康", systemImage: "chart.xyaxis.line")
+                        Label("AI", systemImage: "brain")
                     }
                     
                     MyView(select: self.$select)

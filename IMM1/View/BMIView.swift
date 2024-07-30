@@ -83,29 +83,25 @@ private func formattedDate(_ date: Date) -> String
 }
 
 
-struct BMIView: View
-{
+struct BMIView: View {
     @EnvironmentObject private var user: User
     @State private var height: String = ""
     @State private var weight: String = ""
     
-    @ObservedObject private var bmiRecordViewModel = BMIRecordViewModel()
-    @ObservedObject private var temperatureSensorViewModel = TemperatureSensorViewModel(allSensors: [TemperatureSensor(id: "BMI", records: [])])
+    @StateObject private var bmiRecordViewModel = BMIRecordViewModel()
+    @StateObject private var temperatureSensorViewModel = TemperatureSensorViewModel(allSensors: [TemperatureSensor(id: "BMI", records: [])])
     @State private var displayMode: Int = 0 // 0 for Daily, 1 for Weekly
     @State private var isShowingList: Bool = false
     @State private var isShowingDetailSheet: Bool = false
+    @State private var isLoading: Bool = true // Add a loading state
     
     func postBMI(height: Double, weight: Double, name: String) {
         guard let url = URL(string: "http://163.17.9.107/food/\(name).php") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        // 设置POST请求的body
         let postString = "H=\(String(height))&W=\(String(weight))"
         request.httpBody = postString.data(using: .utf8)
-        
-        // Print the body data to be sent
-        print("Sending data to server: \(postString)") // 在這裡添加 print 語句
         
         URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
@@ -114,186 +110,171 @@ struct BMIView: View
             }
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
                 DispatchQueue.main.async {
-                    // 解析JSON字符串并将记录添加到ViewModel
                     self.bmiRecordViewModel.parseAndAddRecords(from: responseString)
                 }
             }
         }.resume()
     }
     
-    
-    func connect(name: String)
-    {
+    func connect(name: String) {
         let url: URL = URL(string: "http://163.17.9.107/food/\(name).php")!
         var request: URLRequest = URLRequest(url: url)
         
         request.httpMethod = "POST"
         URLSession.shared.dataTask(with: request) { (data, _, error) in
-            if let data = data
-            {
+            if let data = data {
                 if let responseString = String(data: data, encoding: .utf8) {
                     DispatchQueue.main.async {
                         print("Response from server: \(responseString)")
-                        // 解析 JSON 字串並將記錄添加到 ViewModel
                         self.bmiRecordViewModel.parseAndAddRecords(from: responseString)
-                        //self.isShowingList = true // 顯示列表，如果需要
-                        
+                        self.isLoading = false // Set loading state to false
                     }
                 }
             } else if let error = error {
                 print("Error: \(error)")
+                self.isLoading = false // Ensure loading state is false in case of error
             }
         }.resume()
     }
     
-    
-    
-    var body: some View
-    {
-        NavigationStack
-        {
-            VStack
-            {
-                HStack
-                {
-                    Text("BMI紀錄")
-                        .foregroundColor(Color.black)
-                        .frame(width: 300, height: 50)
-                        .font(.system(size: 33, weight: .bold))
-                        .offset(x:-60)
-                    
-                    Button(action:
-                            {
-                        
-                        //self.connect(name: "Dynamics")
-                        isShowingList.toggle()
-                    }) {
-                        Image(systemName: "list.dash")
-                            .font(.title)
-                            .foregroundColor(Color("BottonColor"))
-                            .padding()
-                            .cornerRadius(10)
-                            .padding(.trailing, 20)
-                            .imageScale(.large)
-                    }
-                    .offset(x:10)
-                }
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 20) {
-                        Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords : (displayMode == 1 ? bmiRecordViewModel.averagesEverySevenRecordsSorted() : bmiRecordViewModel.averagesEveryThirtyRecordsSorted())) { record in
-                            LineMark(
-                                x: .value("Date", formattedDate(record.date)),
-                                y: .value("BMI", record.bmi)
-                            )
-                            .lineStyle(.init(lineWidth: 2))
-                            
-                            PointMark(
-                                x: .value("Date", formattedDate(record.date)),
-                                y: .value("BMI", record.bmi)
-                            )
-                            .annotation(position: .top) {
-                                Text("\(record.bmi, specifier: "%.2f")")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(Color.black)
-                            }
-                        }
-                        .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : (displayMode == 1 ? CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)) : CGFloat(max(300, bmiRecordViewModel.averagesEveryThirtyRecordsSorted().count * 100))), height: 200)
+    var body: some View {
+        NavigationStack {
+            VStack {
+                if isLoading {
+                    ProgressView("Loading...")
+                        .progressViewStyle(CircularProgressViewStyle())
                         .padding()
-                        .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加边框
-                        .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5) // 添加阴影
-                    }
-                    .padding()
-                    
-                }
-                
-                
-                
-                
-                VStack()
-                {
-                    HStack{
-                        Text("BMI計算")
-                            .font(.system(size: 20, weight: .semibold))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.leading, 20)
-                            .foregroundColor(Color("TextColor"))
-                        Picker("顯示模式", selection: $displayMode) {
-                            Text("每日").tag(0)
-                            Text("每7日").tag(1)
-                            Text("每30日").tag(2)
-                        }
-                        .pickerStyle(MenuPickerStyle())
-                    }
-                    VStack(spacing: -5)
-                    {
-                        TextField("請輸入身高（公分）", text: $height)
-                            .padding()
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
-                            .frame(width: 330)
-                            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in
-                                height = height.filter { "0123456789.".contains($0) }
-                            }
-                        
-                        TextField("請輸入體重（公斤）", text: $weight)
-                            .padding()
-                            .offset(y: 0)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
-                            .frame(width: 330)
-                            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in
-                                weight = weight.filter { "0123456789.".contains($0) }
-                            }
-                    }
-                    
-                    Button(action: {
-                        if let heightValue = Double(height), let weightValue = Double(weight) {
-                            // 调用postBMI发送数据
-                            postBMI(height: heightValue, weight: weightValue, name: "BMI")
-                            self.connect(name: "FindBMI")
-                            // 其余逻辑保持不变
-                            let today = Date()
-                            let newRecord = BMIRecord(height: heightValue, weight: weightValue, date: today)
-                            bmiRecordViewModel.addOrUpdateRecord(newRecord: newRecord)
-                            
-                            height = ""
-                            weight = ""
-                        }
-                    }) {
-                        Text("計算BMI")
-                            .foregroundColor(Color("ButColor"))
-                            .padding(10)
+                } else {
+                    HStack {
+                        Text("BMI紀錄")
+                            .foregroundColor(Color.black)
                             .frame(width: 300, height: 50)
-                            .background(Color("BottonColor"))
-                            .cornerRadius(100)
-                            .font(.title3)
+                            .font(.system(size: 33, weight: .bold))
+                            .offset(x: -60)
+                        
+                        Button(action: {
+                            isShowingList.toggle()
+                        }) {
+                            Image(systemName: "list.dash")
+                                .font(.title)
+                                .foregroundColor(Color("BottonColor"))
+                                .padding()
+                                .cornerRadius(10)
+                                .padding(.trailing, 20)
+                                .imageScale(.large)
+                        }
+                        .offset(x: 10)
                     }
                     
-                    .padding()
-                    .offset(y: -20)
-                    .sheet(isPresented: $isShowingList)
-                    {
-                        NavigationStack
-                        {
-                            BMIRecordsListView(records: $bmiRecordViewModel.bmiRecords, temperatureSensorViewModel: temperatureSensorViewModel)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 20) {
+                            Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords : (displayMode == 1 ? bmiRecordViewModel.averagesEverySevenRecordsSorted() : bmiRecordViewModel.averagesEveryThirtyRecordsSorted())) { record in
+                                LineMark(
+                                    x: .value("Date", formattedDate(record.date)),
+                                    y: .value("BMI", record.bmi)
+                                )
+                                .lineStyle(.init(lineWidth: 2))
+                                
+                                PointMark(
+                                    x: .value("Date", formattedDate(record.date)),
+                                    y: .value("BMI", record.bmi)
+                                )
+                                .annotation(position: .top) {
+                                    Text("\(record.bmi, specifier: "%.2f")")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(Color.black)
+                                }
+                            }
+                            .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : (displayMode == 1 ? CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)) : CGFloat(max(300, bmiRecordViewModel.averagesEveryThirtyRecordsSorted().count * 100))), height: 200)
+                            .padding()
+                            .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // Add border
+                            .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5) // Add shadow
+                        }
+                        .padding()
+                    }
+                    
+                    VStack {
+                        HStack {
+                            Text("BMI計算")
+                                .font(.system(size: 20, weight: .semibold))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.leading, 20)
+                                .foregroundColor(Color("TextColor"))
+                            
+                            Picker("顯示模式", selection: $displayMode) {
+                                Text("每日").tag(0)
+                                Text("每7日").tag(1)
+                                Text("每30日").tag(2)
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                        }
+                        
+                        VStack(spacing: -5) {
+                            TextField("請輸入身高（公分）", text: $height)
+                                .padding()
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .keyboardType(.numberPad)
+                                .frame(width: 330)
+                                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in
+                                    height = height.filter { "0123456789.".contains($0) }
+                                }
+                            
+                            TextField("請輸入體重（公斤）", text: $weight)
+                                .padding()
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .keyboardType(.numberPad)
+                                .frame(width: 330)
+                                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in
+                                    weight = weight.filter { "0123456789.".contains($0) }
+                                }
+                        }
+                        
+                        Button(action: {
+                            if let heightValue = Double(height), let weightValue = Double(weight) {
+                                postBMI(height: heightValue, weight: weightValue, name: "BMI")
+                                connect(name: "FindBMI")
+                                
+                                let today = Date()
+                                let newRecord = BMIRecord(height: heightValue, weight: weightValue, date: today)
+                                bmiRecordViewModel.addOrUpdateRecord(newRecord: newRecord)
+                                
+                                height = ""
+                                weight = ""
+                            }
+                        }) {
+                            Text("計算BMI")
+                                .foregroundColor(Color("ButColor"))
+                                .padding(10)
+                                .frame(width: 300, height: 50)
+                                .background(Color("BottonColor"))
+                                .cornerRadius(100)
+                                .font(.title3)
+                        }
+                        .padding()
+                        .offset(y: -20)
+                        .sheet(isPresented: $isShowingList) {
+                            NavigationStack {
+                                BMIRecordsListView(records: $bmiRecordViewModel.bmiRecords, temperatureSensorViewModel: temperatureSensorViewModel)
+                            }
+                        }
+                        .sheet(isPresented: $isShowingDetailSheet) {
+                            NavigationStack {
+                                BMIRecordDetailView(record: bmiRecordViewModel.bmiRecords.last ?? BMIRecord(height: 0, weight: 0, date: Date()))
+                            }
                         }
                     }
-                    .sheet(isPresented: $isShowingDetailSheet)
-                    {
-                        NavigationStack
-                        {
-                            BMIRecordDetailView(record: bmiRecordViewModel.bmiRecords.last ?? BMIRecord(height: 0, weight: 0, date: Date()))
-                        }
-                    }
-                }.onAppear{
-                    self.connect(name: "FindBMI")
                 }
-                .onTapGesture
-                {
-                    self.dismissKeyboard()
+            }
+            .onAppear {
+                if isLoading {
+                    connect(name: "FindBMI")
                 }
-                .padding(.bottom, 25)
-            }.offset(y:23)
+            }
+            .onTapGesture {
+                dismissKeyboard()
+            }
+            .padding(.bottom, 25)
+            .offset(y: 23)
         }
     }
 }
