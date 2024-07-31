@@ -53,6 +53,7 @@
 		049CD6C22BCB794700D7AA8E /* BMIRecordViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */; };
 		049CD6C42BCBA72E00D7AA8E /* Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD6C32BCBA72E00D7AA8E /* Menu.swift */; };
 		04CE658A2C58C929001B45C9 /* AIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CE65892C58C929001B45C9 /* AIView.swift */; };
+		04CE659A2C5A055F001B45C9 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CE65992C5A055F001B45C9 /* CameraView.swift */; };
 		04FE2EA22C1C278A00A3C730 /* Color.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04FE2EA12C1C278A00A3C730 /* Color.xcassets */; };
 		0F67D0EF2BF05D870094B4C2 /* Recipe_IP_View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */; };
 		1C0081722BF07CD000720927 /* PastRecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0081712BF07CD000720927 /* PastRecipesView.swift */; };
@@ -110,6 +111,7 @@
 		049CD6C12BCB794700D7AA8E /* BMIRecordViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BMIRecordViewModel.swift; sourceTree = "<group>"; };
 		049CD6C32BCBA72E00D7AA8E /* Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menu.swift; sourceTree = "<group>"; };
 		04CE65892C58C929001B45C9 /* AIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIView.swift; sourceTree = "<group>"; };
+		04CE65992C5A055F001B45C9 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		04FE2EA12C1C278A00A3C730 /* Color.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Color.xcassets; sourceTree = "<group>"; };
 		0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe_IP_View.swift; sourceTree = "<group>"; };
 		1C0081712BF07CD000720927 /* PastRecipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastRecipesView.swift; sourceTree = "<group>"; };
@@ -214,6 +216,7 @@
 				0447AFAB2B872C980080D222 /* CookView.swift */,
 				1C9A27492C009E29006CE811 /* CookingAiView.swift */,
 				0447AFB42B872C980080D222 /* ContentView.swift */,
+				04CE65992C5A055F001B45C9 /* CameraView.swift */,
 				0447AFA82B872C980080D222 /* DynamicView.swift */,
 				0447AFA32B872C980080D222 /* FavoriteView.swift */,
 				0447AFAF2B872C980080D222 /* ForgePasswordView.swift */,
@@ -349,6 +352,7 @@
 				0459852F2BB0285E006D8807 /* PlanManager.swift in Sources */,
 				0447AFBD2B872C980080D222 /* PlanView.swift in Sources */,
 				1C9A274A2C009E29006CE811 /* CookingAiView.swift in Sources */,
+				04CE659A2C5A055F001B45C9 /* CameraView.swift in Sources */,
 				0447AFBF2B872C980080D222 /* CookView.swift in Sources */,
 				0447AFC62B872C980080D222 /* HyperglycemiaView.swift in Sources */,
 				0447AF852B872BE40080D222 /* Recipe.swift in Sources */,
@@ -518,6 +522,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IMM1/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "相機";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "圖片";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "圖片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -548,6 +555,9 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IMM1/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "相機";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "圖片";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "圖片";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

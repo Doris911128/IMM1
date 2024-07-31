@@ -5,9 +5,6 @@ struct DataModel: Codable {
 }
 
 struct RecipeResponse: Codable {
-    var Recipe_ID: Int
-    var U_ID: String
-    var input: String
     var output: String
 }
 
@@ -15,35 +12,52 @@ struct AIView: View {
     @State private var messageText: String = ""
     @State private var messages: [String] = []
     @State private var isLoading: Bool = false
+    @State private var searchingMessageIndex: Int? = nil
+    @State private var showingImagePicker: Bool = false
+    @State private var selectedImage: UIImage? = nil
 
     var body: some View {
         VStack {
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer()
+                    Text("AI助手")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.orange)
+                        .padding(.vertical, 10)
+                    Spacer()
+                    Button(action: {
+                        showingImagePicker.toggle()
+                    }) {
+                        Image(systemName: "camera.fill")
+                            .foregroundColor(.blue)
+                            .imageScale(.large)
+                            .frame(width: 40, height: 40) // Adjust size here
+                    }
+                }
+                Divider()
+                    .background(Color.gray)
+                    .frame(height: 4)
+            }
+            .frame(maxWidth: .infinity)
+
             ScrollView {
                 VStack {
+                    ForEach(messages.indices, id: \.self) { index in
+                        HStack {
+                            if messages[index].starts(with: "答:") {
+                                ServerMessageView(message: messages[index])
+                            } else {
+                                UserMessageView(message: messages[index])
+                            }
+                        }
+                        .padding()
+                    }
                     if isLoading {
-                        // Show a custom loading animation when loading
                         LoadingAnimationView()
                             .frame(maxWidth: .infinity, maxHeight: 100)
                             .padding()
-                    } else {
-                        ForEach(messages, id: \.self) { message in
-                            HStack {
-                                if message.starts(with: "Server:") {
-                                    Text(message)
-                                        .padding()
-                                        .background(Color.blue.opacity(0.2))
-                                        .cornerRadius(10)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                } else {
-                                    Text(message)
-                                        .padding()
-                                        .background(Color.gray.opacity(0.2))
-                                        .cornerRadius(10)
-                                        .frame(maxWidth: .infinity, alignment: .trailing)
-                                }
-                            }
-                            .padding()
-                        }
                     }
                 }
             }
@@ -62,17 +76,26 @@ struct AIView: View {
             }
             .padding()
         }
+        .sheet(isPresented: $showingImagePicker) {
+            ImagePicker(selectedImage: $selectedImage)
+        }
+        .onChange(of: selectedImage) { image in
+            if let image = image {
+                // Handle the selected image here
+                // For example, save it to the photo library or upload it
+                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+            }
+        }
     }
 
     func sendMessage() {
         guard !messageText.isEmpty else { return }
         let dataModel = DataModel(text: messageText)
-        sendToDatabase(dataModel: dataModel)
-        messages.append("User: \(messageText)") // Add user message
+        messages.append("問: \(messageText)") // Add user message
+        isLoading = true // Show loading animation after user sends message
         messageText = ""
 
-        // Fetch data after sending the message
-        fetchData()
+        sendToDatabase(dataModel: dataModel)
     }
 
     func sendToDatabase(dataModel: DataModel) {
@@ -87,35 +110,40 @@ struct AIView: View {
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.isLoading = false // Stop loading animation
+                }
                 return
             }
 
             guard let data = data else {
                 print("No data received")
+                DispatchQueue.main.async {
+                    self.isLoading = false // Stop loading animation
+                }
                 return
             }
 
             let responseString = String(data: data, encoding: .utf8)
             print("Response: \(responseString ?? "No response")")
+
+            // Fetch data after sending the message
+            self.fetchData()
         }.resume()
     }
 
     func fetchData() {
         guard let url = URL(string: "http://163.17.9.107/food/GetRecipe.php") else { return }
 
-        // Set loading status to true before starting the fetch
-        DispatchQueue.main.async {
-            self.isLoading = true
-        }
-
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    // Keep loading animation on and notify user of the error
-                    self.messages = ["Server: Error occurred. Retrying..."]
-                    self.isLoading = true
-                    // Optionally retry after a delay
+                    self.isLoading = false // Stop loading animation
+                    if self.searchingMessageIndex == nil {
+                        self.messages.append("答: Error occurred. Retrying...")
+                        self.searchingMessageIndex = self.messages.count - 1
+                    }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                         self.fetchData()
                     }
@@ -126,10 +154,11 @@ struct AIView: View {
             guard let data = data else {
                 print("No data received")
                 DispatchQueue.main.async {
-                    // Keep loading animation on and notify user of the issue
-                    self.messages = ["Server: No data received. Retrying..."]
-                    self.isLoading = true
-                    // Optionally retry after a delay
+                    self.isLoading = false // Stop loading animation
+                    if self.searchingMessageIndex == nil {
+                        self.messages.append("答: No data received. Retrying...")
+                        self.searchingMessageIndex = self.messages.count - 1
+                    }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                         self.fetchData()
                     }
@@ -142,29 +171,69 @@ struct AIView: View {
                 let decoder = JSONDecoder()
                 let recipeResponse = try decoder.decode(RecipeResponse.self, from: data)
                 
+                // Print the decoded response to the terminal
+                print("Fetched data: \(recipeResponse)")
+
                 DispatchQueue.main.async {
                     if recipeResponse.output == "LOADING" {
-                        // Continue showing the loading animation
-                        self.messages = ["Server: LOADING"]
+                        if self.searchingMessageIndex == nil {
+                            self.messages.append("答:生成中....")
+                            self.searchingMessageIndex = self.messages.count - 1
+                        }
+                        self.fetchData()
                     } else {
-                        // Update messages with the fetched data
-                        self.messages = ["\(recipeResponse.output)"]
-                        self.isLoading = false
+                        if let index = self.searchingMessageIndex {
+                            self.messages[index] = "答: \(recipeResponse.output)"
+                        } else {
+                            self.messages.append("答: \(recipeResponse.output)")
+                        }
+                        self.isLoading = false // Stop loading animation
+                        self.searchingMessageIndex = nil // Reset flag
                     }
                 }
             } catch {
-                print("Decoding error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    // Keep loading animation on and notify user of the decoding error
-                    self.messages = ["Server: Decoding error. Retrying..."]
-                    self.isLoading = true
-                    // Optionally retry after a delay
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        self.fetchData()
+                    self.isLoading = false // Stop loading animation
+                    if self.searchingMessageIndex == nil {
+                        self.messages.append("答: 生成中....")
+                        self.searchingMessageIndex = self.messages.count - 1
                     }
+                    self.fetchData()
                 }
             }
         }.resume()
+    }
+}
+struct ServerMessageView: View {
+    var message: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: "person.fill")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 40, height: 40)
+                .background(Color.blue.opacity(0.2))
+                .clipShape(Circle())
+
+            Text(message)
+                .padding()
+                .background(Color.blue.opacity(0.2))
+                .cornerRadius(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+struct UserMessageView: View {
+    var message: String
+
+    var body: some View {
+        Text(message)
+            .padding()
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(10)
+            .frame(maxWidth: .infinity, alignment: .trailing)
     }
 }
 
