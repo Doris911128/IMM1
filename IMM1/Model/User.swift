@@ -95,7 +95,7 @@ class User: ObservableObject, Decodable {
     
     // MARK: 從後端獲取用戶信息並更新視圖
     func fetchUserInfo(completion: @escaping (User?) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/Login.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Login.php") else {
             print("Invalid URL")
             completion(nil)
             return

@@ -14,7 +14,7 @@ struct FavoriteView: View {
     @State private var loadingError: String? = nil // 加載错误信息
     
     func loadUFavData() {
-        guard let url = URL(string: "http://163.17.9.107/food/Favorite.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php") else {
             print("生成的 URL 無效")
             self.isLoading = false
             self.loadingError = "無效的URL"

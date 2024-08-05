@@ -10,7 +10,7 @@ struct Dish: Codable
 }
 
 func fetchDishesFromServer(completion: @escaping ([Dish]?, Error?) -> Void) {
-    guard let url = URL(string: "http://163.17.9.107/food/Dishes.php") else {
+    guard let url = URL(string: "http://163.17.9.107/food/php/Dishes.php") else {
         print("Invalid URL")
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
@@ -64,7 +64,7 @@ struct Plan: Codable {
 // 刪除計劃的方法
 func deletePlan(withID pID: String, day: String, at indices: IndexSet, completion: @escaping (Result<Void, Error>) -> Void)
 {
-    guard let url = URL(string: "http://163.17.9.107/food/Plandelete.php")
+    guard let url = URL(string: "http://163.17.9.107/food/php/Plandelete.php")
     else {
         completion(.failure(NSError(domain: "InvalidURL", code: 0, userInfo: nil)))
         return
@@ -424,7 +424,7 @@ struct PlanView_Previews: PreviewProvider
 
 func fetchPlansFromServer(completion: @escaping ([Plan]?, Error?) -> Void)
 {
-    guard let url = URL(string: "http://163.17.9.107/food/Plan.php")
+    guard let url = URL(string: "http://163.17.9.107/food/php/Plan.php")
     else
     {
         print("Invalid URL")

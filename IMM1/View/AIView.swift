@@ -119,7 +119,7 @@ struct AIView: View {
     }
 
     func sendToDatabase(dataModel: DataModel) {
-        guard let url = URL(string: "http://163.17.9.107/food/AI_Recipe.php") else { return }
+        guard let url = URL(string: "http://163.17.9.107/food/php/AI_Recipe.php") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -153,7 +153,7 @@ struct AIView: View {
     }
 
     func fetchData() {
-        guard let url = URL(string: "http://163.17.9.107/food/GetRecipe.php?userId=\(userId)") else { return }
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe.php?userId=\(userId)") else { return }
 
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {

@@ -17,7 +17,7 @@ extension View
     func sendBMIData(height: Double, weight: Double, php: String)
     {
         // 构建URL，包含查询参数
-        let urlString = "http://163.17.9.107/food/BMI.php?height=\(height)&weight=\(weight)"
+        let urlString = "http://163.17.9.107/food/php/BMI.php?height=\(height)&weight=\(weight)"
         guard let url = URL(string: urlString)
         else { return }
         
@@ -51,7 +51,7 @@ extension View
     
     // MARK: 愛心toggle
     func toggleFavorite(U_ID: String, Dis_ID: Int, isFavorited: Bool, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/Favorite.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php") else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
@@ -95,7 +95,7 @@ extension View
     
     // MARK: 檢查菜品是否已被收藏的方法
     func checkIfFavorited(U_ID: String, Dis_ID: String, completion: @escaping (Result<Bool, Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/Favorite.php?U_ID=\(U_ID)&Dis_ID=\(Dis_ID)") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php?U_ID=\(U_ID)&Dis_ID=\(Dis_ID)") else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }

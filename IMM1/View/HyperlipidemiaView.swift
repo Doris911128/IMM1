@@ -86,7 +86,7 @@ struct HyperlipidemiaView: View {
     @State private var showAlert: Bool = false//
     
     func connect(name: String, action: String) {
-        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        let url = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = "action=\(action)".data(using: .utf8)
@@ -110,7 +110,7 @@ struct HyperlipidemiaView: View {
     }
     
     func sendBPData(name: String, bl: Double, action: String) {
-        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        let url = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         let postData = "BL=\(bl)&action=\(action)"  // 確保 action 參數也被發送

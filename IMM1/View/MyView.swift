@@ -34,7 +34,7 @@ struct MyView: View
     // MARK: 從後端獲取用戶信息並更新 user 物件
     private func fetchUserInfo()
     {
-        guard let url = URL(string: "http://163.17.9.107/food/Login.php")
+        guard let url = URL(string: "http://163.17.9.107/food/php/Login.php")
         else {
             print("Invalid URL")
             return
@@ -66,7 +66,7 @@ struct MyView: View
     
     // 登出操作
     func logout() {
-        guard var urlComponents = URLComponents(string: "http://163.17.9.107/food/Login.php") else {
+        guard var urlComponents = URLComponents(string: "http://163.17.9.107/food/php/Login.php") else {
             print("Invalid URL")
             return
         }
@@ -398,7 +398,7 @@ struct NameSheetView: View {
                     isPresented = false
                 },
                 trailing: Button("保存") {
-                    guard let url = URL(string: "http://163.17.9.107/food/UpdateUsername.php") else {
+                    guard let url = URL(string: "http://163.17.9.107/food/php/UpdateUsername.php") else {
                         print("Invalid URL")
                         return
                     }

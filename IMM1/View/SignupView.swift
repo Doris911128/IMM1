@@ -20,7 +20,7 @@ struct SignupView: View {
     }
 
     private func sendRequest() {
-        guard let url = URL(string: "http://163.17.9.107/food/Signin.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Signin.php") else {
             print("錯誤: 無效的URL")
             return
         }

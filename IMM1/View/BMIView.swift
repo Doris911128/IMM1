@@ -96,7 +96,7 @@ struct BMIView: View {
     @State private var isLoading: Bool = true // Add a loading state
     
     func postBMI(height: Double, weight: Double, name: String) {
-        guard let url = URL(string: "http://163.17.9.107/food/\(name).php") else { return }
+        guard let url = URL(string: "http://163.17.9.107/food/php/\(name).php") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
@@ -117,7 +117,7 @@ struct BMIView: View {
     }
     
     func connect(name: String) {
-        let url: URL = URL(string: "http://163.17.9.107/food/\(name).php")!
+        let url: URL = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request: URLRequest = URLRequest(url: url)
         
         request.httpMethod = "POST"

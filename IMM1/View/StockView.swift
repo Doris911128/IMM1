@@ -124,7 +124,7 @@ struct AddIngredients: View {
     // MARK: 抓取食材名稱的Function
     private func fetchIngredientNames() {
         let networkManager = NetworkManager()
-        networkManager.fetchData(from: "http://163.17.9.107/food/Food.php") { result in
+        networkManager.fetchData(from: "http://163.17.9.107/food/php/Food.php") { result in
             switch result {
             case .success(let stocks):
                 ingredientsInfo = stocks.compactMap { stock in
@@ -161,7 +161,7 @@ struct AddIngredients: View {
     
     
     private func sendDataToServer(json: String?, F_ID: Int, U_ID: String, SK_SUM: Int) {
-        guard let jsonData = json, let url = URL(string: "http://163.17.9.107/food/Stock.php") else {
+        guard let jsonData = json, let url = URL(string: "http://163.17.9.107/food/php/Stock.php") else {
             print("Invalid URL or JSON data")
             return
         }
@@ -406,7 +406,7 @@ struct StockView: View {
     
     private func fetchData() {
         let networkManager = NetworkManager()
-        networkManager.fetchData(from: "http://163.17.9.107/food/Stock.php") { result in
+        networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php") { result in
             switch result {
             case .success(let stocks):
                 self.ingredients = stocks.compactMap { stock in
@@ -443,7 +443,7 @@ struct StockView: View {
         ]
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict),
-              let url = URL(string: "http://163.17.9.107/food/Stockdelete.php") else {
+              let url = URL(string: "http://163.17.9.107/food/php/Stockdelete.php") else {
             print("Error creating JSON or URL")
             return
         }
@@ -478,7 +478,7 @@ struct StockView: View {
         ]
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict),
-              let url = URL(string: "http://163.17.9.107/food/StockEdit.php") else {
+              let url = URL(string: "http://163.17.9.107/food/php/StockEdit.php") else {
             print("Error creating JSON or URL")
             return
         }

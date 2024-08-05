@@ -17,7 +17,7 @@ struct SigninView: View
 
     private func sendRequest()
        {
-           let url = URL(string: "http://163.17.9.107/food/Login.php")!
+           let url = URL(string: "http://163.17.9.107/food/php/Login.php")!
            var request = URLRequest(url: url)
            request.httpMethod = "POST"
            let bodyParameters = "U_Acc=\(U_Acc)&U_Pas=\(U_Pas)"

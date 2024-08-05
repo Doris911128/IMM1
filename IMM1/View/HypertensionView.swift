@@ -122,7 +122,7 @@ struct HypertensionView: View {
     }
 
     func connect(name: String, action: String) {
-        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        let url = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = "action=\(action)".data(using: .utf8)
@@ -146,7 +146,7 @@ struct HypertensionView: View {
     }
     
     func sendBPData(name: String, bp: Double, action: String) {
-        let url = URL(string: "http://163.17.9.107/food/\(name).php")!
+        let url = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         let postData = "BP=\(bp)&action=\(action)"

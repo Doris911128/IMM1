@@ -8,7 +8,7 @@ struct DishService
 {
     static func loadDishes(completion: @escaping ([Dishes]) -> Void) 
     {
-        guard let url = URL(string: "http://163.17.9.107/food/Dishes.php") 
+        guard let url = URL(string: "http://163.17.9.107/food/php/Dishes.php") 
         else { return }
         
         URLSession.shared.dataTask(with: url) { data, response, error in

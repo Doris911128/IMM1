@@ -64,7 +64,7 @@ struct PastRecipesView: View {
     
     //MARK:  加载菜单数据
     func P_loadMenuData(keyword: String) {
-        let urlString = "http://163.17.9.107/food/Pastrecipes.php?keyword=\(keyword)&U_ID=\(U_ID)"
+        let urlString = "http://163.17.9.107/food/php/Pastrecipes.php?keyword=\(keyword)&U_ID=\(U_ID)"
         print("正在從此URL請求數據: \(urlString)")
         print("當前的 U_ID: \(U_ID)")
         

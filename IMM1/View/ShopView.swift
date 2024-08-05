@@ -57,7 +57,7 @@ struct Ingredient: Identifiable, Codable {
 
 class ShopNetworkManager {
     func fetchAndAggregateRecipes(completion: @escaping (Result<[RecipeWrapper], Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/Shop.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Shop.php") else {
             completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
@@ -362,7 +362,7 @@ struct ShopView: View {
     }
     
     private func sendJSONDataToBackend(jsonData: Data) {
-        guard let url = URL(string:"http://163.17.9.107/food/ShopStock.php") else {
+        guard let url = URL(string:"http://163.17.9.107/food/php/ShopStock.php") else {
             print("无效的 URL")
             return
         }

@@ -2,7 +2,7 @@
 import SwiftUI
 
 func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Void) {
-    guard let url = URL(string: "http://163.17.9.107/food/Cook.php") else {
+    guard let url = URL(string: "http://163.17.9.107/food/php/Cook.php") else {
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
     }

@@ -57,7 +57,7 @@ struct CookingAiView: View {
     
     // 從後端載入菜譜數據的方法
     func loadDishesData() {
-        let urlString = "http://163.17.9.107/food/Dishes.php"
+        let urlString = "http://163.17.9.107/food/php/Dishes.php"
         guard let url = URL(string: urlString) else {
             print("無效的 URL")
             return

@@ -48,7 +48,7 @@ struct MenuView: View
         assert(Dis_ID > 0, "Dis_ID 必須大於 0")
         
         // 構建帶有查詢參數的 URL 字串，使用實際的 Dis_ID 值
-        let urlString = "http://163.17.9.107/food/Dishes.php?id=\(Dis_ID)"
+        let urlString = "http://163.17.9.107/food/php/Dishes.php?id=\(Dis_ID)"
         print("正在從此URL請求數據: \(urlString)")  // 打印 URL 以確認其正確性
         
         // 使用 URL 編碼確保 URL 結構的正確性，避免 URL 中有特殊字符造成問題

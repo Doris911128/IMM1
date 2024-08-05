@@ -34,7 +34,7 @@ struct IMM1App: App
     
     private func executeAutoPlandeleteRequest() 
     {
-        guard let url = URL(string: "http://163.17.9.107/food/Auto.php") 
+        guard let url = URL(string: "http://163.17.9.107/food/php/Auto.php") 
         else
         {
             print("Invalid URL")

@@ -65,7 +65,7 @@ struct EditPlanView: View {
 
     // Function to fetch food options from the server
     func fetchFoodOptions() {
-        if let url = URL(string: "http://163.17.9.107/food/Dishes.php") {
+        if let url = URL(string: "http://163.17.9.107/food/php/Dishes.php") {
             fetchFoodData(from: url) { foodData, error in
                 if let error = error {
                     print("Error occurred: \(error)")
@@ -89,7 +89,7 @@ struct EditPlanView: View {
     }
 
     func fetchUserFavorites() {
-        if let url = URL(string: "http://163.17.9.107/food/UserFavorites.php") {
+        if let url = URL(string: "http://163.17.9.107/food/php/UserFavorites.php") {
             fetchFoodData(from: url) { foodData, error in
                 if let error = error {
                     print("Error fetching favorites: \(error)")
@@ -178,7 +178,7 @@ struct EditPlanView: View {
 
 
     func updatePlanOnServer(pID: String?, disID: Int) {
-        guard let url = URL(string: "http://163.17.9.107/food/Planupdate.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Planupdate.php") else {
             print("Invalid URL")
             return
         }
@@ -213,7 +213,7 @@ struct EditPlanView: View {
     }
 
     func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: Int, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/Plan.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Plan.php") else {
             completion(false, "無效的 URL")
             return
         }
