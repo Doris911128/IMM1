@@ -35,6 +35,11 @@ struct Ingredient: Identifiable, Codable {
     var stock: Int
     let P_DT: String
     let foodImage: String
+    var date: Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.date(from: P_DT)
+    }
     
     enum CodingKeys: String, CodingKey {
         case pID = "P_ID"
@@ -46,7 +51,7 @@ struct Ingredient: Identifiable, Codable {
         case unit = "F_Unit"
         case stock = "SK_SUM"
         case P_DT = "P_DT"
-        case foodImage = "Food_imge" // 注意这里应该是 "Food_imge" 与 PHP 输出匹配
+        case foodImage = "Food_imge"
     }
 }
 
@@ -76,8 +81,17 @@ class ShopNetworkManager {
             do {
                 let responseData = try JSONDecoder().decode(ResponseDa.self, from: data)
                 
+                // Filter out ingredients with P_DT before today
+                let today = Calendar.current.startOfDay(for: Date())
+                let filteredData = responseData.data.filter { ingredient in
+                    guard let ingredientDate = ingredient.date else {
+                        return false
+                    }
+                    return ingredientDate >= today
+                }
+                
                 // Convert raw data to RecipeWrapper
-                let recipeWrappers: [RecipeWrapper] = responseData.data.map { ingredient in
+                let recipeWrappers: [RecipeWrapper] = filteredData.map { ingredient in
                     let shopPlan = responseData.shopPlanData.first { $0.fid == String(ingredient.fid) && $0.uid == ingredient.uid }
                     return RecipeWrapper(sqlResult: ingredient, shopPlan: shopPlan)
                 }
