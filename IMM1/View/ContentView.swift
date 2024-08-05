@@ -54,7 +54,7 @@ struct ContentView: View
                     }
                     
                     //                CameraContentView(cameraManagerViewModel: self.cameraManagerViewModel)
-                    CookView()
+                    CookView(U_ID:"ofmyRwDdZy")
                         .tag(2)
                         .tabItem
                     {

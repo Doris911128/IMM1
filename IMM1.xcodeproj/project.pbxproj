@@ -59,6 +59,7 @@
 		1C0081722BF07CD000720927 /* PastRecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0081712BF07CD000720927 /* PastRecipesView.swift */; };
 		1C9A27482C009DFA006CE811 /* other.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C9A27472C009DFA006CE811 /* other.xcassets */; };
 		1C9A274A2C009E29006CE811 /* CookingAiView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9A27492C009E29006CE811 /* CookingAiView.swift */; };
+		1C9E1FE82C607E5D00E7DC9D /* RecipeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9E1FE72C607E5D00E7DC9D /* RecipeViewModel.swift */; };
 		1CA599992BF09D680087A795 /* RecipeBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA599982BF09D680087A795 /* RecipeBlock.swift */; };
 /* End PBXBuildFile section */
 
@@ -117,6 +118,7 @@
 		1C0081712BF07CD000720927 /* PastRecipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastRecipesView.swift; sourceTree = "<group>"; };
 		1C9A27472C009DFA006CE811 /* other.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = other.xcassets; sourceTree = "<group>"; };
 		1C9A27492C009E29006CE811 /* CookingAiView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CookingAiView.swift; sourceTree = "<group>"; };
+		1C9E1FE72C607E5D00E7DC9D /* RecipeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeViewModel.swift; sourceTree = "<group>"; };
 		1CA599982BF09D680087A795 /* RecipeBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeBlock.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -196,6 +198,7 @@
 			isa = PBXGroup;
 			children = (
 				049CD6C32BCBA72E00D7AA8E /* Menu.swift */,
+				1C9E1FE72C607E5D00E7DC9D /* RecipeViewModel.swift */,
 				0447AF8C2B872C520080D222 /* Dynamic.swift */,
 				049CD6992BC9156A00D7AA8E /* BMI.swift */,
 				0447AF8D2B872C520080D222 /* FoodOption.swift */,
@@ -368,6 +371,7 @@
 				0447AF612B8729C80080D222 /* IMM1App.swift in Sources */,
 				049CD6C02BCB742B00D7AA8E /* Response.swift in Sources */,
 				0447AFBB2B872C980080D222 /* HomeView.swift in Sources */,
+				1C9E1FE82C607E5D00E7DC9D /* RecipeViewModel.swift in Sources */,
 				049CD69A2BC9156A00D7AA8E /* BMI.swift in Sources */,
 				0447AFC32B872C980080D222 /* ForgePasswordView.swift in Sources */,
 				0447AF962B872C520080D222 /* Dynamic.swift in Sources */,

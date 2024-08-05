@@ -11,14 +11,14 @@
 import SwiftUI
 import Foundation
 
-struct Recipe_IP_View: View
+struct Recipe_IP_View: View 
 {
-    init(U_ID: String, Dis_ID: Int = 0, isFavorited: Bool = false)
-    {
+    init(U_ID: String, Dis_ID: Int = 0, isFavorited: Bool = false) {
         self.U_ID = U_ID
         self.Dis_ID = Dis_ID
         self._isFavorited = State(initialValue: isFavorited)
     }
+    
     let U_ID: String // 用於添加我的最愛
     let Dis_ID: Int // 用於添加我的最愛
     @State private var isFavorited: Bool
@@ -29,12 +29,12 @@ struct Recipe_IP_View: View
     
     @State private var cookingMethod: String? // 新增一個狀態來儲存從URL加載的烹飪方法
     @State private var selectedDish: Dishes?
-
     
-//    private var selectedDish: Dishes? //var selectedDish: Dishes?
-//    {
-//        dishesData.first(where: { $0.Dis_ID == Dis_ID })
-//    }
+    
+    //    private var selectedDish: Dishes? //var selectedDish: Dishes?
+    //    {
+    //        dishesData.first(where: { $0.Dis_ID == Dis_ID })
+    //    }
     
     // 過濾對應菜品的食材數量
     private func filteredAmounts(for dish: Dishes) -> [Amount]
@@ -42,107 +42,110 @@ struct Recipe_IP_View: View
         amountData.filter { $0.Dis_ID == dish.Dis_ID }
     }
     
-//    // MARK: Test data
-//    // 菜譜結構
-//    let dishesData: [Dishes] = [
-//        Dishes(Dis_ID: 1, Dis_Name: "蕃茄炒蛋", D_Cook: "http://163.17.9.107/food/dishes/1.txt", D_image: "http://163.17.9.107/food/images/1.jpg", D_Video: "xxxxxxxxx")
-//    ]
-//    // 食材結構
-//    let foodData: [Food] = [
-//        Food(F_ID: 1, F_Name: "雞蛋", F_Unit: "顆"),
-//        Food(F_ID: 2, F_Name: "番茄", F_Unit: "顆"),
-//        Food(F_ID: 7, F_Name: "蔥", F_Unit: "把")
-//    ]
-//    // 菜譜食材數量結構
-//    let  AmountData: [Amount] = [
-//        Amount(A_ID:1,Dis_ID: 1,F_ID: 1,A_Amount:3),
-//        Amount(A_ID:2,Dis_ID: 1,F_ID: 2,A_Amount:2),
-//        Amount(A_ID:3,Dis_ID: 1,F_ID: 7,A_Amount:0.3)
-//    ]
+    //    // MARK: Test data
+    //    // 菜譜結構
+    //    let dishesData: [Dishes] = [
+    //        Dishes(Dis_ID: 1, Dis_Name: "蕃茄炒蛋", D_Cook: "http://163.17.9.107/food/dishes/1.txt", D_image: "http://163.17.9.107/food/images/1.jpg", D_Video: "xxxxxxxxx")
+    //    ]
+    //    // 食材結構
+    //    let foodData: [Food] = [
+    //        Food(F_ID: 1, F_Name: "雞蛋", F_Unit: "顆"),
+    //        Food(F_ID: 2, F_Name: "番茄", F_Unit: "顆"),
+    //        Food(F_ID: 7, F_Name: "蔥", F_Unit: "把")
+    //    ]
+    //    // 菜譜食材數量結構
+    //    let  AmountData: [Amount] = [
+    //        Amount(A_ID:1,Dis_ID: 1,F_ID: 1,A_Amount:3),
+    //        Amount(A_ID:2,Dis_ID: 1,F_ID: 2,A_Amount:2),
+    //        Amount(A_ID:3,Dis_ID: 1,F_ID: 7,A_Amount:0.3)
+    //    ]
     
     // MARK: 讀取php從後端加載菜譜數據
     // 在 MenuView.swift 中的 loadMenuData 方法
-    func loadMenuData()
-    {
+    func loadMenuData() {
         // 確保 Dis_ID 是有效的整數且已正確賦值
         assert(Dis_ID > 0, "Dis_ID 必須大於 0")
-
+        
         // 構建帶有查詢參數的 URL 字串，使用實際的 Dis_ID 值
         let urlString = "http://163.17.9.107/food/Dishes.php?id=\(Dis_ID)"
         print("正在從此URL請求數據: \(urlString)")  // 打印 URL 以確認其正確性
-
+        
         // 使用 URL 編碼確保 URL 結構的正確性，避免 URL 中有特殊字符造成問題
         guard let encodedURLString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: encodedURLString)
-        else
-        {
+        else {
             print("生成的 URL 無效")
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "GET" // 設定 HTTP 請求方法為 GET
-        request.addValue("application/json", forHTTPHeaderField: "Accept")// 請求頭部指定期望回應格式為 JSON
-
+        request.addValue("application/json", forHTTPHeaderField: "Accept") // 請求頭部指定期望回應格式為 JSON
+        
         // 發起異步網絡請求
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil
-            else 
-            {
+            guard let data = data, error == nil else {
                 print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
                 return
             }
-
+            
             // 檢查並處理 HTTP 響應狀態碼
-//            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-//                print("HTTP 錯誤: \(httpResponse.statusCode)")
-//                if let result = try? JSONDecoder().decode([String: String].self, from: data) {
-//                    print("錯誤訊息: \(result["error"] ?? "無錯誤訊息")")
-//                }
-//                return
-//            }
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode)
-            {
+            //            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+            //                print("HTTP 錯誤: \(httpResponse.statusCode)")
+            //                if let result = try? JSONDecoder().decode([String: String].self, from: data) {
+            //                    print("錯誤訊息: \(result["error"] ?? "無錯誤訊息")")
+            //                }
+            //                return
+            //            }
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
                 print("HTTP 錯誤: \(httpResponse.statusCode)")
                 return
             }
             
-
+            
             // 解析 JSON 數據
             do
             {
                 let decoder = JSONDecoder()
                 let dishesData = try decoder.decode([Dishes].self, from: data)
-                DispatchQueue.main.async
-                {
+                DispatchQueue.main.async {
                     self.dishesData = dishesData
                     self.selectedDish = self.dishesData.first(where: { $0.Dis_ID == self.Dis_ID })
                     self.foodData = self.selectedDish?.foods ?? []
                     self.amountData = self.selectedDish?.amounts ?? []
-
+                    
                     // 如果存在烹飪方法的 URL，進行加載
-                    if let cookingUrl = self.selectedDish?.D_Cook
-                    {
+                    if let cookingUrl = self.selectedDish?.D_Cook {
                         self.loadCookingMethod(from: cookingUrl)
                     }
                     
                     // 打印接收到的Dis_ID JSON 字串，用於調試
-//                    if let jsonStr = String(data: data, encoding: .utf8)
-//                    {
-//                        print("接收到的 JSON 數據: \(jsonStr)")
-//                    }
+                    //                    if let jsonStr = String(data: data, encoding: .utf8)
+                    //                    {
+                    //                        print("接收到的 JSON 數據: \(jsonStr)")
+                    //                    }
                     // 打印所有菜譜的 JSON 數據
                     if let jsonStr = String(data: data, encoding: .utf8)
                     {
                         print("接收到的 JSON 數據: \(jsonStr)")
                     }
-
+                    //MARK: 检查收藏状态
+                    checkIfFavorited(U_ID: U_ID, Dis_ID: "\(Dis_ID)") { result in
+                        switch result {
+                        case .success(let favorited):
+                            DispatchQueue.main.async {
+                                self.isFavorited = favorited
+                            }
+                        case .failure(let error):
+                            print("Error checking favorite status: \(error.localizedDescription)")
+                        }
+                    }
+                    
                 }
-            } catch
-            {
+                
+            }  catch {
                 print("JSON 解析錯誤: \(error)")
-                if let jsonStr = String(data: data, encoding: .utf8)
-                {
+                if let jsonStr = String(data: data, encoding: .utf8) {
                     print("接收到的數據字串: \(jsonStr)")
                 }
             }
@@ -158,14 +161,14 @@ struct Recipe_IP_View: View
             print("無效的烹飪方法 URL Invalid URL for cooking method")
             return
         }
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error
             {
                 print("加載烹飪方法失敗 Failed to load cooking method: \(error)")
                 return
             }
-
+            
             if let data = data, let cookingText = String(data: data, encoding: .utf8)
             {
                 DispatchQueue.main.async
@@ -178,70 +181,59 @@ struct Recipe_IP_View: View
     
     // MARK: 封面畫面
     @ViewBuilder
-    private func CoverView(safeArea: EdgeInsets, size: CGSize) -> some View
-    {
+    private func CoverView(safeArea: EdgeInsets, size: CGSize) -> some View {
         let height: CGFloat = size.height * 0.5
-
+        
         GeometryReader { reader in
-            let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY // ScrollView的最小Y值
-            let size: CGSize = reader.size // 當前畫面的大小
-            let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8)) // 滑動狀態的數值
-
-            // 檢查是否有菜餚數據並嘗試加載圖片
-            if let dish = dishesData.first
-            {
+            let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
+            let size: CGSize = reader.size
+            let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
+            
+            if let dish = dishesData.first {
                 AsyncImage(url: URL(string: dish.D_image)) { phase in
                     switch phase {
                     case .success(let image):
                         image.resizable()
-                             .scaledToFill()
-                             .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
-                             .clipped()
-                             .overlay(
-                                 ZStack(alignment: .bottom)
-                                 {
-                                     LinearGradient(colors: [
-                                         Color("menusheetbackgroundcolor").opacity(0 - progress),
-                                         Color("menusheetbackgroundcolor").opacity(0.2 - progress),
-                                         Color("menusheetbackgroundcolor").opacity(0.4 - progress),
-                                         Color("menusheetbackgroundcolor").opacity(0.6 - progress),
-                                         Color("menusheetbackgroundcolor").opacity(0.8 - progress),
-                                         Color("menusheetbackgroundcolor")
-                                     ], startPoint: .top, endPoint: .bottom)
-                                     
-                                     VStack(spacing: 0) {
-                                         Text(dish.Dis_Name)
-                                             .bold()
-                                             .font(.largeTitle)
-                                             .foregroundStyle(.orange)
-
-//                                         HStack(spacing: 5) {
-//                                             Image(systemName: "timer")
-//                                             Text("時間：")
-//                                             Text("一輩子")
-//                                         }
-                                         .bold()
-                                         .font(.body)
-                                         .foregroundStyle(.gray)
-                                         .padding(.top)
-                                     }
-                                     .opacity(1.1 + (progress > 0 ? -progress : progress))
-                                     .padding(.bottom, 50)
-                                     .offset(y: minY < 0 ? minY : 0)
-                                 }
-                             )
+                            .scaledToFill()
+                            .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
+                            .clipped()
+                            .overlay(
+                                ZStack(alignment: .bottom) {
+                                    LinearGradient(colors: [
+                                        Color("menusheetbackgroundcolor").opacity(0 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.2 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.4 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.6 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.8 - progress),
+                                        Color("menusheetbackgroundcolor")
+                                    ], startPoint: .top, endPoint: .bottom)
+                                    
+                                    VStack(spacing: 0) {
+                                        Text(dish.Dis_Name)
+                                            .bold()
+                                            .font(.largeTitle)
+                                            .foregroundStyle(.orange)
+                                            .bold()
+                                            .font(.body)
+                                            .foregroundStyle(.gray)
+                                            .padding(.top)
+                                    }
+                                    .opacity(1.1 + (progress > 0 ? -progress : progress))
+                                    .padding(.bottom, 50)
+                                    .offset(y: minY < 0 ? minY : 0)
+                                }
+                            )
                     case .empty, .failure:
-                        Color.gray // 加載失敗或正在加載時顯示灰色背景
+                        Color.gray
                     @unknown default:
                         EmptyView()
                     }
                 }
-                .offset(y: -minY) // 往上滑動的時候 圖片及陰影也要跟著往上滑動
+                .offset(y: -minY)
                 .onChange(of: progress) {
                     print("CoverView的progress值: \(progress)")
                 }
-            } else
-            {
+            } else {
                 Color.gray.frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
             }
         }
@@ -253,12 +245,12 @@ struct Recipe_IP_View: View
     private func HeaderView(size: CGSize) -> some View
     {
         let Dis_Name = dishesData.first(where: { $0.Dis_ID == Dis_ID })?.Dis_Name ?? "Unknown Dish" // 根据 Dis_ID 找到对应的菜品名称
-
-            GeometryReader
-            { reader in
-                let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY //ScrollView的最小Y值
-                let height: CGFloat = size.height * 0.5
-                let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8)) //滑動狀態的數值
+        
+        GeometryReader
+        { reader in
+            let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY //ScrollView的最小Y值
+            let height: CGFloat = size.height * 0.5
+            let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8)) //滑動狀態的數值
             
             HStack(spacing: 20)
             {
@@ -277,7 +269,6 @@ struct Recipe_IP_View: View
                         .transition(.opacity.animation(.smooth))
                         .foregroundStyle(.orange)
                         .multilineTextAlignment(.center)
-                    
                     Spacer(minLength: 0)
                 }
             }
@@ -310,10 +301,10 @@ struct Recipe_IP_View: View
             {
                 // 根據選擇的菜譜ID過濾相應的菜譜食材數量
                 let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
-                        
+                
                 // 遍歷過濾後的菜譜食材數量
                 ForEach(filteredAmounts, id: \.F_ID) { amount in
-                      
+                    
                     // 在食材數據中查找對應的食材
                     if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
                     {
@@ -325,7 +316,7 @@ struct Recipe_IP_View: View
             {
                 Text("載入中...") // 或顯示載入狀態
             }
-
+            
             // 烹飪方法
             Text("料理方法")
                 .foregroundStyle(.orange)
@@ -343,7 +334,7 @@ struct Recipe_IP_View: View
                     Text("載入中...") // 或顯示載入狀態
                 }
             }
-
+            
             // 影片教學
             Text("影片教學")
                 .foregroundStyle(.orange)
@@ -389,14 +380,13 @@ struct Recipe_IP_View: View
         {
             ToolbarItem(placement: .navigationBarTrailing)
             {
-                Button(action:
-                {
+                Button(action:{
                     withAnimation(.easeInOut.speed(3))
                     {
                         self.isFavorited.toggle()
-                        toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
-                            switch result
-                            {
+                        toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited)
+                        { result in
+                            switch result {
                             case .success(let responseString):
                                 print("Success: \(responseString)")
                             case .failure(let error):

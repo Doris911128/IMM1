@@ -9,7 +9,7 @@
 import Foundation
 
 //解析JSON的
-// MARK: 菜譜結構
+// MARK: Dishes菜譜結構
 struct Dishes: Codable, Identifiable
 {
     var id: Int { Dis_ID }
@@ -22,6 +22,7 @@ struct Dishes: Codable, Identifiable
     var category: String? // MARK: 由EditPlanView.swift 中更新分類
     var foods: [Food]?
     var amounts: [Amount]?
+    var favorites: [Favorite]?
     
     // 添加初始化方法，接受传递的 Dis_ID
     init(
@@ -33,7 +34,8 @@ struct Dishes: Codable, Identifiable
         Dis_serving: String  = "",
         category: String = "",
         foods: [Food] = [],
-        amounts: [Amount] = []
+        amounts: [Amount] = [],
+        favorites: [Favorite] = []
     )
     {
         self.Dis_ID = Dis_ID
@@ -45,9 +47,19 @@ struct Dishes: Codable, Identifiable
         self.category = category
         self.foods = foods
         self.amounts = amounts
+        self.favorites = favorites
     }
 }
-// 過往食譜結構
+
+// MARK: Favorite 小表結構
+struct Favorite: Codable, Identifiable, Equatable {
+    var id: Int { Dis_ID }
+    let U_ID: String
+    let Dis_ID: Int
+    let isFavorited: Bool // 保持为 let 常量
+}
+
+// MARK: 過往食譜結構
 struct PastRecipe: Identifiable, Decodable {
     var id: Int { Dis_ID }
     var Dis_ID: Int
@@ -56,9 +68,8 @@ struct PastRecipe: Identifiable, Decodable {
     var D_Cook: String
     var D_image: String
     var D_Video: String
+    var favorites: [Favorite]?
 }
-
-
 
 //let dishesData: [Dishes] = [
 //    Dishes(Dis_ID: 1, Dis_Name: "t蕃茄炒蛋", D_Cook: "http://163.17.9.107/food/dishes/1.txt", D_image: "http://163.17.9.107/food/images/1.jpg", D_Video: "xxxxxxxxx"), Dishes(Dis_ID: 2, Dis_Name: "t荷包蛋", D_Cook: "http://163.17.9.107/food/dishes/2.txt", D_image: "http://163.17.9.107/food/images/2.jpg", D_Video: "xxxxxxxxx")

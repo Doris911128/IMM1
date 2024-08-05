@@ -1,15 +1,18 @@
+//PastRecipesView
 import SwiftUI
 
 // 修改過往食譜視圖
 struct PastRecipesView: View {
     @AppStorage("U_ID") private var U_ID: String = "vqiVr6At0U"
     
+    @FocusState private var isTextFieldFocused: Bool
+    
     @State private var pastRecipesData: [PastRecipe] = []
     @State private var searchKeyword: String = ""
-    @FocusState private var isTextFieldFocused: Bool
+    
     @State private var isLoading: Bool = false
     @State private var fetchError: String? = nil
-
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -30,12 +33,13 @@ struct PastRecipesView: View {
                 ScrollView(showsIndicators: false) {
                     LazyVStack {
                         ForEach(filteredPastRecipesData(), id: \.Dis_ID) { pastRecipe in
-                            NavigationLink(destination: Recipe_IP_View(U_ID: "", Dis_ID: pastRecipe.Dis_ID)) {
+                            NavigationLink(destination: Recipe_IP_View(U_ID: U_ID, Dis_ID: pastRecipe.Dis_ID)) {
                                 RecipeBlock(
                                     imageName: pastRecipe.D_image,
-                                    title: pastRecipe.Dis_Name,  // 更具描述性的標題
+                                    title: pastRecipe.Dis_Name,
                                     U_ID: U_ID,
-                                    Dis_ID: pastRecipe.Dis_ID
+                                    Dis_ID: pastRecipe.Dis_ID,
+                                    isFavorited: pastRecipe.favorites?.contains(where: { $0.U_ID == U_ID }) ?? false
                                 )
                             }
                             .padding(.bottom, -70)
@@ -58,12 +62,12 @@ struct PastRecipesView: View {
         }
     }
     
-    // 加载菜单数据
+    //MARK:  加载菜单数据
     func P_loadMenuData(keyword: String) {
         let urlString = "http://163.17.9.107/food/Pastrecipes.php?keyword=\(keyword)&U_ID=\(U_ID)"
         print("正在從此URL請求數據: \(urlString)")
         print("當前的 U_ID: \(U_ID)")
-
+        
         guard let encodedURLString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: encodedURLString) else {
             print("生成的 URL 无效")
@@ -71,11 +75,11 @@ struct PastRecipesView: View {
             isLoading = false
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 isLoading = false
@@ -88,7 +92,7 @@ struct PastRecipesView: View {
                 }
                 return
             }
-
+            
             if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
                 print("HTTP 错误: \(httpResponse.statusCode)")
                 DispatchQueue.main.async {
@@ -96,7 +100,7 @@ struct PastRecipesView: View {
                 }
                 return
             }
-
+            
             do {
                 let decoder = JSONDecoder()
                 let pastRecipesData = try decoder.decode([PastRecipe].self, from: data)
@@ -118,7 +122,7 @@ struct PastRecipesView: View {
             }
         }.resume()
     }
-
+    
     // 根据搜索关键字过滤菜品数据
     func filteredPastRecipesData() -> [PastRecipe] {
         if searchKeyword.isEmpty {
