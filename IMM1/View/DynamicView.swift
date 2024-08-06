@@ -36,23 +36,25 @@ struct DynamicView: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 20) {
-                HStack {
-                    Spacer()
-                    recordButton(.BMI, title: "BMI")
-                    recordButton(.hypertension, title: "血壓")
-                    recordButton(.hyperglycemia, title: "血糖")
-                    recordButton(.hyperlipidemia, title: "血脂")
-                    Spacer()
-                }
-                .frame(height: 60)
-                displaySelectedRecordView()
-                    .frame(width: geometry.size.width, height: geometry.size.height * 0.8)
-                    .padding()
+        VStack {
+            HStack {
+                Spacer()
+                recordButton(.BMI, title: "BMI")
+                recordButton(.hypertension, title: "血壓")
+                recordButton(.hyperglycemia, title: "血糖")
+                recordButton(.hyperlipidemia, title: "血脂")
+                Spacer()
             }
-            .frame(width: geometry.size.width, height: geometry.size.height)
+            .frame(height: 50) // Adjust the height as needed
+            
+            Spacer() // This spacer will push the content to the top
+            
+            displaySelectedRecordView()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding()
+                .background(Color.white) // Optional background color
         }
+        //.edgesIgnoringSafeArea(.bottom) // Optional: If you want to ensure content extends to the bottom edge
     }
     
     @ViewBuilder

@@ -174,11 +174,13 @@ struct BMIView: View {
                                     y: .value("BMI", record.bmi)
                                 )
                                 .lineStyle(.init(lineWidth: 2))
+                                .foregroundStyle(Color.orange)
                                 
                                 PointMark(
                                     x: .value("Date", formattedDate(record.date)),
                                     y: .value("BMI", record.bmi)
                                 )
+                                .foregroundStyle(Color.orange)
                                 .annotation(position: .top) {
                                     Text("\(record.bmi, specifier: "%.2f")")
                                         .font(.system(size: 12))
@@ -382,10 +384,17 @@ struct BMIRecordDetailView: View {
                             gradient: Gradient(colors: [categoryColor, .white]),
                             startPoint: .top,
                             endPoint: .bottom),
-                            lineWidth: 4) // 細邊框
+                                lineWidth: 4) // 細邊框
                 )
                 .padding()
-                .offset(y: -50) // 向上移動圖片
+                //.offset(y: -50) // 向上移動圖片
+            
+            // Color Strip
+            colorLegend
+                .frame(height: 20)
+                .padding(.bottom, 60)
+                
+            
             Text("身高：\(String(format: "%.1f", record.H)) 公分")
                 .font(.title) // 放大字體
                 .padding(.bottom,5)
@@ -457,7 +466,36 @@ struct BMIRecordDetailView: View {
             return .red
         }
     }
+    private var colorLegend: some View {
+        HStack(spacing: 0) {
+            ColorBox(color: Color(red: 0.5, green: 0.5, blue: 0.2), label: "過瘦")
+            ColorBox(color: .green, label: "標準")
+            ColorBox(color: .yellow, label: "過重")
+            ColorBox(color: .orange, label: "輕度肥胖")
+            ColorBox(color: .red, label: "重度肥胖")
+        }
+        .padding()
+    }
+
+    private struct ColorBox: View {
+        var color: Color
+        var label: String
+
+        var body: some View {
+            VStack {
+                Rectangle()
+                    .fill(color)
+                    .frame(width: 20, height: 20)
+                Text(label)
+                    .font(.caption)
+                    .padding(.top, 2)
+            }
+            .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
+        }
+    }
+
 }
+
 
 
 

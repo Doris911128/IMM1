@@ -2,26 +2,26 @@ import SwiftUI
 
 struct DataModel: Codable {
     var text: String
-    var userId: String // Add userId field
 }
 
 struct RecipeResponse: Codable {
     var output: String
 }
 
-struct Message: Codable, Identifiable {
-    let id = UUID()
-    var message: String
+struct IdentifiableOption: Identifiable {
+    var id = UUID()
+    var title: String
 }
 
 struct AIView: View {
     @State private var messageText: String = ""
-    @State private var messages: [Message] = []
+    @State private var messages: [String] = []
     @State private var isLoading: Bool = false
     @State private var searchingMessageIndex: Int? = nil
     @State private var showingImagePicker: Bool = false
     @State private var selectedImage: UIImage? = nil
-    @State private var userId: String = "" // Ensure this is dynamically set
+    @State private var selectedOption: IdentifiableOption? = nil
+    @State private var selectedItems: Set<String> = []
 
     var body: some View {
         VStack {
@@ -49,19 +49,14 @@ struct AIView: View {
                     .frame(height: 4)
             }
             .frame(maxWidth: .infinity)
-
             ScrollView {
                 VStack {
-                    ForEach(messages) { message in
+                    ForEach(messages.indices, id: \.self) { index in
                         HStack {
-                            if message.message.starts(with: "答：") {
-                                ServerMessageView(message: message.message, deleteAction: {
-                                    deleteMessage(message: message)
-                                })
+                            if messages[index].starts(with: "答：") {
+                                ServerMessageView(message: messages[index])
                             } else {
-                                UserMessageView(message: message.message, deleteAction: {
-                                    deleteMessage(message: message)
-                                })
+                                UserMessageView(message: messages[index])
                             }
                         }
                         .padding()
@@ -73,7 +68,15 @@ struct AIView: View {
                     }
                 }
             }
-
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 3) {
+                    OptionButton(title: "減脂增肌", action: { self.selectedOption = IdentifiableOption(title: "減脂增肌") })
+                    OptionButton(title: "穩定血脂", action: { self.selectedOption = IdentifiableOption(title: "穩定血脂") })
+                    OptionButton(title: "穩定血壓", action: { self.selectedOption = IdentifiableOption(title: "穩定血壓") })
+                    OptionButton(title: "穩定血糖", action: { self.selectedOption = IdentifiableOption(title: "穩定血糖") })
+                }
+                .padding(.horizontal)
+            }
             HStack {
                 TextField("請輸入食材，將幫您生成食譜", text: $messageText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -88,6 +91,15 @@ struct AIView: View {
             }
             .padding()
         }
+        .sheet(item: $selectedOption) { option in
+            OptionSheet(option: option.title, selectedItems: $selectedItems) {
+                // Update the messageText with selected items
+                let selectedItemsString = selectedItems.joined(separator: ", ")
+                messageText = selectedItemsString
+                // Dismiss the sheet
+                self.selectedOption = nil
+            }
+        }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImage: $selectedImage)
         }
@@ -97,26 +109,18 @@ struct AIView: View {
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
             }
         }
-        .onAppear {
-            // Fetch userId from your login flow or app settings
-            self.userId = "your_dynamic_user_id" // Set this dynamically
-            fetchData()
-        }
     }
 
     func sendMessage() {
         guard !messageText.isEmpty else { return }
-        guard !userId.isEmpty else {
-            print("User ID is not set")
-            return
-        }
-        let dataModel = DataModel(text: messageText, userId: userId)
-        messages.append(Message(message: "問：\(messageText)"))
-        isLoading = true
+        let dataModel = DataModel(text: messageText)
+        messages.append("問：\(messageText)") // Add user message
+        isLoading = true // Show loading animation after user sends message
         messageText = ""
 
         sendToDatabase(dataModel: dataModel)
     }
+
 
     func sendToDatabase(dataModel: DataModel) {
         guard let url = URL(string: "http://163.17.9.107/food/php/AI_Recipe.php") else { return }
@@ -124,14 +128,14 @@ struct AIView: View {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
 
-        let body = "text=\(dataModel.text)&userId=\(dataModel.userId)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        let body = "text=\(dataModel.text)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
         request.httpBody = body?.data(using: .utf8)
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    self.isLoading = false
+                    self.isLoading = false // Stop loading animation
                 }
                 return
             }
@@ -139,7 +143,7 @@ struct AIView: View {
             guard let data = data else {
                 print("No data received")
                 DispatchQueue.main.async {
-                    self.isLoading = false
+                    self.isLoading = false // Stop loading animation
                 }
                 return
             }
@@ -153,15 +157,15 @@ struct AIView: View {
     }
 
     func fetchData() {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe.php?userId=\(userId)") else { return }
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe.php") else { return }
 
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    self.isLoading = false
+                    self.isLoading = false // Stop loading animation
                     if self.searchingMessageIndex == nil {
-                        self.messages.append(Message(message: "答：Error occurred. Retrying..."))
+                        self.messages.append("答：Error occurred. Retrying...")
                         self.searchingMessageIndex = self.messages.count - 1
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -174,9 +178,9 @@ struct AIView: View {
             guard let data = data else {
                 print("No data received")
                 DispatchQueue.main.async {
-                    self.isLoading = false
+                    self.isLoading = false // Stop loading animation
                     if self.searchingMessageIndex == nil {
-                        self.messages.append(Message(message: "答：No data received. Retrying..."))
+                        self.messages.append("答：No data received. Retrying...")
                         self.searchingMessageIndex = self.messages.count - 1
                     }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -190,29 +194,32 @@ struct AIView: View {
             do {
                 let decoder = JSONDecoder()
                 let recipeResponse = try decoder.decode(RecipeResponse.self, from: data)
+                
+                // Print the decoded response to the terminal
+                print("Fetched data: \(recipeResponse)")
 
                 DispatchQueue.main.async {
                     if recipeResponse.output == "LOADING" {
                         if self.searchingMessageIndex == nil {
-                            self.messages.append(Message(message: "答：生成中...."))
+                            self.messages.append("答：生成中....")
                             self.searchingMessageIndex = self.messages.count - 1
                         }
                         self.fetchData()
                     } else {
                         if let index = self.searchingMessageIndex {
-                            self.messages[index] = Message(message: "答：\(recipeResponse.output)")
+                            self.messages[index] = "答：\(recipeResponse.output)"
                         } else {
-                            self.messages.append(Message(message: "答：\(recipeResponse.output)"))
+                            self.messages.append("答：\(recipeResponse.output)")
                         }
-                        self.isLoading = false
-                        self.searchingMessageIndex = nil
+                        self.isLoading = false // Stop loading animation
+                        self.searchingMessageIndex = nil // Reset flag
                     }
                 }
             } catch {
                 DispatchQueue.main.async {
-                    self.isLoading = false
+                    self.isLoading = false // Stop loading animation
                     if self.searchingMessageIndex == nil {
-                        self.messages.append(Message(message: "答：生成中...."))
+                        self.messages.append("答：生成中....")
                         self.searchingMessageIndex = self.messages.count - 1
                     }
                     self.fetchData()
@@ -220,17 +227,247 @@ struct AIView: View {
             }
         }.resume()
     }
+}
 
-    func deleteMessage(message: Message) {
-        if let index = messages.firstIndex(where: { $0.id == message.id }) {
-            messages.remove(at: index)
+struct OptionButton: View {
+    var title: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .padding(.horizontal, 20) // Adjust horizontal padding for a capsule effect
+                .padding(.vertical, 10) // Adjust vertical padding for a capsule effect
+                .background(Color.blue.opacity(0.2))
+                .foregroundColor(.blue) // Set text color to match the background
+                .clipShape(Capsule()) // Create a capsule shape
+                .frame(minWidth: 100) // Set a minimum width
+        }
+    }
+}
+
+struct OptionSheet: View {
+    var option: String
+    @Binding var selectedItems: Set<String>
+    var onDismiss: () -> Void
+    var body: some View {
+        NavigationView {
+            List {
+                switch option {
+                case "減脂增肌":
+                    Section(header: Text("蛋白質來源")) {
+                        ForEach(proteinSources, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("碳水化合物來源")) {
+                        ForEach(carbohydrateSources, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("健康脂肪來源")) {
+                        ForEach(fatSources, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("蔬菜和水果")) {
+                        ForEach(vegetablesAndFruits, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                case "穩定血脂":
+                    Section(header: Text("纖維豐富的食材")) {
+                        ForEach(fiberRichFoods, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("健康脂肪來源")) {
+                        ForEach(fatSourcesForBloodFat, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("蔬菜和水果")) {
+                        ForEach(vegetablesAndFruitsForBloodFat, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("碳水化合物來源")) {
+                        ForEach(carbohydrateSourcesForBloodFat, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                case "穩定血壓":
+                    Section(header: Text("鉀質豐富的食材")) {
+                        ForEach(potassiumRichFoods, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("高纖維食材")) {
+                        ForEach(highFiberFoodsForBloodPressure, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("健康脂肪來源")) {
+                        ForEach(fatSourcesForBloodPressure, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                case "穩定血糖":
+                    Section(header: Text("低升糖指數（GI）食材")) {
+                        ForEach(lowGIFoods, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("高纖維食材")) {
+                        ForEach(highFiberFoodsForBloodSugar, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("健康脂肪來源")) {
+                        ForEach(fatSourcesForBloodSugar, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                    Section(header: Text("蛋白質來源")) {
+                        ForEach(proteinSourcesForBloodSugar, id: \.self) { item in
+                            OptionRow(item: item, isSelected: self.selectedItems.contains(item)) {
+                                toggleSelection(for: item)
+                            }
+                        }
+                    }
+                default:
+                    Text("No options available.")
+                }
+            }
+            .navigationTitle(option)
+            .navigationBarItems(trailing: Button("完成") {
+                           onDismiss()
+                       })
+        }
+    }
+
+    func toggleSelection(for item: String) {
+        if selectedItems.contains(item) {
+            selectedItems.remove(item)
+        } else {
+            selectedItems.insert(item)
+        }
+    }
+
+    var proteinSources = [
+        "雞胸肉", "鮭魚","鱈魚", "豆腐", "希臘酸奶（無糖）"
+    ]
+
+    var carbohydrateSources = [
+        "地瓜", "蕎麥", "藜麥"
+    ]
+
+    var fatSources = [
+        "鮭魚", "酪梨","亞麻籽"
+    ]
+
+    var vegetablesAndFruits = [
+        "菠菜","羽衣甘藍", "番茄", "胡蘿蔔", "蘋果", "梨"
+    ]
+
+    var fiberRichFoods = [
+        "燕麥", "全麥麵包", "糙米", "黑豆","鷹嘴豆", "杏仁","核桃"
+    ]
+
+    var fatSourcesForBloodFat = [
+        "鮭魚", "酪梨", "橄欖油", "亞麻籽"
+    ]
+
+    var vegetablesAndFruitsForBloodFat = [
+        "菠菜","羽衣甘藍", "番茄", "胡蘿蔔", "蘋果", "梨"
+    ]
+
+    var carbohydrateSourcesForBloodFat = [
+        "地瓜", "蕎麥", "藜麥"
+    ]
+
+    var potassiumRichFoods = [
+        "香蕉", "酪梨", "地瓜", "菠菜", "蘑菇", "番茄"
+    ]
+
+    var highFiberFoodsForBloodPressure = [
+        "燕麥", "全麥麵包","蘋果", "梨"
+    ]
+
+    var fatSourcesForBloodPressure = [
+        "鮭魚","杏仁","核桃"
+    ]
+
+    var lowGIFoods = [
+        "燕麥","糙米","藜麥","全麥麵包","黑豆","藍豆","綠豆","豌豆"
+    ]
+
+    var highFiberFoodsForBloodSugar = [
+        "菠菜","羽衣甘藍","西蘭花","胡蘿蔔","蘆筍","蘋果","梨","藍莓","草莓"
+    ]
+
+    var fatSourcesForBloodSugar = [
+        "杏仁","核桃","開心果","酪梨"
+    ]
+
+    var proteinSourcesForBloodSugar = [
+        "雞胸肉","鮭魚","鱈魚","豆腐","希臘酸奶（無糖）"
+    ]
+}
+
+
+struct OptionRow: View {
+    var item: String
+    var isSelected: Bool
+    var action: () -> Void
+
+    var body: some View {
+        HStack {
+            Text(item)
+                .padding()
+            Spacer()
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .foregroundColor(.blue)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            action()
         }
     }
 }
 
 struct ServerMessageView: View {
     var message: String
-    var deleteAction: () -> Void
 
     var body: some View {
         HStack {
@@ -246,18 +483,12 @@ struct ServerMessageView: View {
                 .background(Color.blue.opacity(0.2))
                 .cornerRadius(10)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .contextMenu {
-                    Button(action: deleteAction) {
-                        Label("Delete", systemImage: "trash")
-                    }
-                }
         }
     }
 }
 
 struct UserMessageView: View {
     var message: String
-    var deleteAction: () -> Void
 
     var body: some View {
         Text(message)
@@ -265,11 +496,6 @@ struct UserMessageView: View {
             .background(Color.gray.opacity(0.2))
             .cornerRadius(10)
             .frame(maxWidth: .infinity, alignment: .trailing)
-            .contextMenu {
-                Button(action: deleteAction) {
-                    Label("Delete", systemImage: "trash")
-                }
-            }
     }
 }
 

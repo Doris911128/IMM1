@@ -202,11 +202,12 @@ struct HyperglycemiaView: View {
                             y: .value("Value", record.hyperglycemia)
                         )
                         .lineStyle(.init(lineWidth: 3))
-
+                        .foregroundStyle(Color.orange)
                         PointMark(
                             x: .value("Date", formattedDate(record.date)),
                             y: .value("Value", record.hyperglycemia)
                         )
+                        .foregroundStyle(Color.orange)
                         .annotation(position: .top) {
                             Text("\(record.hyperglycemia, specifier: "%.2f")")
                                 .font(.system(size: 12))
@@ -396,7 +397,14 @@ struct HyperglycemiaRecordDetailView: View {
                             lineWidth: 4)
                 )
                 .padding()
-                .offset(y: -50)
+                //.offset(y: -50) // 向上移動圖片
+            
+            // Color Strip
+            colorLegend
+                .frame(height: 20)
+                .padding(.bottom, 60)
+                
+            
             Text("血糖：\(String(format: "%.2f", record.hyperglycemia))")
                 .font(.title)
                 .padding(.bottom, 5)
@@ -434,9 +442,37 @@ struct HyperglycemiaRecordDetailView: View {
         case "糖尿病":
             return Color.red
         default:
-            return Color.gray
+            return Color.red
         }
     }
+    private var colorLegend: some View {
+        HStack(spacing: 0) {
+            
+            ColorBox(color: .blue, label: "低血糖")
+            ColorBox(color: .green, label: "正常")
+            ColorBox(color: .yellow, label: "偏高")
+            ColorBox(color: .red, label: "糖尿病")
+        }
+        .padding()
+    }
+
+    private struct ColorBox: View {
+        var color: Color
+        var label: String
+
+        var body: some View {
+            VStack {
+                Rectangle()
+                    .fill(color)
+                    .frame(width: 20, height: 20)
+                Text(label)
+                    .font(.caption)
+                    .padding(.top, 2)
+            }
+            .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
+        }
+    }
+
 }
 
 struct HyperglycemiaView_Previews: PreviewProvider {

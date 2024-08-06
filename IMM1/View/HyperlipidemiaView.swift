@@ -163,11 +163,12 @@ struct HyperlipidemiaView: View {
                             y: .value("Value", record.hyperlipidemia)
                         )
                         .lineStyle(.init(lineWidth: 3))
-
+                        .foregroundStyle(Color.orange)
                         PointMark(
                             x: .value("Date", formattedDate(record.date)),
                             y: .value("Value", record.hyperlipidemia)
                         )
+                        .foregroundStyle(Color.orange)
                         .annotation(position: .top) {
                             Text("\(record.hyperlipidemia, specifier: "%.2f")")
                                 .font(.system(size: 12))
@@ -396,7 +397,12 @@ struct HyperlipidemiaRecordDetailView: View {
                             lineWidth: 4)
                 )
                 .padding()
-                .offset(y: -50)
+                //.offset(y: -50) // 向上移動圖片
+        
+            // Color Strip
+            colorLegend
+                .frame(height: 20)
+                .padding(.bottom, 60)
             Text("血脂：\(String(format: "%.2f", record.hyperlipidemia))")
                 .font(.title)
                 .padding(.bottom, 5)
@@ -435,6 +441,31 @@ struct HyperlipidemiaRecordDetailView: View {
     }
 }
 
+private var colorLegend: some View {
+    HStack(spacing: 0) {
+        ColorBox(color: .green, label: "正常")
+        ColorBox(color: .yellow, label: "偏高")
+        ColorBox(color: .red, label: "過高")
+    }
+    .padding()
+}
+
+private struct ColorBox: View {
+    var color: Color
+    var label: String
+
+    var body: some View {
+        VStack {
+            Rectangle()
+                .fill(color)
+                .frame(width: 20, height: 20)
+            Text(label)
+                .font(.caption)
+                .padding(.top, 2)
+        }
+        .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
+    }
+}
 struct HyperlipidemiaView_Previews: PreviewProvider {
     static var previews: some View {
         HyperlipidemiaView()
