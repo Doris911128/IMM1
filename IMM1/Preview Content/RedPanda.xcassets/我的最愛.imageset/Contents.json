@@ -1,12 +1,11 @@
 {
   "images" : [
     {
-      "filename" : "1.png",
+      "filename" : "我的最愛.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "1 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

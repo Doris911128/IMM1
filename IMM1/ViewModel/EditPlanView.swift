@@ -15,12 +15,12 @@ func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> V
             completion(nil, error)
             return
         }
-
+        
         guard let data = data else {
             completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
             return
         }
-
+        
         do {
             let decoder = JSONDecoder()
             let planData = try decoder.decode(PlanData.self, from: data)
@@ -34,7 +34,7 @@ func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> V
 struct EditPlanView: View {
     var day: String
     var planIndex: Int
-
+    
     @State private var dishesData: [Dishes] = []
     @State private var show1: [Bool] = [false, false, false, false, false, false, false, false, false, false]
     @State private var searchText: String = ""
@@ -50,10 +50,10 @@ struct EditPlanView: View {
     @State private var currentCategoryIndex: Int? = nil
     @State private var isSaveAlertShowing = false
     @State private var isSearchingByIngredient = false
-
+    
     @State private var searchResults: [FoodOption] = []
     @Environment(\.presentationMode) var presentationMode
-
+    
     // 選擇食物的函數
     func selectFood(food: Dishes) {
         selectedFoodData = food
@@ -62,7 +62,7 @@ struct EditPlanView: View {
             show1[categoryIndex] = false // 隱藏分類介面
         }
     }
-
+    
     // Function to fetch food options from the server
     func fetchFoodOptions() {
         if let url = URL(string: "http://163.17.9.107/food/php/Dishes.php") {
@@ -91,7 +91,7 @@ struct EditPlanView: View {
             print("Invalid URL")
         }
     }
-
+    
     func fetchUserFavorites() {
         if let url = URL(string: "http://163.17.9.107/food/php/UserFavorites.php") {
             fetchFoodData(from: url) { foodData, error in
@@ -106,28 +106,28 @@ struct EditPlanView: View {
             print("Invalid URL for favorites")
         }
     }
-
+    
     // MARK: 懶人選項
     @State private var foodOptions1: [Dishes] = []
-
+    
     // MARK: 減肥選項
     @State private var foodOptions2: [Dishes] = []
-
+    
     // MARK: 省錢選項
     @State private var foodOptions3: [Dishes] = []
-
+    
     // MARK: 放縱選項
     @State private var foodOptions4: [Dishes] = []
-
+    
     // MARK: 養生選項
     @State private var foodOptions5: [Dishes] = []
-
+    
     // MARK: 清庫存選項
     @State private var foodOptions6: [Dishes] = []
-
+    
     // MARK: 我的最愛選項
     @State private var foodOptions7: [Dishes] = []
-
+    
     // MARK: 適合我選項
     @State private var foodOptions8: [Dishes] = []
     
@@ -148,56 +148,56 @@ struct EditPlanView: View {
         }
         return nil
     }
-
+    
     // MARK: 聽天由命選項的View
-//    private var fateButton: some View {
-//        CustomButton(imageName: "聽天由命", buttonText: "聽天由命") {
-//            isShowingDetail7.toggle()
-//        }
-//        .sheet(isPresented: $isShowingDetail7) {
-//            VStack {
-//                Spacer()
-//                SpinnerView()
-//                    .background(Color.white)
-//                    .cornerRadius(10)
-//            }
-//            .edgesIgnoringSafeArea(.all)
-//        }
-//    }
-
+    //    private var fateButton: some View {
+    //        CustomButton(imageName: "聽天由命", buttonText: "聽天由命") {
+    //            isShowingDetail7.toggle()
+    //        }
+    //        .sheet(isPresented: $isShowingDetail7) {
+    //            VStack {
+    //                Spacer()
+    //                SpinnerView()
+    //                    .background(Color.white)
+    //                    .cornerRadius(10)
+    //            }
+    //            .edgesIgnoringSafeArea(.all)
+    //        }
+    //    }
+    
     @ViewBuilder
-        private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
-            let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red, .gray,.indigo ,.mint]
-
-            CustomButton(imageName: imageName, buttonText: buttonText, backgroundColor: backgroundColors[categoryIndex]) {
-                currentCategoryIndex = categoryIndex
-                isShowingDetail.wrappedValue.toggle()
-            }
-            .cornerRadius(10)
-            .sheet(isPresented: isShowingDetail) {
-                FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-                    FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
-                }), categoryTitle: categoryTitle)
-                .onDisappear {
-                    if let selectedFood = findSelectedFoodData(for: editedPlan) {
-                        self.selectedFoodData = selectedFood
-                        self.showAlert = true
-                    }
+    private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
+        let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red, .gray,.indigo ,.mint]
+        
+        CustomButton(imageName: imageName, buttonText: buttonText, backgroundColor: backgroundColors[categoryIndex]) {
+            currentCategoryIndex = categoryIndex
+            isShowingDetail.wrappedValue.toggle()
+        }
+        .cornerRadius(10)
+        .sheet(isPresented: isShowingDetail) {
+            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
+                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
+            }), categoryTitle: categoryTitle)
+            .onDisappear {
+                if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                    self.selectedFoodData = selectedFood
+                    self.showAlert = true
                 }
             }
         }
-
-
+    }
+    
+    
     func updatePlanOnServer(pID: String?, disID: Int) {
         guard let url = URL(string: "http://163.17.9.107/food/php/Planupdate.php") else {
             print("Invalid URL")
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-
+        
         var postData = "Dis_ID=\(disID)"
         if let pID = pID {
             postData += "&P_ID=\(pID)"
@@ -205,15 +205,15 @@ struct EditPlanView: View {
             print("pID is nil, skipping update operation")
             return
         }
-
+        
         request.httpBody = postData.data(using: .utf8)
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("Error: \(error)")
                 return
             }
-
+            
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
                 print("Response: \(responseString)")
                 if responseString.contains("成功") {
@@ -222,26 +222,26 @@ struct EditPlanView: View {
             }
         }.resume()
     }
-
+    
     func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: Int, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/php/Plan.php") else {
             completion(false, "無效的 URL")
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-
+        
         let postData = "P_ID=\(P_ID)&U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&P_DT=\(P_DT)&P_Bought=\(P_Bought)"
         request.httpBody = postData.data(using: .utf8)
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(false, "錯誤: \(error.localizedDescription)")
                 return
             }
-
+            
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
                 if responseString.contains("計劃已成功保存到數據庫") {
                     completion(true, nil)
@@ -253,26 +253,26 @@ struct EditPlanView: View {
             }
         }.resume()
     }
-
+    
     func Plan_PR(P_ID: String, U_ID: String, Dis_ID: Int, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/php/Plan_PR.php") else {
             completion(false, "無效的 URL")
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-
+        
         let postData = "P_ID=\(P_ID)&U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&P_DT=\(P_DT)&P_Bought=\(P_Bought)"
         request.httpBody = postData.data(using: .utf8)
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(false, "錯誤: \(error.localizedDescription)")
                 return
             }
-
+            
             if let data = data, let responseString = String(data: data, encoding: .utf8) {
                 if responseString.contains("計劃已成功保存到數據庫") {
                     completion(true, nil)
@@ -286,7 +286,7 @@ struct EditPlanView: View {
     }
     struct CustomToggle: View {
         @Binding var isOn: Bool
-
+        
         var body: some View {
             Button(action: {
                 self.isOn.toggle()
@@ -302,7 +302,7 @@ struct EditPlanView: View {
             }
         }
     }
-
+    
     func performSearch() {
         if isSearchingByIngredient {
             let searchTextLowercased = searchText.lowercased()
@@ -322,7 +322,7 @@ struct EditPlanView: View {
             isShowingDetail = true
         }
     }
-
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -333,7 +333,7 @@ struct EditPlanView: View {
                         })
                         .padding()
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-
+                        
                         Button(action: {
                             performSearch()
                         }) {
@@ -347,24 +347,26 @@ struct EditPlanView: View {
                     .onAppear {
                         fetchFoodOptions()
                     }
-
-                    let names = ["我的最愛","適合我" ,"懶人", "減肥", "省錢", "放縱", "素食", "清庫存", "公開食譜","AI食譜"]
-                                       let showOptions = [foodOptions7,foodOptions8, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6,foodOptions9,foodOptions10]
-
-                                       LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
-                                           ForEach(names.indices, id: \.self) { index in
-                                               
-                                                   self.TempView(
-                                                       imageName: names[index],
-                                                       buttonText: names[index],
-                                                       isShowingDetail: $show1[index],
-                                                       foodOptions: showOptions[index],
-                                                       categoryIndex: index,
-                                                       categoryTitle: names[index]
-                                                   )
-                                               
-                                           }
-                                       }
+                    
+                    //                    let names = ["我的最愛","適合我" ,"懶人", "減肥", "省錢", "放縱", "素食", "清庫存", "公開食譜","AI食譜"]
+                    let names = ["我的最愛","健康推薦" ,"懶人分類", "減肥分類", "省錢分類", "放縱分類", "素食分類", "清倉分類", "公開食譜","AI食譜"]
+                    
+                    let showOptions = [foodOptions7,foodOptions8, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6,foodOptions9,foodOptions10]
+                    
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+                        ForEach(names.indices, id: \.self) { index in
+                            
+                            self.TempView(
+                                imageName: names[index],
+                                buttonText: names[index],
+                                isShowingDetail: $show1[index],
+                                foodOptions: showOptions[index],
+                                categoryIndex: index,
+                                categoryTitle: names[index]
+                            )
+                            
+                        }
+                    }
                     .padding()
                 }
             }
@@ -416,12 +418,12 @@ func fetchFoodData(from url: URL, completion: @escaping ([Dishes]?, Error?) -> V
             completion(nil, error)
             return
         }
-
+        
         guard let data = data else {
             completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
             return
         }
-
+        
         do {
             let decoder = JSONDecoder()
             let dishesData = try decoder.decode([Dishes].self, from: data)

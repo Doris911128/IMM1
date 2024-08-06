@@ -107,18 +107,30 @@ struct FavoriteView: View
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 } else if dishesData.isEmpty
                 {
-                    VStack 
+                    VStack
                     {
-                        Text("暫未新增任何親最愛食譜").font(.body).foregroundColor(.gray)
                         
-                        NavigationLink(destination: PastRecipesView())
+                        
+                        VStack
                         {
-                            Text("前往“過往食譜”添加更多＋＋").font(.body).foregroundColor(.blue).underline()
+                            Image("最愛")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity, maxHeight: 150) // 調整高度到適當值
                         }
-                        Spacer().frame(height: 120)
+                        VStack
+                        {
+                            Text("暫未新增任何親最愛食譜").font(.body).foregroundColor(.gray)
+                            
+                            NavigationLink(destination: PastRecipesView())
+                            {
+                                Text("前往“過往食譜”添加更多＋＋").font(.body).foregroundColor(.blue).underline()
+                            }
+                            Spacer().frame(height: 120)
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                } else 
+                } else
                 {
                     ScrollView(showsIndicators: false)
                     {
