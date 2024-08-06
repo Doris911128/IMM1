@@ -1,5 +1,5 @@
-//食譜份數暫時未新增因要更動版面
 // EditPlanView
+
 import SwiftUI
 import Foundation
 
@@ -152,27 +152,27 @@ struct EditPlanView: View {
 //    }
 
     @ViewBuilder
-    private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
-        let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red]
+       private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
+           let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red]
 
-        CustomButton(imageName: imageName, buttonText: buttonText) {
-            currentCategoryIndex = categoryIndex
-            isShowingDetail.wrappedValue.toggle()
-        }
-        .background(backgroundColors[categoryIndex].opacity(0.5)) // 背景颜色
-        .cornerRadius(10)
-        .sheet(isPresented: isShowingDetail) {
-            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
-            }), categoryTitle: categoryTitle)
-            .onDisappear {
-                if let selectedFood = findSelectedFoodData(for: editedPlan) {
-                    self.selectedFoodData = selectedFood
-                    self.showAlert = true
-                }
-            }
-        }
-    }
+           CustomButton(imageName: imageName, buttonText: buttonText) {
+               currentCategoryIndex = categoryIndex
+               isShowingDetail.wrappedValue.toggle()
+           }
+           .background(backgroundColors[categoryIndex].opacity(0.5))
+           .cornerRadius(10)
+           .sheet(isPresented: isShowingDetail) {
+               FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
+                   FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
+               }), categoryTitle: categoryTitle)
+               .onDisappear {
+                   if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                       self.selectedFoodData = selectedFood
+                       self.showAlert = true
+                   }
+               }
+           }
+       }
 
 
 
@@ -243,6 +243,36 @@ struct EditPlanView: View {
         }.resume()
     }
 
+    func Plan_PR(P_ID: String, U_ID: String, Dis_ID: Int, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Plan_PR.php") else {
+            completion(false, "無效的 URL")
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+
+        let postData = "P_ID=\(P_ID)&U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&P_DT=\(P_DT)&P_Bought=\(P_Bought)"
+        request.httpBody = postData.data(using: .utf8)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(false, "錯誤: \(error.localizedDescription)")
+                return
+            }
+
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                if responseString.contains("計劃已成功保存到數據庫") {
+                    completion(true, nil)
+                } else {
+                    completion(false, responseString)
+                }
+            } else {
+                completion(false, "未從服務器收到數據")
+            }
+        }.resume()
+    }
     struct CustomToggle: View {
         @Binding var isOn: Bool
 
@@ -307,8 +337,8 @@ struct EditPlanView: View {
                         fetchFoodOptions()
                     }
 
-                    let names = ["懶人", "減肥", "省錢", "放縱", "素食", "今日推薦", "我的最愛", "聽天由命"]
-                    let showOptions = [foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6, foodOptions7]
+                    let names = ["我的最愛", "懶人", "減肥", "省錢", "放縱", "素食", "今日推薦", "聽天由命"]
+                    let showOptions = [foodOptions7, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6]
 
                     VStack(spacing: 30) {
                         ForEach(names.indices, id: \.self) { index in
@@ -339,6 +369,13 @@ struct EditPlanView: View {
                     if let selectedFood = selectedFoodData {
                         updatePlanOnServer(pID: plans[day]?[planIndex].P_ID, disID: selectedFood.Dis_ID)
                         savePlanToServer(P_ID: plans[day]?[planIndex].P_ID ?? "", U_ID: "", Dis_ID: selectedFood.Dis_ID, P_DT: day, P_Bought: "") { success, errorMessage in
+                            if success {
+                                print("計劃成功保存到伺服器")
+                            } else {
+                                print("保存計劃的結果：\(errorMessage ?? "出問題")")
+                            }
+                        }
+                        Plan_PR(P_ID: plans[day]?[planIndex].P_ID ?? "", U_ID: "", Dis_ID: selectedFood.Dis_ID, P_DT: day, P_Bought: "") { success, errorMessage in
                             if success {
                                 print("計劃成功保存到伺服器")
                             } else {

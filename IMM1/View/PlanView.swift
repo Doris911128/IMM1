@@ -120,7 +120,64 @@ func deletePlan(withID pID: String, day: String, at indices: IndexSet, completio
         }
     }.resume()
 }
-
+func Plan_PRdelete(withID pID: String, day: String, at indices: IndexSet, completion: @escaping (Result<Void, Error>) -> Void)
+{
+    guard let url = URL(string: "http://163.17.9.107/food/php/Plan_PRdelete.php")
+    else {
+        completion(.failure(NSError(domain: "InvalidURL", code: 0, userInfo: nil)))
+        return
+    }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+    
+    // 將 P_ID 進行 URL 編碼並添加到請求參數中
+    guard let encodedPID = pID.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+        completion(.failure(NSError(domain: "URLEncodingError", code: 1, userInfo: nil)))
+        return
+    }
+    let parameters = "delete=true&P_ID=\(encodedPID)"
+    request.httpBody = parameters.data(using: .utf8)
+    
+    URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+            completion(.failure(error))
+            return
+        }
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            let errorMessage = "Invalid HTTP response: \(String(describing: response))"
+            completion(.failure(NSError(domain: "HTTPError", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+            return
+        }
+        
+        guard let data = data else {
+            let errorMessage = "No data received"
+            completion(.failure(NSError(domain: "NoDataError", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+            return
+        }
+        
+        guard let responseData = String(data: data, encoding: .utf8) else {
+            let errorMessage = "Failed to decode response data"
+            completion(.failure(NSError(domain: "DecodingError", code: 0, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+            return
+        }
+        
+        let responseString = responseData
+        
+        if responseString.contains("{\"status\":\"success\"}") {
+            completion(.success(()))
+            
+            // 在成功的 case 中打印 responseString
+            print("Server ssssssresponse:", responseString)
+        } else {
+            let errorMessage = "Failed to delete plan. Server response: \(responseString)"
+            completion(.failure(PlanDeleteError(message: errorMessage)))
+        }
+    }.resume()
+}
 struct PlanView: View {
     // DateFormatter for formatting dates
     private let dateFormatter: DateFormatter
@@ -350,6 +407,29 @@ struct PlanView: View {
                                         }
                                         
                                         deletePlan(withID: deletedPlan.P_ID, day: day, at: indices)
+                                        { result in
+                                            switch result
+                                            {
+                                            case .success:
+                                                print("成功刪除計畫:", deletedPlan.P_ID)
+                                                DispatchQueue.main.async
+                                                {
+                                                    if var dayPlans = self.plans[day]
+                                                    {
+                                                        dayPlans.remove(atOffsets: indices)
+                                                        self.plans[day] = dayPlans
+                                                    }
+                                                }
+                                                
+                                            case .failure(let error):
+                                                print("Failed with error:", error)
+                                                if let planDeleteError = error as? PlanDeleteError
+                                                {
+                                                    print("計劃刪除錯誤訊息:", planDeleteError.message)
+                                                }
+                                            }
+                                        }
+                                        Plan_PRdelete(withID: deletedPlan.P_ID, day: day, at: indices)
                                         { result in
                                             switch result
                                             {

@@ -1,3 +1,5 @@
+//  StockView.swift
+
 // 時刻監控食材變動數量＿警示框ＯＫ
 import SwiftUI
 

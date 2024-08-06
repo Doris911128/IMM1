@@ -1,3 +1,5 @@
+// ShopView.swift
+
 import SwiftUI
 import Foundation
 
@@ -361,8 +363,10 @@ struct ShopView: View {
         return Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
     }
     
-    private func sendJSONDataToBackend(jsonData: Data) {
-        guard let url = URL(string:"http://163.17.9.107/food/php/ShopStock.php") else {
+    private func sendJSONDataToBackend(jsonData: Data) 
+    {
+        guard let url = URL(string:"http://163.17.9.107/food/php/ShopStock.php") 
+        else {
             print("无效的 URL")
             return
         }

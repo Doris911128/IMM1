@@ -91,8 +91,6 @@ extension View
         }.resume()
     }
 
-
-    
     // MARK: 檢查菜品是否已被收藏的方法
     func checkIfFavorited(U_ID: String, Dis_ID: String, completion: @escaping (Result<Bool, Error>) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php?U_ID=\(U_ID)&Dis_ID=\(Dis_ID)") else {
@@ -122,8 +120,6 @@ extension View
             }
         }.resume()
     }
-
-    
 }
 
 struct TextLimit: ViewModifier

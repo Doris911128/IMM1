@@ -37,7 +37,7 @@ struct NowView: View {
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes? = nil
     @EnvironmentObject private var user: User
-
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -56,14 +56,14 @@ struct NowView: View {
                                     RecipeBlock(
                                         imageName: selectedDish.D_image,
                                         title: selectedDish.Dis_Name,
-                                        U_ID: " ", // 在這裡傳遞 U_ID
-                                        Dis_ID: selectedDish.Dis_ID,
-                                        isFavorited: false
+                                        U_ID: " ",
+                                        Dis_ID: selectedDish.Dis_ID
                                     )
                                 }
                             }
                         }
                         .padding(.trailing, 12)
+                        
                     }
                 }
             }
