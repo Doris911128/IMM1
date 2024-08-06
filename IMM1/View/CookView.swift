@@ -1,42 +1,54 @@
 // CookView
+
 import SwiftUI
 
-func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Void) {
-    guard let url = URL(string: "http://163.17.9.107/food/php/Cook.php") else {
+func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Void)
+{
+    guard let url = URL(string: "http://163.17.9.107/food/php/Cook.php") 
+    else
+    {
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
         return
     }
     
     URLSession.shared.dataTask(with: url) { data, response, error in
-        if let error = error {
+        if let error = error
+        {
             completion(nil, error)
             return
         }
         
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 
+        else
+        {
             completion(nil, NSError(domain: "HTTPError", code: 0, userInfo: nil))
             return
         }
         
-        guard let data = data else {
+        guard let data = data 
+        else
+        {
             completion(nil, NSError(domain: "NoDataError", code: 0, userInfo: nil))
             return
         }
         
-        do {
-            if let jsonString = String(data: data, encoding: .utf8) {
+        do 
+        {
+            if let jsonString = String(data: data, encoding: .utf8) 
+            {
                 print("Fetched JSON: \(jsonString)")
             }
             
             let plans = try JSONDecoder().decode([CookPlan].self, from: data)
             completion(plans, nil)
-        } catch {
+        } catch 
+        {
             completion(nil, error)
         }
     }.resume()
 }
 
-struct Cook: Codable, Identifiable 
+struct Cook: Codable, Identifiable
 {
     let id = UUID()
     let P_ID: String
@@ -46,7 +58,7 @@ struct Cook: Codable, Identifiable
     let P_Bought: String
     let Dis_name: String
     
-    enum CodingKeys: String, CodingKey 
+    enum CodingKeys: String, CodingKey
     {
         case P_ID
         case U_ID
@@ -57,7 +69,8 @@ struct Cook: Codable, Identifiable
     }
 }
 
-struct CookPlan: Codable, Identifiable {
+struct CookPlan: Codable, Identifiable
+{
     let id = UUID()
     let P_ID: String
     let U_ID: String
@@ -67,8 +80,9 @@ struct CookPlan: Codable, Identifiable {
     let Dis_name: String
     let D_image: String
     var favorites: [Favorite]? // 添加收藏状态
-
-    enum CodingKeys: String, CodingKey {
+    
+    enum CodingKeys: String, CodingKey 
+    {
         case P_ID
         case U_ID
         case Dis_ID
@@ -80,14 +94,16 @@ struct CookPlan: Codable, Identifiable {
     }
 }
 
-struct C_RecipeBlock: View {
+struct C_RecipeBlock: View
+{
     let D_image: String
     let Dis_Name: String
     let U_ID: String // 用於添加我的最愛
     let Dis_ID: Int // 用於添加我的最愛
     @State private var isFavorited: Bool
-
-    init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0, isFavorited: Bool = false) {
+    
+    init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0, isFavorited: Bool = false)
+    {
         self.D_image = imageName
         self.Dis_Name = title
         self.U_ID = U_ID
@@ -95,11 +111,16 @@ struct C_RecipeBlock: View {
         self._isFavorited = State(initialValue: isFavorited)
     }
     
-    var body: some View {
-        VStack {
-            ZStack(alignment: .topTrailing) {
-                AsyncImage(url: URL(string: D_image)) { phase in
-                    switch phase {
+    var body: some View 
+    {
+        VStack 
+        {
+            ZStack(alignment: .topTrailing) 
+            {
+                AsyncImage(url: URL(string: D_image))
+                { phase in
+                    switch phase
+                    {
                     case .empty:
                         Color.gray
                             .frame(width: 330, height: 450)
@@ -122,10 +143,13 @@ struct C_RecipeBlock: View {
                 }
                 
                 Button(action:{
-                    withAnimation(.easeInOut.speed(3)) {
+                    withAnimation(.easeInOut.speed(3))
+                    {
                         self.isFavorited.toggle()
-                        toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited) { result in
-                            switch result {
+                        toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited)
+                        { result in
+                            switch result 
+                            {
                             case .success(let responseString):
                                 print("Success: \(responseString)")
                             case .failure(let error):
@@ -147,7 +171,8 @@ struct C_RecipeBlock: View {
                 .symbolEffect(.bounce, value: self.isFavorited)
             }
             
-            HStack(alignment: .bottom) {
+            HStack(alignment: .bottom) 
+            {
                 Text(Dis_Name)
                     .foregroundColor(.black)
                     .font(.system(size: 24))
@@ -158,9 +183,12 @@ struct C_RecipeBlock: View {
         }
         .padding(.horizontal, 20)
         .offset(y: -40)
-        .onAppear {
-            checkIfFavorited(U_ID: U_ID, Dis_ID: "\(Dis_ID)") { result in
-                switch result {
+        .onAppear
+        {
+            checkIfFavorited(U_ID: U_ID, Dis_ID: "\(Dis_ID)")
+            { result in
+                switch result
+                {
                 case .success(let favorited):
                     self.isFavorited = favorited
                 case .failure(let error):
@@ -171,18 +199,24 @@ struct C_RecipeBlock: View {
     }
 }
 
-struct CookView: View {
+struct CookView: View
+{
     @State private var plans: [CookPlan] = []
     @State private var favorites: [Favorite] = []
     @State private var isEditing = false
     let U_ID: String // 用於添加我的最愛
     
-    var body: some View {
-        NavigationView {
-            VStack {
+    var body: some View 
+    {
+        NavigationView
+        {
+            VStack
+            {
                 // 確保日期部分位於頂部
-                HStack {
-                    ForEach(computeDays(), id: \.self) { day in
+                HStack 
+                {
+                    ForEach(computeDays(), id: \.self)
+                    { day in
                         Text(day.dateString)
                             .font(.system(size: 20, weight: .bold))
                             .padding(.top, 10)
@@ -190,15 +224,21 @@ struct CookView: View {
                 }
                 
                 // 其他內容
-                ScrollViewReader { scrollView in
-                    ScrollView(.horizontal) {
-                        LazyHStack(spacing: 20) {
-                            ForEach(computeDays(), id: \.self) { day in
+                ScrollViewReader 
+                { scrollView in
+                    ScrollView(.horizontal)
+                    {
+                        LazyHStack(spacing: 20)
+                        {
+                            ForEach(computeDays(), id: \.self)
+                            { day in
                                 let dateString = day.dateString
                                 
-                                VStack(alignment: .leading, spacing: 10) {
+                                VStack(alignment: .leading, spacing: 10) 
+                                {
                                     let dayPlans = plans.filter { $0.P_DT == dateString }
-                                    if dayPlans.isEmpty {
+                                    if dayPlans.isEmpty 
+                                    {
                                         Text("尚無計畫")
                                             .font(.subheadline)
                                             .foregroundColor(.gray)
@@ -206,16 +246,21 @@ struct CookView: View {
                                             .padding(.top, 300)
                                         Spacer()
                                     } else {
-                                        LazyHStack(spacing: 10) {
+                                        LazyHStack(spacing: 10) 
+                                        {
                                             ForEach(dayPlans, id: \.P_ID) { plan in
-                                                HStack {
-                                                    NavigationLink(destination: MenuView(U_ID: plan.U_ID, Dis_ID: plan.Dis_ID)) {
+                                                HStack 
+                                                {
+                                                    NavigationLink(destination: MenuView(U_ID: plan.U_ID, Dis_ID: plan.Dis_ID))
+                                                    {
                                                         C_RecipeBlock(imageName: plan.D_image, title: plan.Dis_name, U_ID: plan.U_ID, Dis_ID: plan.Dis_ID, isFavorited: plan.favorites?.contains(where: { $0.U_ID == U_ID }) ?? false)
                                                     }
                                                     
-                                                    if isEditing {
-                                                        Button(action:{
-                                                            if let index = plans.firstIndex(where: { $0.P_ID == plan.P_ID }) {
+                                                    if isEditing 
+                                                    {
+                                                        Button(action: {
+                                                            if let index = plans.firstIndex(where: { $0.P_ID == plan.P_ID }) 
+                                                            {
                                                                 plans.remove(at: index)
                                                             }
                                                         }) {
@@ -234,13 +279,18 @@ struct CookView: View {
                         }
                         .padding(.horizontal)
                     }
-                    .onAppear {
-                        fetchCookPlansFromServer { fetchedPlans, error in
-                            if let fetchedPlans = fetchedPlans {
-                                DispatchQueue.main.async {
+                    .onAppear 
+                    {
+                        fetchCookPlansFromServer 
+                        { fetchedPlans, error in
+                            if let fetchedPlans = fetchedPlans
+                            {
+                                DispatchQueue.main.async 
+                                {
                                     self.plans = fetchedPlans
                                 }
-                            } else if let error = error {
+                            } else if let error = error
+                            {
                                 print("Failed to fetch plans: \(error)")
                             }
                         }
@@ -252,9 +302,11 @@ struct CookView: View {
         }
     }
     
-    func computeDays() -> [Day] {
+    func computeDays() -> [Day] 
+    {
         var days: [Day] = []
-        if let targetDate = Calendar.current.date(byAdding: .day, value: 0, to: Date()) {
+        if let targetDate = Calendar.current.date(byAdding: .day, value: 0, to: Date()) 
+        {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd"
             let dateString = formatter.string(from: targetDate)
@@ -265,14 +317,17 @@ struct CookView: View {
         return days
     }
     
-    struct Day: Hashable {
+    struct Day: Hashable 
+    {
         let dateString: String
         let dayIndex: Int
     }
 }
 
-struct CookView_Previews: PreviewProvider {
-    static var previews: some View {
+struct CookView_Previews: PreviewProvider 
+{
+    static var previews: some View
+    {
         CookView(U_ID:"ofmyRwDdZy")
     }
 }

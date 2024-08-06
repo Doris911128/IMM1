@@ -36,7 +36,7 @@ struct EditPlanView: View {
     var planIndex: Int
 
     @State private var dishesData: [Dishes] = []
-    @State private var show1: [Bool] = [false, false, false, false, false, false, false, false]
+    @State private var show1: [Bool] = [false, false, false, false, false, false, false, false, false, false]
     @State private var searchText: String = ""
     @State private var editedPlan = ""
     @State private var isShowingDetail = false
@@ -79,6 +79,10 @@ struct EditPlanView: View {
                     self.foodOptions4 = dishes.filter { ["4", "6", "7" ,"14", "16", "18", "19", "20", "23", "25"].contains(String($0.Dis_ID)) }
                     self.foodOptions5 = dishes.filter { ["1", "2", "3", "17", "19", "22", "26","28"].contains(String($0.Dis_ID)) }
                     self.foodOptions6 = dishes
+                    self.foodOptions7 = dishes
+                    self.foodOptions8 = dishes
+                    self.foodOptions9 = dishes
+                    self.foodOptions10 = dishes
                     // 单独获取用户收藏
                     fetchUserFavorites()
                 }
@@ -118,13 +122,23 @@ struct EditPlanView: View {
     // MARK: 養生選項
     @State private var foodOptions5: [Dishes] = []
 
-    // MARK: 今日推薦選項
+    // MARK: 清庫存選項
     @State private var foodOptions6: [Dishes] = []
 
-    // MARK: 我的最愛
+    // MARK: 我的最愛選項
     @State private var foodOptions7: [Dishes] = []
 
-    @State private var isShowingDetail7 = false
+    // MARK: 適合我選項
+    @State private var foodOptions8: [Dishes] = []
+    
+    // MARK: 公開食譜選項
+    @State private var foodOptions9: [Dishes] = []
+    
+    // MARK: AI食譜選項
+    @State private var foodOptions10: [Dishes] = []
+    
+    //@State private var isShowingDetail7 = false
+    
     func findSelectedFoodData(for name: String) -> Dishes? {
         // 根據食物名稱在從服務器獲取的數據中找到對應的食物資料
         for food in foodDataFromServer {
@@ -152,29 +166,26 @@ struct EditPlanView: View {
 //    }
 
     @ViewBuilder
-       private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
-           let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red]
+        private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
+            let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red, .gray,.indigo ,.mint]
 
-           CustomButton(imageName: imageName, buttonText: buttonText) {
-               currentCategoryIndex = categoryIndex
-               isShowingDetail.wrappedValue.toggle()
-           }
-           .background(backgroundColors[categoryIndex].opacity(0.5))
-           .cornerRadius(10)
-           .sheet(isPresented: isShowingDetail) {
-               FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-                   FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
-               }), categoryTitle: categoryTitle)
-               .onDisappear {
-                   if let selectedFood = findSelectedFoodData(for: editedPlan) {
-                       self.selectedFoodData = selectedFood
-                       self.showAlert = true
-                   }
-               }
-           }
-       }
-
-
+            CustomButton(imageName: imageName, buttonText: buttonText, backgroundColor: backgroundColors[categoryIndex]) {
+                currentCategoryIndex = categoryIndex
+                isShowingDetail.wrappedValue.toggle()
+            }
+            .cornerRadius(10)
+            .sheet(isPresented: isShowingDetail) {
+                FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
+                    FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
+                }), categoryTitle: categoryTitle)
+                .onDisappear {
+                    if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                        self.selectedFoodData = selectedFood
+                        self.showAlert = true
+                    }
+                }
+            }
+        }
 
 
     func updatePlanOnServer(pID: String?, disID: Int) {
@@ -284,7 +295,7 @@ struct EditPlanView: View {
                     Image(systemName: isOn ? "checkmark.square.fill" : "square")
                         .resizable()
                         .frame(width: 20, height: 20)
-                    Text(isOn ? "以食材搜索" : "以菜名搜索")
+                    Text(isOn ? "以食材搜尋" : "以菜名搜尋")
                         .font(.footnote)
                 }
                 .foregroundColor(isOn ? .orange : .gray)
@@ -337,25 +348,23 @@ struct EditPlanView: View {
                         fetchFoodOptions()
                     }
 
-                    let names = ["我的最愛", "懶人", "減肥", "省錢", "放縱", "素食", "今日推薦", "聽天由命"]
-                    let showOptions = [foodOptions7, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6]
+                    let names = ["我的最愛","適合我" ,"懶人", "減肥", "省錢", "放縱", "素食", "清庫存", "公開食譜","AI食譜"]
+                                       let showOptions = [foodOptions7,foodOptions8, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6,foodOptions9,foodOptions10]
 
-                    VStack(spacing: 30) {
-                        ForEach(names.indices, id: \.self) { index in
-                            if index == 7{
-//                                fateButton
-                            } else {
-                                self.TempView(
-                                    imageName: names[index],
-                                    buttonText: names[index],
-                                    isShowingDetail: $show1[index],
-                                    foodOptions: showOptions[index],
-                                    categoryIndex: index,
-                                    categoryTitle: names[index]
-                                )
-                            }
-                        }
-                    }
+                                       LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+                                           ForEach(names.indices, id: \.self) { index in
+                                               
+                                                   self.TempView(
+                                                       imageName: names[index],
+                                                       buttonText: names[index],
+                                                       isShowingDetail: $show1[index],
+                                                       foodOptions: showOptions[index],
+                                                       categoryIndex: index,
+                                                       categoryTitle: names[index]
+                                                   )
+                                               
+                                           }
+                                       }
                     .padding()
                 }
             }
@@ -388,7 +397,7 @@ struct EditPlanView: View {
             )
         }
         .sheet(isPresented: $isShowingDetail) {
-            FoodSelectionView(isShowingDetail: $isShowingDetail, editedPlan: $editedPlan, foodOptions: $searchResults, categoryTitle: "搜索结果")
+            FoodSelectionView(isShowingDetail: $isShowingDetail, editedPlan: $editedPlan, foodOptions: $searchResults, categoryTitle: "搜尋結果")
                 .onDisappear {
                     if let selectedFood = findSelectedFoodData(for: editedPlan) {
                         self.selectedFoodData = selectedFood

@@ -1,4 +1,3 @@
-//食譜份數暫時未新增
 //Favorite.swift最愛View
 //
 //  Created on 2023/8/18.

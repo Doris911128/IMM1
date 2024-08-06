@@ -21,7 +21,7 @@ struct MenuView: View, RecipeProtocol
     
     @State var cookingMethod: String? // 新增一個狀態來儲存從URL加載的烹飪方法
     @State var selectedDish: Dishes?
-
+    
     
     // MARK: body
     var body: some View
@@ -54,7 +54,7 @@ struct MenuView: View, RecipeProtocol
                     HStack
                     {
                         Spacer()
-                        NavigationLink(destination: CookingAiView())
+                        NavigationLink(destination: CookingAiView(disID: Dis_ID))
                         {
                             HStack
                             {
@@ -86,17 +86,13 @@ struct MenuView: View, RecipeProtocol
         }
         .toolbarBackground(Color("menusheetbackgroundcolor"), for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) 
-            {
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Button(action: {
-                    withAnimation(.easeInOut.speed(3)) 
-                    {
-                        if let isFavorited = isFavorited 
-                        {
+                    withAnimation(.easeInOut.speed(3)) {
+                        if let isFavorited = isFavorited {
                             self.isFavorited = !isFavorited
                             toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: self.isFavorited!) { result in
-                                switch result 
-                                {
+                                switch result {
                                 case .success(let responseString):
                                     print("Success: \(responseString)")
                                 case .failure(let error):

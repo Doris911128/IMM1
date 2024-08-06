@@ -4,31 +4,30 @@
 //
 //  Created by Ｍac on 2023/12/10.
 //
+
 import SwiftUI
 
 struct CustomButton: View {
-    var imageName: String  // 按鈕圖片名稱
-    var buttonText: String // 按鈕文字內容
-    var action: () -> Void // 點擊按鈕時的動作
+    var imageName: String  // 按钮图片名称
+    var buttonText: String // 按钮文字内容
+    var backgroundColor: Color // 按钮背景色
+    var action: () -> Void // 点击按钮时的动作
 
     var body: some View {
         Button(action: action) {
-            HStack {
-                Text(buttonText)
-                    .foregroundColor(.black)
-                    .font(.custom("Arial", size: 40))
-                    .padding(.leading, 20)
-                Spacer()
-
+            VStack {
                 Image(imageName)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 150, height: 150)
-                    .alignmentGuide(HorizontalAlignment.trailing) { _ in 150 } // 將圖片向右靠齊
+                    .frame(width: 100, height: 100)
+                Text(buttonText)
+                    .foregroundColor(.black)
+                    .font(.custom("Arial", size: 20))
             }
-            .padding(10)
-            .foregroundColor(.white)
+            .frame(width: 150, height: 150) // 设置为正方形
+            .background(backgroundColor) // 添加背景色
             .cornerRadius(10)
+            .shadow(radius: 5)
         }
         .buttonStyle(BorderlessButtonStyle())
     }
