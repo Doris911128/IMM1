@@ -57,7 +57,8 @@ struct Ingredient: Identifiable, Codable {
     }
 }
 
-class ShopNetworkManager {
+class ShopNetworkManager
+{
     func fetchAndAggregateRecipes(completion: @escaping (Result<[RecipeWrapper], Error>) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/php/Shop.php") else {
             completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -126,41 +127,47 @@ class ShopNetworkManager {
     }
 }
 
-struct RecipeWrapper: Codable {
+struct RecipeWrapper: Codable
+{
     var sqlResult: Ingredient
     var shopPlan: ShopPlan?
     var isSelected: Bool = false
     
-    var planAmount: String? {
+    var planAmount: String?
+    {
         return shopPlan?.amount
     }
 }
 
-struct RecipeView: View {
+struct RecipeView: View
+{
     @Binding var recipes: [RecipeWrapper]
-    @State private var hiddenIngredients: Set<UUID> = []
+    
     var onDeleteIngredient: (Ingredient) -> Void
     var onIngredientSelection: (Int, String, Int) -> Void
-    @Binding var selectedIngredients: [Ingredient]
-    @State private var quantityInputs: [UUID: String] = [:]
     
-    init(recipes: Binding<[RecipeWrapper]>, onDeleteIngredient: @escaping (Ingredient) -> Void, selectedIngredients: Binding<[Ingredient]>, onIngredientSelection: @escaping (Int, String, Int) -> Void) {
+    @Binding var selectedIngredients: [Ingredient]
+    @Binding var ingredients: [StockIngredient] // 添加对 ingredients 的绑定
+    
+    @State private var quantityInputs: [UUID: String] = [:]
+    @State private var hiddenIngredients: Set<UUID> = []
+    
+    init(recipes: Binding<[RecipeWrapper]>, onDeleteIngredient: @escaping (Ingredient) -> Void, selectedIngredients: Binding<[Ingredient]>, onIngredientSelection: @escaping (Int, String, Int) -> Void, ingredients: Binding<[StockIngredient]>) {
         self._recipes = recipes
         self.onDeleteIngredient = onDeleteIngredient
-        self._hiddenIngredients = State(initialValue: [])
         self._selectedIngredients = selectedIngredients
         self.onIngredientSelection = onIngredientSelection
+        self._ingredients = ingredients // 正确绑定 ingredients
     }
     
     var body: some View 
     {
-        if recipes.isEmpty
+        if recipes.isEmpty 
         {
-            VStack
+            VStack 
             {
                 Spacer().frame(height: 200) // 调整此高度以控制顶部间距
-                
-                VStack
+                VStack 
                 {
                     Image("採購")
                         .resizable()
@@ -176,16 +183,44 @@ struct RecipeView: View {
                 Spacer() // 自动将内容推到中心位置
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
+        } else if !ingredients.isEmpty
+        { // 检查是否有库存
+            VStack 
+            {
+                Spacer().frame(height: 200) // 调整此高度以控制顶部间距
+                VStack
+                {
+                    Image("已採購")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 180, height: 180) // 调整图片大小
+                }
+                VStack 
+                {
+                    Text("已有所需採購食材，快去烹飪吧")
+                        .font(.system(size: 18))
+                        .foregroundColor(.gray)
+                }
+                Spacer() // 自动将内容推到中心位置
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
         } else 
         {
-            List {
-                ForEach(recipes, id: \.sqlResult.id) { wrapper in
+            List 
+            {
+                ForEach(recipes, id: \.sqlResult.id)
+                { wrapper in
                     if !shouldHideIngredient(wrapper.sqlResult.id) && (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
-                        Section(header: EmptyView()) {
-                            HStack(alignment: .top) {
-                                if let imageUrl = URL(string: wrapper.sqlResult.foodImage) {
-                                    AsyncImage(url: imageUrl) { phase in
-                                        switch phase {
+                        Section(header: EmptyView())
+                        {
+                            HStack(alignment: .top) 
+                            {
+                                if let imageUrl = URL(string: wrapper.sqlResult.foodImage) 
+                                {
+                                    AsyncImage(url: imageUrl) 
+                                    { phase in
+                                        switch phase
+                                        {
                                         case .empty:
                                             ProgressView()
                                                 .frame(width: 100, height: 100)
@@ -212,10 +247,12 @@ struct RecipeView: View {
                                                 .cornerRadius(10)
                                         }
                                     }
-                                    .onAppear {
+                                    .onAppear 
+                                    {
                                         print("Loading image from URL: \(imageUrl)")
                                     }
-                                } else {
+                                } else 
+                                {
                                     Image(systemName: "photo")
                                         .resizable()
                                         .aspectRatio(contentMode: .fill)
@@ -271,7 +308,6 @@ struct RecipeView: View {
             }
             .listStyle(PlainListStyle())
             .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
-
         }
     }
     
@@ -298,11 +334,13 @@ struct RecipeView: View {
     }
 }
 
-struct ShopView: View {
+struct ShopView: View 
+{
     @State private var recipes: [RecipeWrapper] = []
     @State private var isLoading = true
     @State private var selectedIngredients: [Ingredient] = []
     @State private var userUID: String?
+    @State private var ingredients: [StockIngredient] = [] // 初始化 ingredients 数组
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -331,7 +369,7 @@ struct ShopView: View {
             VStack {
                 HStack {
                     Text("採購")
-                        .font(.title) // 可以設定標題的字體樣式
+                        .font(.title)
                 }
                 Text("你需要採購的食材")
                     .font(.system(size: 12))
@@ -346,7 +384,8 @@ struct ShopView: View {
                             // 更新选定的食材...
                         },
                         selectedIngredients: $selectedIngredients,
-                        onIngredientSelection: handleIngredientSelection
+                        onIngredientSelection: handleIngredientSelection,
+                        ingredients: $ingredients // 将 ingredients 传递给 RecipeView
                     )
                 }
             }
@@ -354,6 +393,7 @@ struct ShopView: View {
         .onAppear {
             getUserUIDFromDatabase()
             loadRecipes()
+            loadIngredients() // 确保加载库存食材
         }
         .onDisappear {
             sendSelectedIngredientsToBackend()
@@ -383,10 +423,8 @@ struct ShopView: View {
         return Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
     }
     
-    private func sendJSONDataToBackend(jsonData: Data) 
-    {
-        guard let url = URL(string:"http://163.17.9.107/food/php/ShopStock.php") 
-        else {
+    private func sendJSONDataToBackend(jsonData: Data) {
+        guard let url = URL(string:"http://163.17.9.107/food/php/ShopStock.php") else {
             print("无效的 URL")
             return
         }
@@ -429,7 +467,29 @@ struct ShopView: View {
             }
         }
     }
+    
+    private func loadIngredients() 
+    {
+        // 加载库存食材的逻辑
+        let networkManager = NetworkManager()
+        networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php") { result in
+            switch result {
+            case .success(let stocks):
+                self.ingredients = stocks.compactMap { stock in
+                    let name = stock.F_Name ?? "未知食材"
+                    let unit = stock.F_Unit ?? "未指定单位"
+                    let SK_SUM = stock.SK_SUM ?? 0
+                    let image = stock.Food_imge ?? ""  // 确保Food_imge被正确解析
+
+                    return StockIngredient(U_ID: stock.U_ID ?? UUID().uuidString, F_ID: stock.F_ID, F_Name: name, SK_SUM: SK_SUM, F_Unit: unit, Food_imge: image)
+                }
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+    }
 }
+
 
 struct ShopView_Previews: PreviewProvider {
     static var previews: some View {
