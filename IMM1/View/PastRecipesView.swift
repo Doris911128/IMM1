@@ -34,11 +34,32 @@ struct PastRecipesView: View
                 .padding(.horizontal, 20)
                 .autocapitalization(.none)
                 .focused($isTextFieldFocused)
-                if pastRecipesData.isEmpty {
-                    Text("無過往食譜")
-                        .font(.body)
-                        .foregroundColor(.gray)
-                        .padding(.top,250)
+                if pastRecipesData.isEmpty 
+                {
+                    VStack
+                    {
+                        Spacer().frame(height: 115) // 调整此高度以控制顶部间距
+                        
+                        VStack 
+                        {
+                            Image("過往食譜")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 180, height: 180) // 调整图片大小
+                        }
+                        .padding(10)
+                        
+                        VStack
+                        {
+                            Text("無過往食譜")
+                                .font(.system(size: 18))
+                                .foregroundColor(.gray)
+                        }
+                        
+                        Spacer() // 自动将内容推到中心位置
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
+
                 }
                 ScrollView(showsIndicators: false)
                 {

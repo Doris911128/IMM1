@@ -152,12 +152,32 @@ struct RecipeView: View {
         self.onIngredientSelection = onIngredientSelection
     }
     
-    var body: some View {
-        if recipes.isEmpty {
-            Spacer()
-            Text("目前無採買項目")
-            Spacer()
-        } else {
+    var body: some View 
+    {
+        if recipes.isEmpty
+        {
+            VStack
+            {
+                Spacer().frame(height: 200) // 调整此高度以控制顶部间距
+                
+                VStack
+                {
+                    Image("採購")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 180, height: 180) // 调整图片大小
+                }
+                VStack
+                {
+                    Text("目前無採買項目")
+                        .font(.system(size: 18))
+                        .foregroundColor(.gray)
+                }
+                Spacer() // 自动将内容推到中心位置
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
+        } else 
+        {
             List {
                 ForEach(recipes, id: \.sqlResult.id) { wrapper in
                     if !shouldHideIngredient(wrapper.sqlResult.id) && (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {

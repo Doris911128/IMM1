@@ -5,7 +5,7 @@
 
 import SwiftUI
 
-struct FavoriteView: View 
+struct FavoriteView: View
 {
     let U_ID: String // 用於添加我的最愛
     @State private var dishesData: [Dishes] = []
@@ -13,7 +13,7 @@ struct FavoriteView: View
     @State private var isLoading: Bool = true // 加载状态
     @State private var loadingError: String? = nil // 加載错误信息
     
-    func loadUFavData() 
+    func loadUFavData()
     {
         guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php")
         else
@@ -29,21 +29,21 @@ struct FavoriteView: View
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async 
+            DispatchQueue.main.async
             {
                 self.isLoading = false
             }
             
             if let error = error
             {
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     self.loadingError = error.localizedDescription
                 }
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200
             else
             {
                 DispatchQueue.main.async
@@ -53,19 +53,19 @@ struct FavoriteView: View
                 return
             }
             
-            if let data = data 
+            if let data = data
             {
-                do 
+                do
                 {
                     let decoder = JSONDecoder()
                     let dishes = try decoder.decode([Dishes].self, from: data)
-                    DispatchQueue.main.async 
+                    DispatchQueue.main.async
                     {
                         self.dishesData = dishes
                     }
                 } catch
                 {
-                    DispatchQueue.main.async 
+                    DispatchQueue.main.async
                     {
                         self.loadingError = "JSON解析錯誤: \(error.localizedDescription)"
                     }
@@ -77,9 +77,9 @@ struct FavoriteView: View
     
     var body: some View
     {
-        NavigationStack 
+        NavigationStack
         {
-            VStack 
+            VStack
             {
                 Text("我的最愛")
                     .font(.largeTitle)
@@ -87,19 +87,19 @@ struct FavoriteView: View
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 20)
                 
-                if isLoading 
+                if isLoading
                 {
                     //MARK: 想要載入中轉圈圈動畫
-                    VStack 
+                    VStack
                     {
                         Spacer()
                         ProgressView("載入中...").progressViewStyle(CircularProgressViewStyle())
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let error = loadingError 
+                } else if let error = loadingError
                 {
-                    VStack 
+                    VStack
                     {
                         Text("載入失敗: \(error)").font(.body).foregroundColor(.red)
                         Spacer().frame(height: 120)
@@ -107,38 +107,48 @@ struct FavoriteView: View
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 } else if dishesData.isEmpty
                 {
-                    VStack
+                    ZStack 
                     {
-                        
-                        
-                        VStack
-                        {
-                            Image("最愛")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: .infinity, maxHeight: 150) // 調整高度到適當值
-                        }
-                        VStack
-                        {
-                            Text("暫未新增任何親最愛食譜").font(.body).foregroundColor(.gray)
-                            
-                            NavigationLink(destination: PastRecipesView())
+                        GeometryReader 
+                        { geometry in
+                            VStack
                             {
-                                Text("前往“過往食譜”添加更多＋＋").font(.body).foregroundColor(.blue).underline()
+                                Image("最愛")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 180, height: 180)
+                                    .position(x: geometry.size.width / 2, y: geometry.size.height / 3) // 向上移动图片
                             }
-                            Spacer().frame(height: 120)
+                            VStack
+                            {
+                                Spacer().frame(height: geometry.size.height / 2) // 向下移动文字
+                                VStack 
+                                {
+                                    Text("暫未新增任何親最愛食譜")
+                                        .font(.system(size: 18))
+                                        .foregroundColor(.gray)
+                                    NavigationLink(destination: PastRecipesView()) 
+                                    {
+                                        Text("前往“過往食譜”添加更多＋＋")
+                                            .font(.system(size: 18))
+                                            .foregroundColor(.blue).underline()
+                                    }
+                                    Spacer().frame(height: 300)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .center)
+                            }
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else
                 {
                     ScrollView(showsIndicators: false)
                     {
-                        LazyVStack 
+                        LazyVStack
                         {
                             ForEach(dishesData, id: \.Dis_ID)
                             { dish in
-                                NavigationLink(destination: Recipe_IP_View(U_ID: "", Dis_ID: dish.Dis_ID)) 
+                                NavigationLink(destination: Recipe_IP_View(U_ID: "", Dis_ID: dish.Dis_ID))
                                 {
                                     RecipeBlock(imageName: dish.D_image, title: dish.Dis_Name, U_ID: "", Dis_ID: dish.Dis_ID)
                                 }

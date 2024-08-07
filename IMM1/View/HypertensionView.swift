@@ -212,7 +212,7 @@ struct HypertensionView: View {
                         }
                     }
                     .chartForegroundStyleScale(["血壓值": .orange])
-                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
+                    .frame(width: max(350, Double(chartData.count) * 100), height: 200) // 将宽度调整为每个数据点有更多空间
                     .padding(.top, 20)
                     .padding()
                     .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))

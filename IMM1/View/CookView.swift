@@ -2,9 +2,25 @@
 
 import SwiftUI
 
+class CookViewModel: ObservableObject {
+    @Published var plans: [CookPlan] = []
+    
+    func fetchCookPlans() {
+        fetchCookPlansFromServer { [weak self] fetchedPlans, error in
+            if let fetchedPlans = fetchedPlans {
+                DispatchQueue.main.async {
+                    self?.plans = fetchedPlans
+                }
+            } else if let error = error {
+                print("Failed to fetch plans: \(error)")
+            }
+        }
+    }
+}
+
 func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Void)
 {
-    guard let url = URL(string: "http://163.17.9.107/food/php/Cook.php") 
+    guard let url = URL(string: "http://163.17.9.107/food/php/Cook.php")
     else
     {
         completion(nil, NSError(domain: "InvalidURL", code: 0, userInfo: nil))
@@ -18,30 +34,30 @@ func fetchCookPlansFromServer(completion: @escaping ([CookPlan]?, Error?) -> Voi
             return
         }
         
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200
         else
         {
             completion(nil, NSError(domain: "HTTPError", code: 0, userInfo: nil))
             return
         }
         
-        guard let data = data 
+        guard let data = data
         else
         {
             completion(nil, NSError(domain: "NoDataError", code: 0, userInfo: nil))
             return
         }
         
-        do 
+        do
         {
-            if let jsonString = String(data: data, encoding: .utf8) 
+            if let jsonString = String(data: data, encoding: .utf8)
             {
                 print("Fetched JSON: \(jsonString)")
             }
             
             let plans = try JSONDecoder().decode([CookPlan].self, from: data)
             completion(plans, nil)
-        } catch 
+        } catch
         {
             completion(nil, error)
         }
@@ -81,7 +97,7 @@ struct CookPlan: Codable, Identifiable
     let D_image: String
     var favorites: [Favorite]? // 添加收藏状态
     
-    enum CodingKeys: String, CodingKey 
+    enum CodingKeys: String, CodingKey
     {
         case P_ID
         case U_ID
@@ -111,11 +127,11 @@ struct C_RecipeBlock: View
         self._isFavorited = State(initialValue: isFavorited)
     }
     
-    var body: some View 
+    var body: some View
     {
-        VStack 
+        VStack
         {
-            ZStack(alignment: .topTrailing) 
+            ZStack(alignment: .topTrailing)
             {
                 AsyncImage(url: URL(string: D_image))
                 { phase in
@@ -148,7 +164,7 @@ struct C_RecipeBlock: View
                         self.isFavorited.toggle()
                         toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited)
                         { result in
-                            switch result 
+                            switch result
                             {
                             case .success(let responseString):
                                 print("Success: \(responseString)")
@@ -171,13 +187,14 @@ struct C_RecipeBlock: View
                 .symbolEffect(.bounce, value: self.isFavorited)
             }
             
-            HStack(alignment: .bottom) 
+            HStack(alignment: .bottom)
             {
                 Text(Dis_Name)
                     .foregroundColor(.black)
                     .font(.system(size: 24))
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.horizontal, 10)
+                    .padding(.top,10)
             }
             .offset(y: -5)
         }
@@ -201,52 +218,98 @@ struct C_RecipeBlock: View
 
 struct CookView: View
 {
+    @StateObject private var viewModel = CookViewModel()
+    
     @State private var plans: [CookPlan] = []
     @State private var favorites: [Favorite] = []
     @State private var isEditing = false
     let U_ID: String // 用於添加我的最愛
     
-    var body: some View 
+    var body: some View
     {
-        NavigationView
+        NavigationStack
         {
             VStack
             {
-                // 確保日期部分位於頂部
-                HStack 
+                // 添加標題1和標題2
+                VStack
                 {
-                    ForEach(computeDays(), id: \.self)
-                    { day in
-                        Text(day.dateString)
-                            .font(.system(size: 20, weight: .bold))
-                            .padding(.top, 10)
-                    }
+                    Text("烹飪")
+                        .font(.title)
+                    Text("今日您計劃烹飪的食譜")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
                 }
                 
+                //                // 根據計劃是否存在來決定是否顯示日期
+                //                if !viewModel.plans.isEmpty
+                //                {
+                //                    HStack
+                //                    {
+                //                        ForEach(computeDays(), id: \.self) { day in
+                //                            Text(day.dateString)
+                //                                .font(.system(size: 20, weight: .bold))
+                //                                .frame(maxWidth: .infinity, alignment: .center)
+                //                        }
+                //                    }
+                //                    .frame(height: 50) // 固定日期部分高度
+                //                }
+                
                 // 其他內容
-                ScrollViewReader 
-                { scrollView in
-                    ScrollView(.horizontal)
+                ScrollViewReader { scrollView in
+                    if viewModel.plans.isEmpty {
+                        // 沒有計劃時顯示的靜態視圖
+                        VStack {
+                            Spacer().frame(height: 200) // 調整此高度以控制頂部間距
+                            
+                            VStack {
+                                Image("烹飪")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 180, height: 180) // 調整圖片大小
+                            }
+                            VStack {
+                                Text("尚無烹飪計畫")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.gray)
+                            }
+                            Spacer() // 自動將內容推到中心位置
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 確保內容在頂部對齊
+                    } else
                     {
-                        LazyHStack(spacing: 20)
+                        // 有計劃時顯示的滾動視圖
+                        ScrollView(.horizontal)
                         {
-                            ForEach(computeDays(), id: \.self)
-                            { day in
-                                let dateString = day.dateString
-                                
-                                VStack(alignment: .leading, spacing: 10) 
-                                {
-                                    let dayPlans = plans.filter { $0.P_DT == dateString }
-                                    if dayPlans.isEmpty 
+                            LazyHStack(spacing: 20)
+                            {
+                                ForEach(computeDays(), id: \.self)
+                                { day in
+                                    let dateString = day.dateString
+                                    
+                                    VStack(alignment: .leading, spacing: 10)
                                     {
-                                        Text("尚無計畫")
-                                            .font(.subheadline)
-                                            .foregroundColor(.gray)
-                                            .padding(.leading, 150)
-                                            .padding(.top, 300)
-                                        Spacer()
-                                    } else {
-                                        LazyHStack(spacing: 10) 
+                                        let dayPlans = viewModel.plans.filter { $0.P_DT == dateString }
+                                        //                                        if dayPlans.isEmpty {
+                                        //                                            VStack {
+                                        //                                                Spacer().frame(height: 200) // 調整此高度以控制頂部間距
+                                        //
+                                        //                                                VStack {
+                                        //                                                    Image("烹飪")
+                                        //                                                        .resizable()
+                                        //                                                        .scaledToFit()
+                                        //                                                        .frame(width: 180, height: 175) // 調整圖片大小
+                                        //                                                }
+                                        //                                                VStack {
+                                        //                                                    Text("尚無計劃")
+                                        //                                                        .font(.body)
+                                        //                                                        .foregroundColor(.gray)
+                                        //                                                }
+                                        //                                                Spacer() // 自動將內容推到中心位置
+                                        //                                            }
+                                        //                                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 確保內容在頂部對齊
+                                        // } else {
+                                        LazyHStack(spacing: 10)
                                         {
                                             ForEach(dayPlans, id: \.P_ID) { plan in
                                                 HStack 
@@ -254,16 +317,18 @@ struct CookView: View
                                                     NavigationLink(destination: MenuView(U_ID: plan.U_ID, Dis_ID: plan.Dis_ID))
                                                     {
                                                         C_RecipeBlock(imageName: plan.D_image, title: plan.Dis_name, U_ID: plan.U_ID, Dis_ID: plan.Dis_ID, isFavorited: plan.favorites?.contains(where: { $0.U_ID == U_ID }) ?? false)
+                                                            .padding(.top, 50)
                                                     }
                                                     
                                                     if isEditing 
                                                     {
                                                         Button(action: {
-                                                            if let index = plans.firstIndex(where: { $0.P_ID == plan.P_ID }) 
+                                                            if let index = viewModel.plans.firstIndex(where: { $0.P_ID == plan.P_ID }) 
                                                             {
-                                                                plans.remove(at: index)
+                                                                viewModel.plans.remove(at: index)
                                                             }
-                                                        }) {
+                                                        }) 
+                                                        {
                                                             Image(systemName: "minus.circle")
                                                                 .foregroundColor(.red)
                                                         }
@@ -271,41 +336,29 @@ struct CookView: View
                                                 }
                                             }
                                         }
+                                        // }//
                                     }
+                                    .id(dateString)
+                                    //.frame(minHeight: 500) // 設定最小高度，確保日期部分在沒有計畫時也在正確位置
                                 }
-                                .id(dateString)
-                                .frame(minHeight: 500) // 設定最小高度，確保日期部分在沒有計畫時也在正確位置
                             }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
+                        .scrollIndicators(.hidden)
+                        .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
                     }
-                    .onAppear 
-                    {
-                        fetchCookPlansFromServer 
-                        { fetchedPlans, error in
-                            if let fetchedPlans = fetchedPlans
-                            {
-                                DispatchQueue.main.async 
-                                {
-                                    self.plans = fetchedPlans
-                                }
-                            } else if let error = error
-                            {
-                                print("Failed to fetch plans: \(error)")
-                            }
-                        }
-                    }
-                    .scrollIndicators(.hidden)
-                    .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
+                }
+                .onAppear 
+                {
+                    viewModel.fetchCookPlans()
                 }
             }
         }
     }
-    
-    func computeDays() -> [Day] 
+    func computeDays() -> [Day]
     {
         var days: [Day] = []
-        if let targetDate = Calendar.current.date(byAdding: .day, value: 0, to: Date()) 
+        if let targetDate = Calendar.current.date(byAdding: .day, value: 0, to: Date())
         {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd"
@@ -317,14 +370,14 @@ struct CookView: View
         return days
     }
     
-    struct Day: Hashable 
+    struct Day: Hashable
     {
         let dateString: String
         let dayIndex: Int
     }
 }
 
-struct CookView_Previews: PreviewProvider 
+struct CookView_Previews: PreviewProvider
 {
     static var previews: some View
     {

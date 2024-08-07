@@ -187,6 +187,7 @@ struct BMIView: View {
                                         .foregroundColor(Color.black)
                                 }
                             }
+                            .chartForegroundStyleScale(["BMI值": .orange])
                             .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : (displayMode == 1 ? CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)) : CGFloat(max(300, bmiRecordViewModel.averagesEveryThirtyRecordsSorted().count * 100))), height: 200)
                             .padding()
                             .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // Add border
