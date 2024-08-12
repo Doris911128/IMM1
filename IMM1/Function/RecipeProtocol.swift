@@ -11,7 +11,7 @@
 import SwiftUI
 import Foundation
 
-protocol RecipeProtocol: View 
+protocol RecipeProtocol: View
 {
     var U_ID: String { get }
     var Dis_ID: Int { get }
@@ -30,16 +30,16 @@ protocol RecipeProtocol: View
     func CookbookView(safeArea: EdgeInsets) -> AnyView
 }
 
-extension RecipeProtocol 
+extension RecipeProtocol
 {
     // MARK: 過濾對應菜品的食材數量
-    func filteredAmounts(for dish: Dishes) -> [Amount] 
+    func filteredAmounts(for dish: Dishes) -> [Amount]
     {
         return amountData.filter { $0.Dis_ID == dish.Dis_ID }
     }
     
     // MARK: 讀取php從後端加載菜譜數據
-    func loadMenuData() 
+    func loadMenuData()
     {
         assert(Dis_ID > 0, "Dis_ID 必須大於 0")
         
@@ -47,7 +47,7 @@ extension RecipeProtocol
         print("正在從此URL請求數據: \(urlString)")
         
         guard let encodedURLString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: encodedURLString) 
+              let url = URL(string: encodedURLString)
         else
         {
             print("生成的 URL 無效")
@@ -58,7 +58,7 @@ extension RecipeProtocol
         request.httpMethod = "GET"
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         
-        URLSession.shared.dataTask(with: request) 
+        URLSession.shared.dataTask(with: request)
         { data, response, error in
             guard let data = data, error == nil
             else
@@ -67,17 +67,17 @@ extension RecipeProtocol
                 return
             }
             
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) 
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode)
             {
                 print("HTTP 錯誤: \(httpResponse.statusCode)")
                 return
             }
             
-            do 
+            do
             {
                 let decoder = JSONDecoder()
                 let dishesData = try decoder.decode([Dishes].self, from: data)
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     var mutableSelf = self
                     mutableSelf.dishesData = dishesData
@@ -85,7 +85,7 @@ extension RecipeProtocol
                     mutableSelf.foodData = mutableSelf.selectedDish?.foods ?? []
                     mutableSelf.amountData = mutableSelf.selectedDish?.amounts ?? []
                     
-                    if let cookingUrl = mutableSelf.selectedDish?.D_Cook 
+                    if let cookingUrl = mutableSelf.selectedDish?.D_Cook
                     {
                         mutableSelf.loadCookingMethod(from: cookingUrl)
                     }
@@ -95,12 +95,12 @@ extension RecipeProtocol
                         print("接收到的 JSON 數據: \(jsonStr)")
                     }
                     
-                    checkIfFavorited(U_ID: U_ID, Dis_ID: "\(Dis_ID)") 
+                    checkIfFavorited(U_ID: U_ID, Dis_ID: "\(Dis_ID)")
                     { result in
-                        switch result 
+                        switch result
                         {
                         case .success(let favorited):
-                            DispatchQueue.main.async 
+                            DispatchQueue.main.async
                             {
                                 mutableSelf.isFavorited = favorited
                             }
@@ -109,10 +109,10 @@ extension RecipeProtocol
                         }
                     }
                 }
-            } catch 
+            } catch
             {
                 print("JSON 解析錯誤: \(error)")
-                if let jsonStr = String(data: data, encoding: .utf8) 
+                if let jsonStr = String(data: data, encoding: .utf8)
                 {
                     print("接收到的數據字串: \(jsonStr)")
                 }
@@ -123,7 +123,7 @@ extension RecipeProtocol
     // MARK: 從URL加載烹飪方法
     func loadCookingMethod(from urlString: String)
     {
-        guard let url = URL(string: urlString) 
+        guard let url = URL(string: urlString)
         else
         {
             print("無效的烹飪方法 URL Invalid URL for cooking method")
@@ -151,16 +151,16 @@ extension RecipeProtocol
         let height: CGFloat = size.height * 0.5
         
         return AnyView(
-            GeometryReader 
+            GeometryReader
             { reader in
                 let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
                 let size: CGSize = reader.size
                 let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
                 
-                if let dish = dishesData.first 
+                if let dish = dishesData.first
                 {
                     AsyncImage(url: URL(string: dish.D_image)) { phase in
-                        switch phase 
+                        switch phase
                         {
                         case .success(let image):
                             image.resizable()
@@ -168,7 +168,7 @@ extension RecipeProtocol
                                 .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
                                 .clipped()
                                 .overlay(
-                                    ZStack(alignment: .bottom) 
+                                    ZStack(alignment: .bottom)
                                     {
                                         LinearGradient(colors: [
                                             Color("menusheetbackgroundcolor").opacity(0 - progress),
@@ -179,7 +179,7 @@ extension RecipeProtocol
                                             Color("menusheetbackgroundcolor")
                                         ], startPoint: .top, endPoint: .bottom)
                                         
-                                        VStack(spacing: 0) 
+                                        VStack(spacing: 0)
                                         {
                                             Text(dish.Dis_Name)
                                                 .bold()
@@ -202,11 +202,11 @@ extension RecipeProtocol
                         }
                     }
                     .offset(y: -minY)
-                    .onChange(of: progress) 
+                    .onChange(of: progress)
                     {
                         print("CoverView的progress值: \(progress)")
                     }
-                } else 
+                } else
                 {
                     Color.gray.frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
                 }
@@ -216,7 +216,7 @@ extension RecipeProtocol
     }
     
     // MARK: 標題畫面
-    func HeaderView(size: CGSize) -> AnyView 
+    func HeaderView(size: CGSize) -> AnyView
     {
         let Dis_Name = dishesData.first(where: { $0.Dis_ID == Dis_ID })?.Dis_Name ?? "Unknown Dish"
         
@@ -227,12 +227,12 @@ extension RecipeProtocol
                 let height: CGFloat = size.height * 0.5
                 let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
                 
-                HStack(spacing: 20) 
+                HStack(spacing: 20)
                 {
                     if(progress > 6)
                     {
                         Spacer(minLength: 0)
-                    } else 
+                    } else
                     {
                         Spacer(minLength: 0)
                         
@@ -251,7 +251,7 @@ extension RecipeProtocol
                 .background(Color("menusheetbackgroundcolor").opacity(progress > 6 ? 0 : 1))
                 .animation(.smooth.speed(2), value: progress<6)
                 .offset(y: -minY)
-                .onChange(of: progress) 
+                .onChange(of: progress)
                 {
                     print("HeaderView的progress值: \(progress)")
                 }
@@ -270,18 +270,18 @@ extension RecipeProtocol
                     .font(.title2)
                     .offset(x: -130)
                 
-                if let selectedDish = selectedDish 
+                if let selectedDish = selectedDish
                 {
                     let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
                     
-                    ForEach(filteredAmounts, id: \.F_ID) 
+                    ForEach(filteredAmounts, id: \.F_ID)
                     { amount in
                         if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
                         {
                             Text("\(food.F_Name) \(amount.A_Amount) \(food.F_Unit)")
                         }
                     }
-                } else 
+                } else
                 {
                     Text("載入中...")
                 }
@@ -290,26 +290,42 @@ extension RecipeProtocol
                     .foregroundStyle(.orange)
                     .font(.title2)
                     .offset(x: -130)
-                ScrollView 
+                ScrollView
                 {
                     if let method = cookingMethod
                     {
                         Text(method)
                             .padding(.leading, 20)
                             .padding(.trailing, 20)
-                    } else 
+                    } else
                     {
                         Text("載入中...")
                     }
                 }
                 
-                Text("影片教學")
+                Text("參考影片")
                     .foregroundStyle(.orange)
                     .font(.title2)
                     .offset(x: -130)
-                Text(dishesData.first?.D_Video ?? "無影片資訊")
+                // 播放组件
+                if let videoURLString = dishesData.first?.D_Video, let videoURL = URL(string: videoURLString)
+                {
+                    WebView(url: videoURL)
+                               .frame(width: 350, height: 200)  // 设置 WebView 的大小
+                               .cornerRadius(15)  // 设置圆角
+                               .overlay(
+                                   RoundedRectangle(cornerRadius: 15)
+                                       .stroke(Color("BottonColor"), lineWidth: 2)  // 添加边框
+                                        )
+                    
+                } else 
+                {
+                    Text("無影片資訊")
+                        .foregroundColor(.gray)
+                        .padding()
+                }
             }
-                .onAppear 
+                .onAppear
             {
                 if let cookingUrl = selectedDish?.D_Cook
                 {
