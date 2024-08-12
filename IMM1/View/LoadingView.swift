@@ -11,8 +11,8 @@ struct LoadingView: View
 {
     private var gifURL: URL 
     {
-            URL(string: "http://163.17.9.107/food/gif/redpanda_walk.gif")!
-        }
+        URL(string: "http://163.17.9.107/food/gif/redpanda_walk.gif")!
+    }
     var body: some View
     {
         

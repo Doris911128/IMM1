@@ -18,7 +18,7 @@ struct SignupView: View {
         UIPageControl.appearance().pageIndicatorTintColor = UIColor.gray
         _information = State(initialValue: ("", "", "", "", "", SignupView.formatDate(Date()), "", "", 0.0, 0.0, 0.0, 0.0))
     }
-
+    
     private func sendRequest() {
         guard let url = URL(string: "http://163.17.9.107/food/php/Signin.php") else {
             print("錯誤: 無效的URL")
@@ -27,7 +27,7 @@ struct SignupView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         let gender: Int
         switch information.4 {
         case "男性":
@@ -62,7 +62,7 @@ struct SignupView: View {
             print("錯誤: 無法從參數創建JSON")
             return
         }
-
+        
         URLSession.shared.dataTask(with: request) { (data, response, error) in
             if let error = error {
                 print("网络请求错误: \(error.localizedDescription)")
@@ -81,7 +81,7 @@ struct SignupView: View {
             }
         }.resume()
     }
-
+    
     private static func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
@@ -102,7 +102,7 @@ struct SignupView: View {
         InformationLabel(system: false, image: "bitter", label: "苦"),
         InformationLabel(system: false, image: "spicy", label: "辣")
     ]
-
+    
     private func setInformation(index: Int) -> String {
         switch(index) {
         case 0: return self.information.0

@@ -55,25 +55,25 @@ extension View
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         let bodyData = "Dis_ID=\(Dis_ID)&isFavorited=\(isFavorited ? 1 : 0)&U_ID=\(U_ID)"
         request.httpBody = bodyData.data(using: .utf8)
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
             }
-
+            
             guard let httpResponse = response as? HTTPURLResponse else {
                 let statusError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
                 completion(.failure(statusError))
                 return
             }
-
+            
             if httpResponse.statusCode == 200 {
                 if let data = data, let responseString = String(data: data, encoding: .utf8) {
                     completion(.success(responseString))
@@ -90,29 +90,29 @@ extension View
             }
         }.resume()
     }
-
+    
     // MARK: 檢查菜品是否已被收藏的方法
     func checkIfFavorited(U_ID: String, Dis_ID: String, completion: @escaping (Result<Bool, Error>) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php?U_ID=\(U_ID)&Dis_ID=\(Dis_ID)") else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
             }
-
+            
             guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
                 let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
                 completion(.failure(dataError))
                 return
             }
-
+            
             if responseString.contains("\"favorited\":true") {
                 completion(.success(true))
             } else {

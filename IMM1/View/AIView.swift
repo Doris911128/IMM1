@@ -137,7 +137,7 @@ struct AIView: View {
     @State private var selectedOption: IdentifiableOption? = nil
     @State private var selectedItems: Set<String> = []
     @State private var showHistory: Bool = false
-
+    
     var body: some View {
         VStack {
             VStack(spacing: 0) {
@@ -209,7 +209,7 @@ struct AIView: View {
                 TextField("請輸入食材，將幫您生成食譜", text: $messageText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .frame(minHeight: CGFloat(30))
-
+                
                 Button(action: sendMessage) {
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(.blue)
@@ -238,27 +238,27 @@ struct AIView: View {
             }
         }
     }
-
+    
     func sendMessage() {
         guard !messageText.isEmpty else { return }
         let dataModel = DataModel(text: messageText)
         messages.append("問：\(messageText)") // Add user message
         isLoading = true // Show loading animation after user sends message
         messageText = ""
-
+        
         sendToDatabase(dataModel: dataModel)
     }
-
-
+    
+    
     func sendToDatabase(dataModel: DataModel) {
         guard let url = URL(string: "http://163.17.9.107/food/php/AI_Recipe.php") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-
+        
         let body = "text=\(dataModel.text)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
         request.httpBody = body?.data(using: .utf8)
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
@@ -267,7 +267,7 @@ struct AIView: View {
                 }
                 return
             }
-
+            
             guard let data = data else {
                 print("No data received")
                 DispatchQueue.main.async {
@@ -275,18 +275,18 @@ struct AIView: View {
                 }
                 return
             }
-
+            
             let responseString = String(data: data, encoding: .utf8)
             print("Response: \(responseString ?? "No response")")
-
+            
             // Fetch data after sending the message
             self.fetchData()
         }.resume()
     }
-
+    
     func fetchData() {
         guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe.php") else { return }
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
@@ -302,7 +302,7 @@ struct AIView: View {
                 }
                 return
             }
-
+            
             guard let data = data else {
                 print("No data received")
                 DispatchQueue.main.async {
@@ -317,7 +317,7 @@ struct AIView: View {
                 }
                 return
             }
-
+            
             // Decode the JSON response
             do {
                 let decoder = JSONDecoder()
@@ -325,7 +325,7 @@ struct AIView: View {
                 
                 // Print the decoded response to the terminal
                 print("Fetched data: \(recipeResponse)")
-
+                
                 DispatchQueue.main.async {
                     if recipeResponse.output == "Loading..." {
                         if self.searchingMessageIndex == nil {
@@ -360,7 +360,7 @@ struct AIView: View {
 struct OptionButton: View {
     var title: String
     var action: () -> Void
-
+    
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -497,11 +497,12 @@ struct OptionSheet: View {
             }
             .navigationTitle(option)
             .navigationBarItems(trailing: Button("完成") {
-                           onDismiss()
-                       })
+                onDismiss()
+                self.selectedItems.removeAll()
+            })
         }
     }
-
+    
     func toggleSelection(for item: String) {
         if selectedItems.contains(item) {
             selectedItems.remove(item)
@@ -509,63 +510,63 @@ struct OptionSheet: View {
             selectedItems.insert(item)
         }
     }
-
+    
     var proteinSources = [
         "雞胸肉", "鮭魚","鱈魚", "豆腐", "希臘酸奶（無糖）"
     ]
-
+    
     var carbohydrateSources = [
         "地瓜", "蕎麥", "藜麥"
     ]
-
+    
     var fatSources = [
         "鮭魚", "酪梨","亞麻籽"
     ]
-
+    
     var vegetablesAndFruits = [
         "菠菜","羽衣甘藍", "番茄", "胡蘿蔔", "蘋果", "梨"
     ]
-
+    
     var fiberRichFoods = [
         "燕麥", "全麥麵包", "糙米", "黑豆","鷹嘴豆", "杏仁","核桃"
     ]
-
+    
     var fatSourcesForBloodFat = [
         "鮭魚", "酪梨", "橄欖油", "亞麻籽"
     ]
-
+    
     var vegetablesAndFruitsForBloodFat = [
         "菠菜","羽衣甘藍", "番茄", "胡蘿蔔", "蘋果", "梨"
     ]
-
+    
     var carbohydrateSourcesForBloodFat = [
         "地瓜", "蕎麥", "藜麥"
     ]
-
+    
     var potassiumRichFoods = [
         "香蕉", "酪梨", "地瓜", "菠菜", "蘑菇", "番茄"
     ]
-
+    
     var highFiberFoodsForBloodPressure = [
         "燕麥", "全麥麵包","蘋果", "梨"
     ]
-
+    
     var fatSourcesForBloodPressure = [
         "鮭魚","杏仁","核桃"
     ]
-
+    
     var lowGIFoods = [
         "燕麥","糙米","藜麥","全麥麵包","黑豆","藍豆","綠豆","豌豆"
     ]
-
+    
     var highFiberFoodsForBloodSugar = [
         "菠菜","羽衣甘藍","西蘭花","胡蘿蔔","蘆筍","蘋果","梨","藍莓","草莓"
     ]
-
+    
     var fatSourcesForBloodSugar = [
         "杏仁","核桃","開心果","酪梨"
     ]
-
+    
     var proteinSourcesForBloodSugar = [
         "雞胸肉","鮭魚","鱈魚","豆腐","希臘酸奶（無糖）"
     ]
@@ -576,7 +577,7 @@ struct OptionRow: View {
     var item: String
     var isSelected: Bool
     var action: () -> Void
-
+    
     var body: some View {
         HStack {
             Text(item)
@@ -596,7 +597,7 @@ struct OptionRow: View {
 
 struct ServerMessageView: View {
     var message: String
-
+    
     var body: some View {
         HStack {
             Image(systemName: "person.fill")
@@ -605,7 +606,7 @@ struct ServerMessageView: View {
                 .frame(width: 40, height: 40)
                 .background(Color.blue.opacity(0.2))
                 .clipShape(Circle())
-
+            
             Text(message)
                 .padding()
                 .background(Color.blue.opacity(0.2))
@@ -617,7 +618,7 @@ struct ServerMessageView: View {
 
 struct UserMessageView: View {
     var message: String
-
+    
     var body: some View {
         Text(message)
             .padding()
@@ -629,7 +630,7 @@ struct UserMessageView: View {
 
 struct LoadingAnimationView: View {
     @State private var rotation: Double = 0
-
+    
     var body: some View {
         VStack {
             Image(systemName: "arrow.triangle.2.circlepath")

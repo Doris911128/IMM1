@@ -12,7 +12,7 @@ import ImageIO
 struct GIFImageView: UIViewRepresentable {
     let url: URL
     let frameDuration: TimeInterval = 3.0 // 每帧的持续时间
-
+    
     func makeUIView(context: Context) -> UIImageView {
         let imageView = UIImageView()
         loadGIF(from: url) { image in
@@ -22,9 +22,9 @@ struct GIFImageView: UIViewRepresentable {
         }
         return imageView
     }
-
+    
     func updateUIView(_ uiView: UIImageView, context: Context) {}
-
+    
     private func loadGIF(from url: URL, completion: @escaping (UIImage?) -> Void) {
         URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data, error == nil else {

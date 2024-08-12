@@ -85,7 +85,7 @@ struct HypertensionView: View {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HypertensionRecord] = []
         let batchSize = 7
-
+        
         for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
             let batchEnd = min(batchStart + batchSize, sortedRecords.count)
             let batch = Array(sortedRecords[batchStart..<batchEnd])
@@ -97,15 +97,15 @@ struct HypertensionView: View {
                 results.append(avgRecord)
             }
         }
-
+        
         return results
     }
-
+    
     private func averagesEveryThirtyRecords() -> [HypertensionRecord] {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HypertensionRecord] = []
         let batchSize = 30
-
+        
         for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
             let batchEnd = min(batchStart + batchSize, sortedRecords.count)
             let batch = Array(sortedRecords[batchStart..<batchEnd])
@@ -117,10 +117,10 @@ struct HypertensionView: View {
                 results.append(avgRecord)
             }
         }
-
+        
         return results
     }
-
+    
     func connect(name: String, action: String) {
         let url = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request = URLRequest(url: url)
@@ -168,7 +168,7 @@ struct HypertensionView: View {
             }
         }.resume()
     }
-
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -298,7 +298,7 @@ struct HypertensionView: View {
 
 struct HypertensionRecordsListView: View {
     @Binding var records: [HypertensionRecord]
-
+    
     var body: some View {
         NavigationStack {
             List {
@@ -337,11 +337,11 @@ struct HypertensionRecordsListView: View {
             }
         }
     }
-
+    
     private func deleteRecord(at offsets: IndexSet) {
         records.remove(atOffsets: offsets)
     }
-
+    
     private func hypertensionImage(for record: HypertensionRecord) -> Image {
         switch record.category {
         case "過低":
@@ -356,7 +356,7 @@ struct HypertensionRecordsListView: View {
             return Image(systemName: "waveform.path.ecg.rectangle")
         }
     }
-
+    
     private func categoryColor(for record: HypertensionRecord) -> Color {
         switch record.category {
         case "過低":
@@ -375,7 +375,7 @@ struct HypertensionRecordsListView: View {
 
 struct HypertensionRecordDetailView: View {
     var record: HypertensionRecord
-
+    
     var body: some View {
         VStack {
             hypertensionImage(for: record)
@@ -391,11 +391,11 @@ struct HypertensionRecordDetailView: View {
                             gradient: Gradient(colors: [categoryColor(for: record), .white]),
                             startPoint: .top,
                             endPoint: .bottom),
-                            lineWidth: 4)
+                                lineWidth: 4)
                 )
                 .padding()
-                //.offset(y: -50) // 向上移動圖片
-        
+            //.offset(y: -50) // 向上移動圖片
+            
             // Color Strip
             colorLegend
                 .frame(height: 20)
@@ -410,7 +410,7 @@ struct HypertensionRecordDetailView: View {
         }
         .navigationTitle("血壓 詳細資訊")
     }
-
+    
     private func hypertensionImage(for record: HypertensionRecord) -> Image {
         switch record.category {
         case "過低":
@@ -425,7 +425,7 @@ struct HypertensionRecordDetailView: View {
             return Image(systemName: "waveform.path.ecg.rectangle")
         }
     }
-
+    
     private func categoryColor(for record: HypertensionRecord) -> Color {
         switch record.category {
         case "過低":
@@ -449,11 +449,11 @@ struct HypertensionRecordDetailView: View {
         }
         .padding()
     }
-
+    
     private struct ColorBox: View {
         var color: Color
         var label: String
-
+        
         var body: some View {
             VStack {
                 Rectangle()

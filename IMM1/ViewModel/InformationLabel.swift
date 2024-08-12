@@ -12,7 +12,7 @@ struct InformationLabel: View
     var system: Bool=true
     let image: String
     let label: String
-
+    
     var body: some View
     {
         HStack(spacing: 20)
@@ -31,11 +31,11 @@ struct InformationLabel: View
                     .scaledToFit()
                     .frame(width: 30, height: 30)
             }
-
+            
             Text(self.label)
                 .bold()
                 .font(.body)
-
+            
             Spacer()
         }
     }

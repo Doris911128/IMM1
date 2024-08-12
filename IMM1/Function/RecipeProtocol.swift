@@ -211,7 +211,7 @@ extension RecipeProtocol
                     Color.gray.frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
                 }
             }
-            .frame(height: height + safeArea.top)
+                .frame(height: height + safeArea.top)
         )
     }
     
@@ -309,7 +309,7 @@ extension RecipeProtocol
                     .offset(x: -130)
                 Text(dishesData.first?.D_Video ?? "無影片資訊")
             }
-            .onAppear 
+                .onAppear 
             {
                 if let cookingUrl = selectedDish?.D_Cook
                 {

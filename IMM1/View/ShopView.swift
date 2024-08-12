@@ -480,7 +480,7 @@ struct ShopView: View
                     let unit = stock.F_Unit ?? "未指定单位"
                     let SK_SUM = stock.SK_SUM ?? 0
                     let image = stock.Food_imge ?? ""  // 确保Food_imge被正确解析
-
+                    
                     return StockIngredient(U_ID: stock.U_ID ?? UUID().uuidString, F_ID: stock.F_ID, F_Name: name, SK_SUM: SK_SUM, F_Unit: unit, Food_imge: image)
                 }
             case .failure(let error):

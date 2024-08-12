@@ -14,7 +14,7 @@ struct RecipeBlock: View
     let U_ID: String
     let Dis_ID: Int
     @State private var isFavorited: Bool = false // 初始化为 false
-
+    
     init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0) 
     {
         self.D_image = imageName
@@ -22,7 +22,7 @@ struct RecipeBlock: View
         self.U_ID = U_ID
         self.Dis_ID = Dis_ID
     }
-
+    
     var body: some View 
     {
         VStack 
@@ -44,7 +44,7 @@ struct RecipeBlock: View
                 }
                 .padding(.top, 50)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
-
+                
                 Button(action: {
                     withAnimation(.easeInOut.speed(3)) 
                     {

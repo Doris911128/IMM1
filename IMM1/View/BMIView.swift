@@ -388,13 +388,13 @@ struct BMIRecordDetailView: View {
                                 lineWidth: 4) // 細邊框
                 )
                 .padding()
-                //.offset(y: -50) // 向上移動圖片
+            //.offset(y: -50) // 向上移動圖片
             
             // Color Strip
             colorLegend
                 .frame(height: 20)
                 .padding(.bottom, 60)
-                
+            
             
             Text("身高：\(String(format: "%.1f", record.H)) 公分")
                 .font(.title) // 放大字體
@@ -477,11 +477,11 @@ struct BMIRecordDetailView: View {
         }
         .padding()
     }
-
+    
     private struct ColorBox: View {
         var color: Color
         var label: String
-
+        
         var body: some View {
             VStack {
                 Rectangle()
@@ -494,7 +494,7 @@ struct BMIRecordDetailView: View {
             .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
         }
     }
-
+    
 }
 
 

@@ -9,10 +9,10 @@ import Foundation
 
 class PlanManager {
     static let shared = PlanManager()
-
+    
     private let userDefaults = UserDefaults.standard
     private let plansKey = "plans"
-
+    
     func savePlans(_ plans: [String: [String]]) {
         do {
             let encodedData = try JSONEncoder().encode(plans)
@@ -21,12 +21,12 @@ class PlanManager {
             print("Error encoding plans: (error)")
         }
     }
-
+    
     func loadPlans() -> [String: [String]] {
         guard let encodedData = userDefaults.data(forKey: plansKey) else {
             return [:]
         }
-
+        
         do {
             let plans = try JSONDecoder().decode([String: [String]].self, from: encodedData)
             return plans

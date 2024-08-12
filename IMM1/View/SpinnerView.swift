@@ -128,7 +128,7 @@ struct OrangeWhiteSpinner: View
     @Binding var selectedFood: String
     @Binding var rotationAngle: Double
     
-   
+    
     let foodNames = ["披薩", "漢堡", "壽司", "義大利麵", "沙拉", "牛排", "吐司", "冰淇淋", "麥當當", "麵線", "雞塊", "蛋糕"] //讀取食物內容
     
     // MARK: 食物位置角度計算
@@ -145,7 +145,7 @@ struct OrangeWhiteSpinner: View
     
     var body: some View
     {
-       
+        
         let numberOfItems = 12 //轉盤格數
         let angleIncrement = 360  / Double(numberOfItems)
         
@@ -234,13 +234,13 @@ struct OrangeWhiteSpinner: View
 struct FanShape: Shape
 {
     var startAngle: Angle //起始角度
-       var endAngle: Angle //結束角度
+    var endAngle: Angle //結束角度
     
     // MARK: 定義形狀在指定矩形區域的路徑
     func path(in rect: CGRect) -> Path
     {
         var path = Path() //將路徑的起點設置為矩形中心
-       
+        
         path.move(to: CGPoint(x: rect.midX, y: rect.midY))
         
         path.addArc( //添加一個以矩形中心為中心、半徑為矩形寬度一半的扇形
@@ -250,7 +250,7 @@ struct FanShape: Shape
             endAngle: endAngle,
             clockwise: false
         )
-       
+        
         path.closeSubpath() //封閉路徑，形成一個完整的扇形
         return path
     }

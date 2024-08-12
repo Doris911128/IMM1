@@ -132,7 +132,7 @@ struct HyperlipidemiaView: View {
             }
         }.resume()
     }
-
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -264,7 +264,7 @@ struct HyperlipidemiaView: View {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HyperlipidemiaRecord] = []
         let batchSize = 7
-
+        
         for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
             let batchEnd = min(batchStart + batchSize, sortedRecords.count)
             let batch = Array(sortedRecords[batchStart..<batchEnd])
@@ -276,7 +276,7 @@ struct HyperlipidemiaView: View {
                 results.append(avgRecord)
             }
         }
-
+        
         return results
     }
     
@@ -284,7 +284,7 @@ struct HyperlipidemiaView: View {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HyperlipidemiaRecord] = []
         let batchSize = 30
-
+        
         for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
             let batchEnd = min(batchStart + batchSize, sortedRecords.count)
             let batch = Array(sortedRecords[batchStart..<batchEnd])
@@ -296,7 +296,7 @@ struct HyperlipidemiaView: View {
                 results.append(avgRecord)
             }
         }
-
+        
         return results
     }
 }
@@ -304,7 +304,7 @@ struct HyperlipidemiaView: View {
 // MARK: 列表記錄
 struct HyperlipidemiaRecordsListView: View {
     @Binding var records: [HyperlipidemiaRecord]
-
+    
     var body: some View {
         NavigationStack {
             List {
@@ -343,11 +343,11 @@ struct HyperlipidemiaRecordsListView: View {
             }
         }
     }
-
+    
     private func deleteRecord(at offsets: IndexSet) {
         records.remove(atOffsets: offsets)
     }
-
+    
     private func hyperlipidemiaImage(for record: HyperlipidemiaRecord) -> Image {
         switch record.category {
         case "正常":
@@ -360,7 +360,7 @@ struct HyperlipidemiaRecordsListView: View {
             return Image(systemName: "drop.circle")
         }
     }
-
+    
     private func categoryColor(for record: HyperlipidemiaRecord) -> Color {
         switch record.category {
         case "正常":
@@ -378,7 +378,7 @@ struct HyperlipidemiaRecordsListView: View {
 // MARK: 編輯血脂紀錄視圖
 struct HyperlipidemiaRecordDetailView: View {
     var record: HyperlipidemiaRecord
-
+    
     var body: some View {
         VStack {
             hyperlipidemiaImage(for: record)
@@ -394,11 +394,11 @@ struct HyperlipidemiaRecordDetailView: View {
                             gradient: Gradient(colors: [categoryColor(for: record), .white]),
                             startPoint: .top,
                             endPoint: .bottom),
-                            lineWidth: 4)
+                                lineWidth: 4)
                 )
                 .padding()
-                //.offset(y: -50) // 向上移動圖片
-        
+            //.offset(y: -50) // 向上移動圖片
+            
             // Color Strip
             colorLegend
                 .frame(height: 20)
@@ -413,7 +413,7 @@ struct HyperlipidemiaRecordDetailView: View {
         }
         .navigationTitle("血脂 詳細資訊")
     }
-
+    
     private func hyperlipidemiaImage(for record: HyperlipidemiaRecord) -> Image {
         switch record.category {
         case "正常":
@@ -426,7 +426,7 @@ struct HyperlipidemiaRecordDetailView: View {
             return Image(systemName: "drop.circle")
         }
     }
-
+    
     private func categoryColor(for record: HyperlipidemiaRecord) -> Color {
         switch record.category {
         case "正常":
@@ -453,7 +453,7 @@ private var colorLegend: some View {
 private struct ColorBox: View {
     var color: Color
     var label: String
-
+    
     var body: some View {
         VStack {
             Rectangle()

@@ -79,25 +79,25 @@ struct MyView: View
             print("Failed to construct URL")
             return
         }
-
+        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let _ = data, error == nil else {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
-
+            
             // 清除本地会话中的用户信息
-//            DispatchQueue.main.async {
-//                self.signin = false
-//                // 清除存储的用户 ID
-//                UserDefaults.standard.removeObject(forKey: "userID")
-//            }
+            //            DispatchQueue.main.async {
+            //                self.signin = false
+            //                // 清除存储的用户 ID
+            //                UserDefaults.standard.removeObject(forKey: "userID")
+            //            }
         }.resume()
     }
-
+    
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]
     
     // MARK: 設定顯示資訊
@@ -124,7 +124,7 @@ struct MyView: View
             return ""
         }
     }
-
+    
     var body: some View
     {
         NavigationStack
@@ -266,7 +266,7 @@ struct MyView: View
                                 {
                                     self.label[index]
                                     Text(self.setInformation(index:index))
-                                    .foregroundColor(.gray)
+                                        .foregroundColor(.gray)
                                 }
                                 .frame(height: 30)
                             }
@@ -332,8 +332,8 @@ struct MyView: View
                                     .scaleEffect(0.75)
                                     .offset(x: 30)
                                     .onChange(of:self.colorScheme){
-                                            fetchUserInfo()
-                                        }
+                                        fetchUserInfo()
+                                    }
                             }
                             // MARK: 登出
                             Button(action:{
@@ -375,8 +375,8 @@ struct MyView: View
         }
         .preferredColorScheme(self.colorScheme ? .light:.dark) //控制深淺模式切換
         .onAppear {
-                fetchUserInfo()
-            }
+            fetchUserInfo()
+        }
     }
 }
 

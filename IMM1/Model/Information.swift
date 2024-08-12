@@ -16,10 +16,10 @@ struct Information
     var H: String
     var W: String
     var BMI: Double
-
+    
     var acid: Double // 酸
     var sweet: Double // 甜
     var bitter: Double // 苦
     var hot: Double // 辣
-
+    
 }

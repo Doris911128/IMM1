@@ -108,29 +108,29 @@ extension BMIRecordViewModel {
         return weeklyAverages.sorted(by: { $0.date < $1.date })
     }
     func averagesEveryThirtyRecordsSorted() -> [BMIRecord] {
-            let sortedRecords = bmiRecords.sorted { $0.date < $1.date }
-            var results = [BMIRecord]()
-            let batchSize = 30
+        let sortedRecords = bmiRecords.sorted { $0.date < $1.date }
+        var results = [BMIRecord]()
+        let batchSize = 30
+        
+        for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
+            let batchEnd = min(batchStart + batchSize, sortedRecords.count)
+            let batch = Array(sortedRecords[batchStart..<batchEnd])
             
-            for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
-                let batchEnd = min(batchStart + batchSize, sortedRecords.count)
-                let batch = Array(sortedRecords[batchStart..<batchEnd])
+            let totalHeight = batch.reduce(0.0) { $0 + $1.H }
+            let totalWeight = batch.reduce(0.0) { $0 + $1.W }
+            if !batch.isEmpty {
+                let averageHeight = totalHeight / Double(batch.count)
+                let averageWeight = totalWeight / Double(batch.count)
+                _ = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
                 
-                let totalHeight = batch.reduce(0.0) { $0 + $1.H }
-                let totalWeight = batch.reduce(0.0) { $0 + $1.W }
-                if !batch.isEmpty {
-                    let averageHeight = totalHeight / Double(batch.count)
-                    let averageWeight = totalWeight / Double(batch.count)
-                    _ = averageWeight / ((averageHeight / 100) * (averageHeight / 100))
-                    
-                    let recordDate = batch.first!.date
-                    let avgRecord = BMIRecord(height: averageHeight, weight: averageWeight, date: recordDate)
-                    results.append(avgRecord)
-                }
+                let recordDate = batch.first!.date
+                let avgRecord = BMIRecord(height: averageHeight, weight: averageWeight, date: recordDate)
+                results.append(avgRecord)
             }
-            
-            return results
         }
+        
+        return results
+    }
 }
 
 extension Calendar {

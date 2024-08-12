@@ -14,54 +14,54 @@ struct SigninView: View
     @State private var information: (String, String) = ("", "")
     @State private var forget: Bool = false
     @EnvironmentObject private var user: User
-
+    
     private func sendRequest()
-       {
-           let url = URL(string: "http://163.17.9.107/food/php/Login.php")!
-           var request = URLRequest(url: url)
-           request.httpMethod = "POST"
-           let bodyParameters = "U_Acc=\(U_Acc)&U_Pas=\(U_Pas)"
-           request.httpBody = bodyParameters.data(using: .utf8)
-
-           URLSession.shared.dataTask(with: request)
-           { (data, response, error) in
-               if let error = error
-               {
-                   print("Error: \(error)")
-               } else if let data = data
-               {
-                   if let responseString = String(data: data, encoding: .utf8)
-                   {
-                       print("Response: \(responseString)")
-                       let responseData = try? JSONDecoder().decode(ResponseData.self, from: data)
-                       if let responseData = responseData {
-                           if responseData.status == "success" {
-                               DispatchQueue.main.async {
-                                   // 登录成功
-                                   signin = true
-                                   if rememberMe {
-                                       // 如果记住我已选中，则保存登录状态
-                                       UserDefaults.standard.set(signin, forKey: "signin")
-                                       UserDefaults.standard.set(U_Acc, forKey: "savedUsername")
-                                       UserDefaults.standard.set(U_Pas, forKey: "savedPassword")
-                                   } else {
-                                       // 如果记住我未选中，则清除保存的用户名和密码
-                                       UserDefaults.standard.removeObject(forKey: "savedUsername")
-                                       UserDefaults.standard.removeObject(forKey: "savedPassword")
-                                   }
-                               }
-                           } else {
-                               // 登录失败，显示错误消息
-                               result = (true, responseData.message)
-                           }
-                       } else {
-                           print("Unable to decode response data.")
-                       }
-                   }
-               }
-           }.resume()
+    {
+        let url = URL(string: "http://163.17.9.107/food/php/Login.php")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let bodyParameters = "U_Acc=\(U_Acc)&U_Pas=\(U_Pas)"
+        request.httpBody = bodyParameters.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request)
+        { (data, response, error) in
+            if let error = error
+            {
+                print("Error: \(error)")
+            } else if let data = data
+            {
+                if let responseString = String(data: data, encoding: .utf8)
+                {
+                    print("Response: \(responseString)")
+                    let responseData = try? JSONDecoder().decode(ResponseData.self, from: data)
+                    if let responseData = responseData {
+                        if responseData.status == "success" {
+                            DispatchQueue.main.async {
+                                // 登录成功
+                                signin = true
+                                if rememberMe {
+                                    // 如果记住我已选中，则保存登录状态
+                                    UserDefaults.standard.set(signin, forKey: "signin")
+                                    UserDefaults.standard.set(U_Acc, forKey: "savedUsername")
+                                    UserDefaults.standard.set(U_Pas, forKey: "savedPassword")
+                                } else {
+                                    // 如果记住我未选中，则清除保存的用户名和密码
+                                    UserDefaults.standard.removeObject(forKey: "savedUsername")
+                                    UserDefaults.standard.removeObject(forKey: "savedPassword")
+                                }
+                            }
+                        } else {
+                            // 登录失败，显示错误消息
+                            result = (true, responseData.message)
+                        }
+                    } else {
+                        print("Unable to decode response data.")
+                    }
+                }
+            }
+        }.resume()
     }
-
+    
     var body: some View
     {
         NavigationView
@@ -75,17 +75,17 @@ struct SigninView: View
                 {
                     
                     Image("登入Logo")
-                                .resizable()
-                                .frame(width: 150, height: 150)
-                                .clipShape(Circle())
-                                .scaleEffect(scale) // Use the state variable for scaling
-                                .background(Color.clear) // Set the background color to clear
-                                .animation(.easeInOut(duration: 1.0), value: scale) // Apply animation
-                                .onAppear {
-                                    scale = 1.8 // Change the scale value to trigger animation
-                                }
-                                .padding(.bottom, 50)
-                                         
+                        .resizable()
+                        .frame(width: 150, height: 150)
+                        .clipShape(Circle())
+                        .scaleEffect(scale) // Use the state variable for scaling
+                        .background(Color.clear) // Set the background color to clear
+                        .animation(.easeInOut(duration: 1.0), value: scale) // Apply animation
+                        .onAppear {
+                            scale = 1.8 // Change the scale value to trigger animation
+                        }
+                        .padding(.bottom, 50)
+                    
                     VStack(spacing: 30)
                     {
                         TextField("帳號...",text: $U_Acc)
@@ -105,10 +105,10 @@ struct SigninView: View
                     
                     
                     
-                        Text("")
-                            .font(.body)
-                            .foregroundColor(Color(red: 0.574, green: 0.609, blue: 0.386))
-                            .colorMultiply(.gray)
+                    Text("")
+                        .font(.body)
+                        .foregroundColor(Color(red: 0.574, green: 0.609, blue: 0.386))
+                        .colorMultiply(.gray)
                     
                     
                     HStack

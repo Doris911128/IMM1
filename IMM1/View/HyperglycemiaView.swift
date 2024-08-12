@@ -88,7 +88,7 @@ struct HyperglycemiaView: View {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HyperglycemiaRecord] = []
         let batchSize = 7
-
+        
         for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
             let batchEnd = min(batchStart + batchSize, sortedRecords.count)
             let batch = Array(sortedRecords[batchStart..<batchEnd])
@@ -100,7 +100,7 @@ struct HyperglycemiaView: View {
                 results.append(avgRecord)
             }
         }
-
+        
         return results
     }
     
@@ -108,7 +108,7 @@ struct HyperglycemiaView: View {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HyperglycemiaRecord] = []
         let batchSize = 30
-
+        
         for batchStart in stride(from: 0, to: sortedRecords.count, by: batchSize) {
             let batchEnd = min(batchStart + batchSize, sortedRecords.count)
             let batch = Array(sortedRecords[batchStart..<batchEnd])
@@ -120,10 +120,10 @@ struct HyperglycemiaView: View {
                 results.append(avgRecord)
             }
         }
-
+        
         return results
     }
-
+    
     func connect(name: String, action: String) {
         let url = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request = URLRequest(url: url)
@@ -171,7 +171,7 @@ struct HyperglycemiaView: View {
             }
         }.resume()
     }
-
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -301,7 +301,7 @@ struct HyperglycemiaView: View {
 
 struct HyperglycemiaRecordsListView: View {
     @Binding var records: [HyperglycemiaRecord]
-
+    
     var body: some View {
         NavigationStack {
             List {
@@ -340,11 +340,11 @@ struct HyperglycemiaRecordsListView: View {
             }
         }
     }
-
+    
     private func deleteRecord(at offsets: IndexSet) {
         records.remove(atOffsets: offsets)
     }
-
+    
     private func hyperglycemiaImage(for record: HyperglycemiaRecord) -> Image {
         switch record.category {
         case "低血糖":
@@ -359,7 +359,7 @@ struct HyperglycemiaRecordsListView: View {
             return Image(systemName: "medical.thermometer")
         }
     }
-
+    
     private func categoryColor(for record: HyperglycemiaRecord) -> Color {
         switch record.category {
         case "低血糖":
@@ -378,7 +378,7 @@ struct HyperglycemiaRecordsListView: View {
 
 struct HyperglycemiaRecordDetailView: View {
     var record: HyperglycemiaRecord
-
+    
     var body: some View {
         VStack {
             hyperglycemiaImage(for: record)
@@ -394,16 +394,16 @@ struct HyperglycemiaRecordDetailView: View {
                             gradient: Gradient(colors: [categoryColor(for: record), .white]),
                             startPoint: .top,
                             endPoint: .bottom),
-                            lineWidth: 4)
+                                lineWidth: 4)
                 )
                 .padding()
-                //.offset(y: -50) // 向上移動圖片
+            //.offset(y: -50) // 向上移動圖片
             
             // Color Strip
             colorLegend
                 .frame(height: 20)
                 .padding(.bottom, 60)
-                
+            
             
             Text("血糖：\(String(format: "%.2f", record.hyperglycemia))")
                 .font(.title)
@@ -415,7 +415,7 @@ struct HyperglycemiaRecordDetailView: View {
         }
         .navigationTitle("血糖 詳細資訊")
     }
-
+    
     private func hyperglycemiaImage(for record: HyperglycemiaRecord) -> Image {
         switch record.category {
         case "低血糖":
@@ -430,7 +430,7 @@ struct HyperglycemiaRecordDetailView: View {
             return Image(systemName: "medical.thermometer")
         }
     }
-
+    
     private func categoryColor(for record: HyperglycemiaRecord) -> Color {
         switch record.category {
         case "低血糖":
@@ -455,11 +455,11 @@ struct HyperglycemiaRecordDetailView: View {
         }
         .padding()
     }
-
+    
     private struct ColorBox: View {
         var color: Color
         var label: String
-
+        
         var body: some View {
             VStack {
                 Rectangle()
@@ -472,7 +472,7 @@ struct HyperglycemiaRecordDetailView: View {
             .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
         }
     }
-
+    
 }
 
 struct HyperglycemiaView_Previews: PreviewProvider {

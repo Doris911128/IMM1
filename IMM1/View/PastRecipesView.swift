@@ -59,7 +59,7 @@ struct PastRecipesView: View
                         Spacer() // 自动将内容推到中心位置
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
-
+                    
                 }
                 ScrollView(showsIndicators: false)
                 {

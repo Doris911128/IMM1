@@ -188,7 +188,7 @@ struct PlanView: View {
     @State private var showSingleDayView: Bool = false // 新增狀態變數
     @State private var dishes: [String: String] = [:] // 新增變數來儲存 Dis_Name 和 D_image 的映射
     @State private var dishServings: [String: String] = [:] // 新增變數來儲存 Dis_Name 和 Dis_serving 的映射
-
+    
     // DateFormatter for displaying dates in MM/DD format 用於顯示日期的 DateFormatter
     private var displayDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -212,11 +212,11 @@ struct PlanView: View {
         return formatter
     }()
     private var dayOfWeekFormatters: DateFormatter = {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "E"
-            formatter.locale = Locale(identifier: "zh_tw") // 設置為中文
-            return formatter
-        }()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "E"
+        formatter.locale = Locale(identifier: "zh_tw") // 設置為中文
+        return formatter
+    }()
     func convertPlansToDictionary(plans: [Plan]) -> [String: [Plan]] {
         var plansDict = [String: [Plan]]()
         var idToNameMap = [String: String]()
@@ -485,13 +485,13 @@ struct PlanView: View {
     }
     
     private func getDayLabelText(for date: String) -> String {
-            guard let dateObject = dateFormatter.date(from: date) else {
-                return ""
-            }
-
-            let dayOfWeek = dayOfWeekFormatters.string(from: dateObject)
-            return dayOfWeek
+        guard let dateObject = dateFormatter.date(from: date) else {
+            return ""
         }
+        
+        let dayOfWeek = dayOfWeekFormatters.string(from: dateObject)
+        return dayOfWeek
+    }
 }
 
 struct PlanView_Previews: PreviewProvider

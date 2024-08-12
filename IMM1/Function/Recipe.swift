@@ -16,7 +16,7 @@ func overlayRectangleWithText() -> some View
         Rectangle()
             .frame(width: 400, height: 150)
             .foregroundColor(Color("menusheetbackgroundcolor"))
-
+        
         HStack(alignment:.center)
         {
             VStack(alignment: .center)
