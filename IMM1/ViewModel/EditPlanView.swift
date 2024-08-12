@@ -4,12 +4,14 @@ import SwiftUI
 import Foundation
 
 // 定義從服務器獲取的計劃數據結構
-struct PlanData: Codable {
+struct PlanData: Codable
+{
     let P_ID: String
 }
 
 // 定義一個從指定 URL 獲取計劃數據的函數
-func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> Void) {
+func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> Void)
+{
     URLSession.shared.dataTask(with: url) { data, response, error in
         if let error = error {
             completion(nil, error)
@@ -31,7 +33,31 @@ func fetchPlanData(from url: URL, completion: @escaping (PlanData?, Error?) -> V
     }.resume()
 }
 
-struct EditPlanView: View {
+func fetchFoodData(from url: URL, completion: @escaping ([Dishes]?, Error?) -> Void)
+{
+    URLSession.shared.dataTask(with: url) { data, response, error in
+        if let error = error {
+            completion(nil, error)
+            return
+        }
+        
+        guard let data = data else {
+            completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
+            return
+        }
+        
+        do {
+            let decoder = JSONDecoder()
+            let dishesData = try decoder.decode([Dishes].self, from: data)
+            completion(dishesData, nil)
+        } catch {
+            completion(nil, error)
+        }
+    }.resume()
+}
+
+struct EditPlanView: View
+{
     var day: String
     var planIndex: Int
     
@@ -50,6 +76,9 @@ struct EditPlanView: View {
     @State private var currentCategoryIndex: Int? = nil
     @State private var isSaveAlertShowing = false
     @State private var isSearchingByIngredient = false
+    
+    @State private var isLoading: Bool = false
+    @State private var isEmpty: Bool = false
     
     @State private var searchResults: [FoodOption] = []
     @Environment(\.presentationMode) var presentationMode
@@ -92,18 +121,60 @@ struct EditPlanView: View {
         }
     }
     
-    func fetchUserFavorites() {
-        if let url = URL(string: "http://163.17.9.107/food/php/UserFavorites.php") {
+    // MARK: 導入最愛食譜
+    func fetchUserFavorites()
+    {
+        isLoading = true
+        isEmpty = false
+        if let url = URL(string: "http://163.17.9.107/food/php/UserFavorites.php")
+        {
             fetchFoodData(from: url) { foodData, error in
-                if let error = error {
+                isLoading = false
+                if let error = error
+                {
                     print("Error fetching favorites: \(error)")
-                } else if let favorites = foodData {
+                    self.isEmpty = true // 出错时也应该显示空状态
+                } else if let favorites = foodData
+                {
+                    if favorites.isEmpty
+                    {
+                        print("No favorite dishes found for the user.")
+                        self.foodOptions7 = favorites
+                        self.isEmpty = favorites.isEmpty // 如果数据为空，设置 isEmpty = true
+                    }
                     print("Fetched favorite dishes: \(favorites)")
                     self.foodOptions7 = favorites
                 }
             }
-        } else {
+        } else
+        {
             print("Invalid URL for favorites")
+            isLoading = false
+            isEmpty = true
+        }
+    }
+    
+    // MARK: 「未作」導入公開食譜
+    func fetchPublicRecipes() {
+        isLoading = true
+        isEmpty = false
+        
+        if let url = URL(string: "http://163.17.9.107/food/php/PublicRecipes.php") {
+            fetchFoodData(from: url) { foodData, error in
+                isLoading = false
+                if let error = error {
+                    print("Error fetching public recipes: \(error)")
+                    self.foodOptions9 = []
+                    isEmpty = true
+                } else if let publicRecipes = foodData {
+                    self.foodOptions9 = publicRecipes
+                    isEmpty = publicRecipes.isEmpty
+                }
+            }
+        } else {
+            print("Invalid URL for public recipes")
+            isLoading = false
+            isEmpty = true
         }
     }
     
@@ -166,22 +237,52 @@ struct EditPlanView: View {
     //    }
     
     @ViewBuilder
-    private func TempView(imageName: String, buttonText: String, isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View {
-        let backgroundColors: [Color] = [.blue, .green, .yellow, .orange, .pink, .purple, .red, .gray,.indigo ,.mint]
-        
-        CustomButton(imageName: imageName, buttonText: buttonText, backgroundColor: backgroundColors[categoryIndex]) {
+    private func TempView(imageName: String, buttonText: String, contentText: String , isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View
+    {
+        CustomButton(imageName: imageName, buttonText: buttonText ,contentText: contentText)
+        {
             currentCategoryIndex = categoryIndex
             isShowingDetail.wrappedValue.toggle()
         }
         .cornerRadius(10)
-        .sheet(isPresented: isShowingDetail) {
-            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
-            }), categoryTitle: categoryTitle)
-            .onDisappear {
-                if let selectedFood = findSelectedFoodData(for: editedPlan) {
-                    self.selectedFoodData = selectedFood
-                    self.showAlert = true
+        .sheet(isPresented: isShowingDetail)
+        //        {
+        //            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
+        //                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
+        //            }), categoryTitle: categoryTitle)
+        //            .onDisappear {
+        //                if let selectedFood = findSelectedFoodData(for: editedPlan) {
+        //                    self.selectedFoodData = selectedFood
+        //                    self.showAlert = true
+        //                }
+        //            }
+        //        }
+        {
+            if isLoading {
+                LoadingView()
+            } else if isEmpty {
+                switch categoryIndex {
+                case 0: // 我的最愛選項
+                    EmptyStateView(imageName: "分類未新增最愛", message: "尚未收藏最愛食譜喔～快去添加吧！")
+                case 8: // 公開食譜選項
+                    EmptyStateView(imageName: "exclamationmark.triangle", message: "目前沒有公開食譜")
+                default:
+                    EmptyStateView(imageName: "folder", message: "没有内容")
+                }
+            } else {
+                FoodSelectionView(
+                    isShowingDetail: isShowingDetail,
+                    editedPlan: $editedPlan,
+                    foodOptions: .constant(foodOptions.map { foodData in
+                        FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
+                    }),
+                    categoryTitle: categoryTitle
+                )
+                .onDisappear {
+                    if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                        self.selectedFoodData = selectedFood
+                        self.showAlert = true
+                    }
                 }
             }
         }
@@ -284,26 +385,9 @@ struct EditPlanView: View {
             }
         }.resume()
     }
-    struct CustomToggle: View {
-        @Binding var isOn: Bool
-        
-        var body: some View {
-            Button(action: {
-                self.isOn.toggle()
-            }) {
-                VStack {
-                    Image(systemName: isOn ? "checkmark.square.fill" : "square")
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                    Text(isOn ? "以食材搜尋" : "以菜名搜尋")
-                        .font(.footnote)
-                }
-                .foregroundColor(isOn ? .orange : .gray)
-            }
-        }
-    }
     
-    func performSearch() {
+    func performSearch()
+    {
         if isSearchingByIngredient {
             let searchTextLowercased = searchText.lowercased()
             searchResults = foodDataFromServer
@@ -323,7 +407,8 @@ struct EditPlanView: View {
         }
     }
     
-    var body: some View {
+    var body: some View
+    {
         NavigationView {
             ScrollView {
                 VStack(spacing: 5) {
@@ -347,18 +432,20 @@ struct EditPlanView: View {
                     .onAppear {
                         fetchFoodOptions()
                     }
-                    
-                    //                    let names = ["我的最愛","適合我" ,"懶人", "減肥", "省錢", "放縱", "素食", "清庫存", "公開食譜","AI食譜"]
                     let names = ["我的最愛","健康推薦" ,"懶人分類", "減肥分類", "省錢分類", "放縱分類", "素食分類", "清倉分類", "公開食譜","AI食譜"]
+                    
+                    let contentText = ["美食珍藏庫，專屬小天地","數據分析師，量身訂製法","便捷又快速，食材易準備","低卡且低脂，健康拿滿分","用料超便宜，荷包省省省","高熱量美食，滿滿罪惡感","吃素不單調，色香味俱全","食材訂料理，庫存大清理","食譜大推薦，宜相互分享","創意無窮盡，樂趣多更多"]
                     
                     let showOptions = [foodOptions7,foodOptions8, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6,foodOptions9,foodOptions10]
                     
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) 
+                    {
                         ForEach(names.indices, id: \.self) { index in
                             
                             self.TempView(
                                 imageName: names[index],
                                 buttonText: names[index],
+                                contentText: contentText[index],
                                 isShowingDetail: $show1[index],
                                 foodOptions: showOptions[index],
                                 categoryIndex: index,
@@ -412,24 +499,52 @@ struct EditPlanView: View {
     }
 }
 
-func fetchFoodData(from url: URL, completion: @escaping ([Dishes]?, Error?) -> Void) {
-    URLSession.shared.dataTask(with: url) { data, response, error in
-        if let error = error {
-            completion(nil, error)
-            return
+// 分類內加載狀態畫面
+struct EmptyStateView: View
+{
+    var imageName: String
+    var message: String
+    
+    var body: some View {
+        VStack
+        {
+            Spacer().frame(height: 10)
+            VStack
+            {
+                Image(imageName) // 使用自定义图片
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 180, height: 180)
+                    .onAppear {
+                        print("Attempting to load image: \(imageName)")
+                    }
+            }
+            VStack
+            {
+                Text(message)
+                    .font(.system(size: 18))
+                    .foregroundColor(.gray)
+            }
         }
-        
-        guard let data = data else {
-            completion(nil, NSError(domain: "com.example", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"]))
-            return
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+struct CustomToggle: View {
+    @Binding var isOn: Bool
+    
+    var body: some View {
+        Button(action: {
+            self.isOn.toggle()
+        }) {
+            VStack {
+                Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                Text(isOn ? "以食材搜尋" : "以菜名搜尋")
+                    .font(.footnote)
+            }
+            .foregroundColor(isOn ? .orange : .gray)
         }
-        
-        do {
-            let decoder = JSONDecoder()
-            let dishesData = try decoder.decode([Dishes].self, from: data)
-            completion(dishesData, nil)
-        } catch {
-            completion(nil, error)
-        }
-    }.resume()
+    }
 }
