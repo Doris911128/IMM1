@@ -13,6 +13,120 @@ struct IdentifiableOption: Identifiable {
     var title: String
 }
 
+
+// 用於顯示歷史對話紀錄的視圖
+struct ChatHistoryView: View {
+    @State private var chatRecords: [ChatRecord] = []
+    @State private var currentUserID: String? = nil
+    
+    var body: some View {
+        VStack {
+            Text("歷史對話紀錄")
+                .font(.title)
+                .padding()
+            
+            List(chatRecords) { record in
+                VStack(alignment: .leading) {
+                    Text("問：\(record.input)")
+                        .fontWeight(.bold)
+                    Text("答：\(record.output)")
+                        .foregroundColor(.gray)
+                }
+                .padding()
+            }
+        }
+        .onAppear {
+            fetchUserID { userID in
+                guard let userID = userID else {
+                    print("Failed to get user ID")
+                    return
+                }
+                self.currentUserID = userID
+                fetchChatRecords(for: userID)
+            }
+        }
+    }
+    
+    func fetchUserID(completion: @escaping (String?) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/php/getUserID.php") else {
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                completion(nil)
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                completion(nil)
+                return
+            }
+            
+            do {
+                let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String]
+                let uID = json?["U_ID"]
+                completion(uID)
+            } catch {
+                print("Decoding error: \(error.localizedDescription)")
+                completion(nil)
+            }
+        }.resume()
+    }
+    
+    func fetchChatRecords(for userID: String) {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php") else { return }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let data = data else {
+                print("No data received")
+                return
+            }
+            
+            // Print raw JSON
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Raw JSON: \(jsonString)")
+            }
+            
+            // Decode the JSON response
+            do {
+                let decoder = JSONDecoder()
+                let records = try decoder.decode([ChatRecord].self, from: data)
+                
+                // Filter the records for the current user
+                DispatchQueue.main.async {
+                    self.chatRecords = records.filter { $0.U_ID == userID }
+                }
+            } catch {
+                print("Decoding error: \(error.localizedDescription)")
+            }
+        }.resume()
+    }
+}
+
+struct ResponseWrapper: Codable {
+    var chatRecords: [ChatRecord] // 根據實際的 JSON 結構定義
+}
+
+struct ChatRecord: Identifiable, Codable {
+    var id: Int { Recipe_ID }
+    let Recipe_ID: Int
+    let U_ID: String
+    let input: String
+    let output: String
+}
+
+
+
+
 struct AIView: View {
     @State private var messageText: String = ""
     @State private var messages: [String] = []
@@ -22,17 +136,31 @@ struct AIView: View {
     @State private var selectedImage: UIImage? = nil
     @State private var selectedOption: IdentifiableOption? = nil
     @State private var selectedItems: Set<String> = []
+    @State private var showHistory: Bool = false
 
     var body: some View {
         VStack {
             VStack(spacing: 0) {
                 HStack {
+                    Spacer().frame(width: 20)
+                    Button(action: {
+                        showHistory.toggle()
+                    }) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .foregroundColor(.blue)
+                            .imageScale(.large)
+                            .frame(width: 40, height: 40)
+                    }
+                    .sheet(isPresented: $showHistory) {
+                        ChatHistoryView() // 用於顯示歷史對話紀錄的視圖
+                    }
+                    
                     Spacer()
                     Text("AI助手")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.orange)
-                        .offset(x: 21, y: 0)
+                        .offset(x: -10, y: 0)
                     Spacer()
                     Button(action: {
                         showingImagePicker.toggle()
@@ -199,7 +327,7 @@ struct AIView: View {
                 print("Fetched data: \(recipeResponse)")
 
                 DispatchQueue.main.async {
-                    if recipeResponse.output == "LOADING" {
+                    if recipeResponse.output == "Loading..." {
                         if self.searchingMessageIndex == nil {
                             self.messages.append("答：生成中....")
                             self.searchingMessageIndex = self.messages.count - 1

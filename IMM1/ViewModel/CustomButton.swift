@@ -7,33 +7,48 @@
 
 import SwiftUI
 
-struct CustomButton: View 
+struct CustomButton: View
 {
     var imageName: String  // 按钮图片名称
     var buttonText: String // 按钮文字内容
     var contentText: String
     var action: () -> Void // 点击按钮时的动作
-
-    var body: some View 
+    
+    var body: some View
     {
-        Button(action: action) 
+        Button(action: action)
         {
-            VStack 
+            VStack(spacing: 0)
             {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
-                Text(buttonText)
-                    .foregroundColor(.black)
-                    .font(.system(size: 18))
-                Text(contentText)
-                    .font(.system(size: 10))
+                Spacer().frame(height: 10)
+                VStack
+                {
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle()) // 将图像裁剪为圆形
+                }
                 
+                VStack(spacing: 5)
+                {
+                    Text(buttonText)
+                        .foregroundColor(Color("BottonColor"))
+                        .font(.system(size: 18))
+                    Text(contentText)
+                        .font(.system(size: 10))
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .cornerRadius(10)
             }
-            .frame(width: 150, height: 150) // 设置为正方形
-            .cornerRadius(10)
-            .shadow(radius: 5)
+            .frame(width: 150, height: 200) // 设置整个按钮的尺寸
+            .cornerRadius(15) // 设置整体背景的圆角
+            .overlay(
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(Color("BottonColor")
+                        .opacity(0.3), lineWidth: 2) // 添加一致的轻微边框
+            )
         }
         .buttonStyle(BorderlessButtonStyle())
     }
