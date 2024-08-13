@@ -17,7 +17,7 @@ struct LoadingView: View
     {
         
         VStack {
-            Text("小熊貓走路")
+            Text("小熊貓走路中..")
                 .font(.largeTitle)
                 .padding()
             

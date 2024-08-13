@@ -17,6 +17,9 @@ struct WebView: UIViewRepresentable {
     
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
+        webView.scrollView.isScrollEnabled = false // 禁止滚动
+        webView.backgroundColor = .clear // 背景透明
+        webView.isOpaque = false // 不显示默认背景色
         return webView
     }
     
@@ -26,62 +29,17 @@ struct WebView: UIViewRepresentable {
     }
 }
 
-struct VideoPlayerView: View
-{
+struct VideoPlayerView: View {
     let videoURL: URL
-    @State private var player: AVPlayer = AVPlayer()
-    @State private var isPlaying: Bool = false
-    @State private var thumbnailImage: UIImage?
-    
-    var body: some View {
-        ZStack(alignment: .center) {
-            // 视频播放器本身
-            VideoPlayer(player: player)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
-                .cornerRadius(15)
-            
-            // 播放按钮
-            Button(action: {
-                togglePlayPause()
-            }) {
-                Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .resizable()
-                    .frame(width: 50, height: 50)
-                    .foregroundColor(.white)
-                    .opacity(0.8)
-            }
-        }
-        .onAppear {
-            player = AVPlayer(url: videoURL)
-        }
-        .frame(width: 350, height: 200) // 确保整个 VideoPlayerView 的范围
-        .cornerRadius(15) // 设置整体背景的圆角
-    }
 
-    // 切换播放和暂停
-    private func togglePlayPause() {
-        if isPlaying {
-            player.pause()
-        } else {
-            player.play()
-        }
-        isPlaying.toggle()
-    }
-    
-    // 加载视频的缩略图
-    private func loadThumbnail() {
-        let asset = AVAsset(url: videoURL)
-        let imageGenerator = AVAssetImageGenerator(asset: asset)
-        imageGenerator.appliesPreferredTrackTransform = true
-        
-        let time = CMTime(seconds: 1.0, preferredTimescale: 600) // 获取视频1秒处的图像
-        do {
-            let imageRef = try imageGenerator.copyCGImage(at: time, actualTime: nil)
-            self.thumbnailImage = UIImage(cgImage: imageRef)
-        } catch {
-            print("Error generating thumbnail: \(error)")
-        }
+    var body: some View {
+        WebView(url: videoURL)
+            .frame(width: 350, height: 200)  // 设置 WebView 的大小
+            .cornerRadius(15)  // 设置圆角
+            .overlay(
+                RoundedRectangle(cornerRadius: 15)
+                    .stroke(Color("BottonColor"), lineWidth: 2)  // 添加边框
+            )
     }
 }
 

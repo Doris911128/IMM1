@@ -136,8 +136,10 @@ extension RecipeProtocol
                 return
             }
             
-            if let data = data, let cookingText = String(data: data, encoding: .utf8) {
-                DispatchQueue.main.async {
+            if let data = data, let cookingText = String(data: data, encoding: .utf8) 
+            {
+                DispatchQueue.main.async 
+                {
                     var mutableSelf = self
                     mutableSelf.cookingMethod = cookingText
                 }
@@ -283,7 +285,7 @@ extension RecipeProtocol
                     }
                 } else
                 {
-                    Text("載入中...")
+                    LoadingView()//載入畫面
                 }
                 
                 Text("料理方法")
@@ -299,7 +301,7 @@ extension RecipeProtocol
                             .padding(.trailing, 20)
                     } else
                     {
-                        Text("載入中...")
+                        LoadingView()//載入畫面
                     }
                 }
                 
@@ -307,25 +309,25 @@ extension RecipeProtocol
                     .foregroundStyle(.orange)
                     .font(.title2)
                     .offset(x: -130)
-                // 播放组件
-                if let videoURLString = dishesData.first?.D_Video, let videoURL = URL(string: videoURLString)
-                {
-                    WebView(url: videoURL)
-                               .frame(width: 350, height: 200)  // 设置 WebView 的大小
-                               .cornerRadius(15)  // 设置圆角
-                               .overlay(
-                                   RoundedRectangle(cornerRadius: 15)
-                                       .stroke(Color("BottonColor"), lineWidth: 2)  // 添加边框
-                                        )
-                    
-                } else 
-                {
+                
+                // 使用 WebView 播放 YouTube 视频
+                if let videoURLString = dishesData.first?.D_Video,
+                   let videoID = URLComponents(string: videoURLString)?.queryItems?.first(where: { $0.name == "v" })?.value,
+                   let embedURL = URL(string: "https://www.youtube.com/embed/\(videoID)") {
+                    WebView(url: embedURL)
+                        .frame(width: 350, height: 200)  // 设置 WebView 的大小
+                        .cornerRadius(15)  // 设置圆角
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 15)
+                                .stroke(Color("BottonColor"), lineWidth: 2)  // 添加边框
+                        )
+                } else {
                     Text("無影片資訊")
                         .foregroundColor(.gray)
                         .padding()
                 }
             }
-                .onAppear
+            .onAppear 
             {
                 if let cookingUrl = selectedDish?.D_Cook
                 {

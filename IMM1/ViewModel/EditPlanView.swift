@@ -258,18 +258,14 @@ struct EditPlanView: View
         //            }
         //        }
         {
-            if isLoading {
+            if categoryIndex == 0 && foodOptions7.isEmpty
+            {
+                EmptyStateView(imageName: "分類未新增最愛", message: "尚未收藏最愛食譜喔～快去添加吧！")
+            } else if isLoading
+            {
                 LoadingView()
-            } else if isEmpty {
-                switch categoryIndex {
-                case 0: // 我的最愛選項
-                    EmptyStateView(imageName: "分類未新增最愛", message: "尚未收藏最愛食譜喔～快去添加吧！")
-                case 8: // 公開食譜選項
-                    EmptyStateView(imageName: "exclamationmark.triangle", message: "目前沒有公開食譜")
-                default:
-                    EmptyStateView(imageName: "folder", message: "没有内容")
-                }
-            } else {
+            } else
+            {
                 FoodSelectionView(
                     isShowingDetail: isShowingDetail,
                     editedPlan: $editedPlan,
@@ -315,9 +311,11 @@ struct EditPlanView: View
                 return
             }
             
-            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+            if let data = data, let responseString = String(data: data, encoding: .utf8) 
+            {
                 print("Response: \(responseString)")
-                if responseString.contains("成功") {
+                if responseString.contains("成功") 
+                {
                     self.isNewPlan = false
                 }
             }
@@ -325,7 +323,9 @@ struct EditPlanView: View
     }
     
     func savePlanToServer(P_ID: String, U_ID: String, Dis_ID: Int, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/Plan.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Plan.php") 
+        else
+        {
             completion(false, "無效的 URL")
             return
         }
@@ -337,26 +337,34 @@ struct EditPlanView: View
         let postData = "P_ID=\(P_ID)&U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&P_DT=\(P_DT)&P_Bought=\(P_Bought)"
         request.httpBody = postData.data(using: .utf8)
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+        URLSession.shared.dataTask(with: request)
+        { data, response, error in
+            if let error = error
+            {
                 completion(false, "錯誤: \(error.localizedDescription)")
                 return
             }
             
-            if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                if responseString.contains("計劃已成功保存到數據庫") {
+            if let data = data, let responseString = String(data: data, encoding: .utf8) 
+            {
+                if responseString.contains("計劃已成功保存到數據庫")
+                {
                     completion(true, nil)
-                } else {
+                } else 
+                {
                     completion(false, responseString)
                 }
-            } else {
+            } else 
+            {
                 completion(false, "未從服務器收到數據")
             }
         }.resume()
     }
     
     func Plan_PR(P_ID: String, U_ID: String, Dis_ID: Int, P_DT: String, P_Bought: String, completion: @escaping (Bool, String?) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/Plan_PR.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Plan_PR.php")
+        else
+        {
             completion(false, "無效的 URL")
             return
         }
@@ -368,14 +376,18 @@ struct EditPlanView: View
         let postData = "P_ID=\(P_ID)&U_ID=\(U_ID)&Dis_ID=\(Dis_ID)&P_DT=\(P_DT)&P_Bought=\(P_Bought)"
         request.httpBody = postData.data(using: .utf8)
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+        URLSession.shared.dataTask(with: request) 
+        { data, response, error in
+            if let error = error
+            {
                 completion(false, "錯誤: \(error.localizedDescription)")
                 return
             }
             
-            if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                if responseString.contains("計劃已成功保存到數據庫") {
+            if let data = data, let responseString = String(data: data, encoding: .utf8) 
+            {
+                if responseString.contains("計劃已成功保存到數據庫")
+                {
                     completion(true, nil)
                 } else {
                     completion(false, responseString)
@@ -438,7 +450,7 @@ struct EditPlanView: View
                     
                     let showOptions = [foodOptions7,foodOptions8, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6,foodOptions9,foodOptions10]
                     
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) 
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20)
                     {
                         ForEach(names.indices, id: \.self) { index in
                             
@@ -458,23 +470,31 @@ struct EditPlanView: View
                 }
             }
         }
-        .alert(isPresented: $showAlert) {
+        .alert(isPresented: $showAlert) 
+        {
             Alert(
                 title: Text("保存計劃"),
                 message: Text("是否保存當前選擇的菜品：\(selectedFoodData?.Dis_Name ?? "")"),
-                primaryButton: .default(Text("保存")) {
+                primaryButton: .default(Text("保存")) 
+                {
                     presentationMode.wrappedValue.dismiss()
-                    if let selectedFood = selectedFoodData {
+                    if let selectedFood = selectedFoodData 
+                    {
                         updatePlanOnServer(pID: plans[day]?[planIndex].P_ID, disID: selectedFood.Dis_ID)
-                        savePlanToServer(P_ID: plans[day]?[planIndex].P_ID ?? "", U_ID: "", Dis_ID: selectedFood.Dis_ID, P_DT: day, P_Bought: "") { success, errorMessage in
-                            if success {
+                        savePlanToServer(P_ID: plans[day]?[planIndex].P_ID ?? "", U_ID: "", Dis_ID: selectedFood.Dis_ID, P_DT: day, P_Bought: "") 
+                        { success, errorMessage in
+                            if success 
+                            {
                                 print("計劃成功保存到伺服器")
-                            } else {
+                            } else 
+                            {
                                 print("保存計劃的結果：\(errorMessage ?? "出問題")")
                             }
                         }
-                        Plan_PR(P_ID: plans[day]?[planIndex].P_ID ?? "", U_ID: "", Dis_ID: selectedFood.Dis_ID, P_DT: day, P_Bought: "") { success, errorMessage in
-                            if success {
+                        Plan_PR(P_ID: plans[day]?[planIndex].P_ID ?? "", U_ID: "", Dis_ID: selectedFood.Dis_ID, P_DT: day, P_Bought: "") 
+                        { success, errorMessage in
+                            if success
+                            {
                                 print("計劃成功保存到伺服器")
                             } else {
                                 print("保存計劃的結果：\(errorMessage ?? "出問題")")
@@ -485,10 +505,13 @@ struct EditPlanView: View
                 secondaryButton: .cancel(Text("取消")) {}
             )
         }
-        .sheet(isPresented: $isShowingDetail) {
+        .sheet(isPresented: $isShowingDetail) 
+        {
             FoodSelectionView(isShowingDetail: $isShowingDetail, editedPlan: $editedPlan, foodOptions: $searchResults, categoryTitle: "搜尋結果")
-                .onDisappear {
-                    if let selectedFood = findSelectedFoodData(for: editedPlan) {
+                .onDisappear 
+            {
+                    if let selectedFood = findSelectedFoodData(for: editedPlan)
+                    {
                         self.selectedFoodData = selectedFood
                         self.showAlert = true
                     } else {
@@ -505,7 +528,8 @@ struct EmptyStateView: View
     var imageName: String
     var message: String
     
-    var body: some View {
+    var body: some View
+    {
         VStack
         {
             Spacer().frame(height: 10)
@@ -530,14 +554,18 @@ struct EmptyStateView: View
     }
 }
 
-struct CustomToggle: View {
+struct CustomToggle: View 
+{
     @Binding var isOn: Bool
     
-    var body: some View {
+    var body: some View 
+    {
         Button(action: {
             self.isOn.toggle()
-        }) {
-            VStack {
+        }) 
+        {
+            VStack 
+            {
                 Image(systemName: isOn ? "checkmark.square.fill" : "square")
                     .resizable()
                     .frame(width: 20, height: 20)
