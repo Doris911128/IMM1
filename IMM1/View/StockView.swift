@@ -37,22 +37,27 @@ struct IngredientInfo {
 struct AddIngredients: View {
     @State private var selectedIngredientIndex = 0
     @State private var newIngredientQuantity: String = ""
-    @State private var searchText = ""  // 搜索文本
+    @State private var searchText = ""
     @State private var showAlert = false
     @State private var ingredientsInfo: [IngredientInfo] = []
     @State private var refreshTrigger = false
     
-    var onAdd: (StockIngredient) -> Void
+    @State private var manualIngredientName: String = ""
+    @State private var manualIngredientUnit: String = ""
+    @State private var isManualEntry: Bool = false
     
+    // 預設的食材單位選擇列表
+    private let predefinedUnits = ["顆", "毫升", "個", "克", "瓣",  "塊", "片", "條", "支"]
+    
+    var onAdd: (StockIngredient) -> Void
     @Binding var isSheetPresented: Bool
     @Binding var isEditing: Bool
     
-    
-    var body: some View {
-        NavigationView 
+    var body: some View
+    {
+        NavigationView
         {
-
-            ZStack 
+            ZStack
             {
                 // 背景图片，放在Form的外面
                 Image("庫存頭腳")
@@ -61,83 +66,114 @@ struct AddIngredients: View {
                     .frame(width: 100, height: 100)
                     .offset(y: -340) // 调整图片的垂直位置
                     .zIndex(1) // 确保图片在最前面
-                
                 // Form内容
-                Form {
-                    
+                Form
+                {
                     Section(header: Text("新增食材")) 
                     {
-                        TextField("搜索食材", text: $searchText)
-                            .autocapitalization(.none)
+                        Toggle("手動輸入食材", isOn: $isManualEntry)
                         
-                        Picker("選擇食材", selection: $selectedIngredientIndex) {
-                            ForEach(filteredIngredients.indices, id: \.self) { index in
-                                Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
+                        if isManualEntry 
+                        {
+                            TextField("食材名稱", text: $manualIngredientName)
+                            
+                            Picker("食材單位", selection: $manualIngredientUnit) 
+                            {
+                                ForEach(predefinedUnits, id: \.self) 
+                                { unit in
+                                    Text(unit).tag(unit)
+                                }
                             }
+                            .pickerStyle(MenuPickerStyle())
+                        } else 
+                        {
+                            TextField("搜索食材", text: $searchText)
+                                .autocapitalization(.none)
+                            
+                            Picker("選擇食材", selection: $selectedIngredientIndex)
+                            {
+                                ForEach(filteredIngredients.indices, id: \.self) 
+                                { index in
+                                    Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
                         }
-                        .pickerStyle(MenuPickerStyle())
                         
-                        TextField("請輸入食材數量", text: $newIngredientQuantity)
+                        TextField("請输入食材数量", text: $newIngredientQuantity)
                             .keyboardType(.numberPad)
                     }
-                    .background(Color.white.opacity(0.8)) // 确保Form有背景色
                 }
-                .background(Color.clear) // 确保Form背景透明
-                //.offset(y: 100) // 调整Form在屏幕上的位置，使其下移
             }
-
-
-
-
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("新增") {
-                        if let SK_SUM = Int(newIngredientQuantity), SK_SUM > 0 {
-                            if filteredIngredients.isEmpty {
-                                showAlert = true // 如果过滤后的列表为空，显示警示
-                            } else {
+            .toolbar 
+            {
+                ToolbarItem(placement: .navigationBarTrailing)
+                {
+                    Button("新增") 
+                    {
+                        if let SK_SUM = Int(newIngredientQuantity), SK_SUM > 0 
+                        {
+                            let F_ID: Int
+                            let F_Name: String
+                            let F_Unit: String
+                            
+                            if isManualEntry 
+                            {
+                                F_ID = -1 // Special value to indicate manual entry
+                                F_Name = manualIngredientName
+                                F_Unit = manualIngredientUnit
+                            } else 
+                            {
+                                if filteredIngredients.isEmpty 
+                                {
+                                    showAlert = true // Show alert if no ingredients are available
+                                    return
+                                }
                                 let selectedInfo = filteredIngredients[selectedIngredientIndex]
-                                let newIngredient = StockIngredient(
-                                    U_ID: UUID().uuidString,
-                                    F_ID: selectedInfo.F_ID,
-                                    F_Name: selectedInfo.F_Name,
-                                    SK_SUM: SK_SUM,
-                                    F_Unit: selectedInfo.F_Unit  // 正确引用F_Unit
-                                )
-                                onAdd(newIngredient)
-                                let json = toJSONString(F_ID: newIngredient.F_ID, U_ID: newIngredient.U_ID, SK_SUM: newIngredient.SK_SUM)
-                                sendDataToServer(json: json, F_ID: newIngredient.F_ID, U_ID: newIngredient.U_ID, SK_SUM: newIngredient.SK_SUM)
-                                print("新增食材信息：F_ID=\(newIngredient.F_ID), U_ID=\(newIngredient.U_ID), SK_SUM=\(newIngredient.SK_SUM)")
-                                
-                                isSheetPresented = false
-                                isEditing = false
-                                refreshTrigger.toggle()  // Toggle the refresh trigger to update the view
+                                F_ID = selectedInfo.F_ID
+                                F_Name = selectedInfo.F_Name
+                                F_Unit = selectedInfo.F_Unit
                             }
-                        } else {
+                            
+                            let newIngredient = StockIngredient(
+                                U_ID: UUID().uuidString,
+                                F_ID: F_ID,
+                                F_Name: F_Name,
+                                SK_SUM: SK_SUM,
+                                F_Unit: F_Unit
+                            )
+                            onAdd(newIngredient)
+                            let json = toJSONString(F_ID: newIngredient.F_ID, F_Name: newIngredient.F_Name, F_Unit: newIngredient.F_Unit!, SK_SUM: newIngredient.SK_SUM, U_ID: newIngredient.U_ID)
+                            sendDataToServer(json: json)
+                            
+                            print("新增食材信息：F_ID=\(newIngredient.F_ID), U_ID=\(newIngredient.U_ID), SK_SUM=\(newIngredient.SK_SUM)")
+                            
+                            isSheetPresented = false
+                            isEditing = false
+                            refreshTrigger.toggle()  // Toggle the refresh trigger to update the view
+                        } else 
+                        {
                             showAlert = true
                         }
                     }
-                    
                 }
             }
             .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text("警告"),
-                    message: Text("請確認輸入的食材名稱或數量字元是否正確"),
+                    message: Text("请确认输入的食材名称或数量字符是否正确"),
                     dismissButton: .default(Text("好的")) {
-                        searchText = ""  // 清空搜索文本框
-                        newIngredientQuantity = ""  // 如果需要，也可以同時清空數量輸入框
+                        searchText = ""
+                        newIngredientQuantity = ""
                     }
                 )
             }
-            
         }
         .onAppear {
             fetchIngredientNames()
         }
     }
     
-    // 根据搜索文本过滤食材
     var filteredIngredients: [IngredientInfo] {
         if searchText.isEmpty {
             return ingredientsInfo
@@ -146,7 +182,6 @@ struct AddIngredients: View {
         }
     }
     
-    // MARK: 抓取食材名稱的Function
     private func fetchIngredientNames() {
         let networkManager = NetworkManager()
         networkManager.fetchData(from: "http://163.17.9.107/food/php/Food.php") { result in
@@ -165,15 +200,13 @@ struct AddIngredients: View {
         }
     }
     
-    
-    
-    
-    // MARK: 將資料改為Json字串的Function
-    func toJSONString(F_ID: Int, U_ID: String, SK_SUM: Int) -> String? {
+    func toJSONString(F_ID: Int, F_Name: String, F_Unit: String, SK_SUM: Int, U_ID: String) -> String? {
         let jsonDict: [String: Any] = [
             "F_ID": F_ID,
-            "U_ID": U_ID,
-            "SK_SUM": SK_SUM
+            "F_Name": F_Name,
+            "F_Unit": F_Unit,
+            "SK_SUM": SK_SUM,
+            "U_ID": U_ID
         ]
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: jsonDict, options: .prettyPrinted)
@@ -184,8 +217,7 @@ struct AddIngredients: View {
         }
     }
     
-    
-    private func sendDataToServer(json: String?, F_ID: Int, U_ID: String, SK_SUM: Int) {
+    private func sendDataToServer(json: String?) {
         guard let jsonData = json, let url = URL(string: "http://163.17.9.107/food/php/Stock.php") else {
             print("Invalid URL or JSON data")
             return
@@ -203,9 +235,9 @@ struct AddIngredients: View {
             }
             
             if let response = response as? HTTPURLResponse, let data = data {
-                if response.statusCode == 200 {  // 判断响应状态码
+                if response.statusCode == 200 {
                     if let responseJSON = String(data: data, encoding: .utf8) {
-                        print("Response JSON: \(responseJSON)") // 打印服务器返回的JSON数据
+                        print("Response JSON: \(responseJSON)")
                     } else {
                         print("Received data could not be converted to JSON")
                     }
@@ -216,6 +248,10 @@ struct AddIngredients: View {
         }.resume()
     }
 }
+
+
+
+
 
 // MARK: - 网络管理器
 class NetworkManager {
