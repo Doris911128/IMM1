@@ -307,8 +307,8 @@ struct MyView: View
                             // MARK: 我的最愛
                             HStack
                             {
-                                NavigationLink(destination: FavoriteView(U_ID: "")) {
-                                    InformationLabel(image: "heart.fill", label: "我的最愛")
+                                NavigationLink(destination: Rec_Col_View()) {
+                                    InformationLabel(image: "tray.2.fill", label: "食譜收藏庫")
                                 }
                             }
                             // MARK: 深淺模式

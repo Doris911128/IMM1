@@ -600,10 +600,10 @@ struct ServerMessageView: View {
     
     var body: some View {
         HStack {
-            Image(systemName: "person.fill")
+            Image("登入Logo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 40, height: 40)
+                .frame(width: 60, height: 60)
                 .background(Color.blue.opacity(0.2))
                 .clipShape(Circle())
             
