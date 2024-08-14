@@ -4,14 +4,13 @@
 //
 //  Created by 朝陽資管 on 2024/8/12.
 //
-
 import SwiftUI
 import UIKit
 import ImageIO
 
 struct GIFImageView: UIViewRepresentable {
     let url: URL
-    let frameDuration: TimeInterval = 3.0 // 每帧的持续时间
+    let frameDuration: TimeInterval = 3.0 // 动画的持续时间
     
     func makeUIView(context: Context) -> UIImageView {
         let imageView = UIImageView()
@@ -48,16 +47,15 @@ extension UIImage {
                 images.append(UIImage(cgImage: image))
                 
                 // Calculate the duration of each frame
-                let frameProperties = CGImageSourceCopyPropertiesAtIndex(source, i, nil) as NSDictionary?
-                let gifProperties = frameProperties?[kCGImagePropertyGIFDictionary as String] as? NSDictionary
+                let frameProperties = CGImageSourceCopyPropertiesAtIndex(source, i, nil) as? [String: Any]
+                let gifProperties = frameProperties?[kCGImagePropertyGIFDictionary as String] as? [String: Any]
                 let delayTime = gifProperties?[kCGImagePropertyGIFUnclampedDelayTime as String] as? Double ?? 0.1
                 durations.append(delayTime)
             }
         }
         
         let totalDuration = durations.reduce(0, +)
-        let adjustedDurations = durations.map { $0 * (frameDuration / totalDuration) }
-        let adjustedTotalDuration = adjustedDurations.reduce(0, +)
+        let adjustedTotalDuration = frameDuration > 0 ? frameDuration : totalDuration
         
         return UIImage.animatedImage(with: images, duration: adjustedTotalDuration)
     }

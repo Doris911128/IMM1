@@ -49,23 +49,46 @@ struct AddIngredients: View {
     
     
     var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("新增食材")) {
+        NavigationView 
+        {
+
+            ZStack 
+            {
+                // 背景图片，放在Form的外面
+                Image("庫存頭腳")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .offset(y: -340) // 调整图片的垂直位置
+                    .zIndex(1) // 确保图片在最前面
+                
+                // Form内容
+                Form {
                     
-                    TextField("搜索食材", text: $searchText)
-                        .autocapitalization(.none)
-                    
-                    Picker("選擇食材", selection: $selectedIngredientIndex) {
-                        ForEach(filteredIngredients.indices, id: \.self) { index in
-                            Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)                        }
+                    Section(header: Text("新增食材")) 
+                    {
+                        TextField("搜索食材", text: $searchText)
+                            .autocapitalization(.none)
+                        
+                        Picker("選擇食材", selection: $selectedIngredientIndex) {
+                            ForEach(filteredIngredients.indices, id: \.self) { index in
+                                Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        
+                        TextField("請輸入食材數量", text: $newIngredientQuantity)
+                            .keyboardType(.numberPad)
                     }
-                    .pickerStyle(MenuPickerStyle())
-                    
-                    TextField("請輸入食材數量", text: $newIngredientQuantity)
-                        .keyboardType(.numberPad)
+                    .background(Color.white.opacity(0.8)) // 确保Form有背景色
                 }
+                .background(Color.clear) // 确保Form背景透明
+                //.offset(y: 100) // 调整Form在屏幕上的位置，使其下移
             }
+
+
+
+
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("新增") {

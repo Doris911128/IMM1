@@ -4,25 +4,22 @@
 //
 //  Created by 朝陽資管 on 2024/8/12.
 //
-
 import SwiftUI
 
-struct LoadingView: View 
-{
-    private var gifURL: URL 
-    {
+struct LoadingView: View {
+    private var gifURL: URL {
         URL(string: "http://163.17.9.107/food/gif/redpanda_walk.gif")!
     }
-    var body: some View
-    {
-        
-        VStack {
-            Text("小熊貓走路中..")
-                .font(.largeTitle)
-                .padding()
-            
-            GIFImageView(url: gifURL)
-                .frame(width: 300, height: 300)  // 设置尺寸
+
+    var body: some View {
+        GeometryReader { geometry in
+            VStack {
+                Spacer()
+
+                GIFImageView(url: gifURL)
+
+                    .position(x: geometry.size.width / 2, y: 140) // 設置位置
+            }
         }
     }
 }

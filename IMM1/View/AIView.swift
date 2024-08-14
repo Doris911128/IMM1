@@ -22,7 +22,7 @@ struct ChatHistoryView: View {
     var body: some View {
         VStack {
             Text("歷史對話紀錄")
-                .font(.title)
+                .font(.system(size: 22))
                 .padding()
             
             List(chatRecords) { record in
@@ -137,7 +137,8 @@ struct AIView: View {
     @State private var selectedOption: IdentifiableOption? = nil
     @State private var selectedItems: Set<String> = []
     @State private var showHistory: Bool = false
-    
+    @State private var isLoading1 = false
+
     var body: some View {
         VStack {
             VStack(spacing: 0) {
@@ -178,7 +179,7 @@ struct AIView: View {
             }
             .frame(maxWidth: .infinity)
             ScrollView {
-                VStack {
+               
                     ForEach(messages.indices, id: \.self) { index in
                         HStack {
                             if messages[index].starts(with: "答：") {
@@ -189,13 +190,21 @@ struct AIView: View {
                         }
                         .padding()
                     }
-                    if isLoading {
+                    if isLoading1 {
                         LoadingAnimationView()
-                            .frame(maxWidth: .infinity, maxHeight: 100)
+                            .frame(maxWidth: .infinity, maxHeight: 300)
                             .padding()
                     }
+                    if isLoading {
+                        LoadingView()
+                            .frame(width: 300,height: 300)
+                            .padding()
+                            
+                    }
+                 
+                    
                 }
-            }
+            
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 3) {
                     OptionButton(title: "減脂增肌", action: { self.selectedOption = IdentifiableOption(title: "減脂增肌") })
@@ -286,12 +295,17 @@ struct AIView: View {
     
     func fetchData() {
         guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe.php") else { return }
-        
+
+        // 開始加載動畫
+        DispatchQueue.main.async {
+            self.isLoading = true
+        }
+
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    self.isLoading = false // Stop loading animation
+                    self.isLoading1 = false // 停止加載動畫
                     if self.searchingMessageIndex == nil {
                         self.messages.append("答：Error occurred. Retrying...")
                         self.searchingMessageIndex = self.messages.count - 1
@@ -302,11 +316,11 @@ struct AIView: View {
                 }
                 return
             }
-            
+
             guard let data = data else {
                 print("No data received")
                 DispatchQueue.main.async {
-                    self.isLoading = false // Stop loading animation
+                    self.isLoading1 = false // 停止加載動畫
                     if self.searchingMessageIndex == nil {
                         self.messages.append("答：No data received. Retrying...")
                         self.searchingMessageIndex = self.messages.count - 1
@@ -317,14 +331,11 @@ struct AIView: View {
                 }
                 return
             }
-            
-            // Decode the JSON response
+
+            // 解碼 JSON 回應
             do {
                 let decoder = JSONDecoder()
                 let recipeResponse = try decoder.decode(RecipeResponse.self, from: data)
-                
-                // Print the decoded response to the terminal
-                print("Fetched data: \(recipeResponse)")
                 
                 DispatchQueue.main.async {
                     if recipeResponse.output == "Loading..." {
@@ -332,6 +343,9 @@ struct AIView: View {
                             self.messages.append("答：生成中....")
                             self.searchingMessageIndex = self.messages.count - 1
                         }
+                        
+                        // 繼續顯示加載動畫並再次調用 fetchData()
+                        self.isLoading1 = true
                         self.fetchData()
                     } else {
                         if let index = self.searchingMessageIndex {
@@ -339,13 +353,13 @@ struct AIView: View {
                         } else {
                             self.messages.append("答：\(recipeResponse.output)")
                         }
-                        self.isLoading = false // Stop loading animation
-                        self.searchingMessageIndex = nil // Reset flag
+                        self.isLoading = false // 停止加載動畫
+                        self.searchingMessageIndex = nil // 重設標誌
                     }
                 }
             } catch {
                 DispatchQueue.main.async {
-                    self.isLoading = false // Stop loading animation
+                    self.isLoading1 = false // 停止加載動畫
                     if self.searchingMessageIndex == nil {
                         self.messages.append("答：生成中....")
                         self.searchingMessageIndex = self.messages.count - 1
@@ -355,7 +369,9 @@ struct AIView: View {
             }
         }.resume()
     }
+
 }
+
 
 struct OptionButton: View {
     var title: String
