@@ -53,124 +53,108 @@ struct AddIngredients: View {
     @Binding var isSheetPresented: Bool
     @Binding var isEditing: Bool
     
-    var body: some View
-    {
-        NavigationView
-        {
-            ZStack
-            {
-                // 背景图片，放在Form的外面
-                Image("庫存頭腳")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 100, height: 100)
-                    .offset(y: -340) // 调整图片的垂直位置
-                    .zIndex(1) // 确保图片在最前面
-                // Form内容
-                Form
-                {
-                    Section(header: Text("新增食材"))
-                    {
-                        Toggle("手動輸入食材", isOn: $isManualEntry)
-                        
-                        if isManualEntry
-                        {
-                            TextField("食材名稱", text: $manualIngredientName)
+    var body: some View {
+        NavigationView {
+            GeometryReader { geometry in
+                ZStack {
+                    // 背景图片，放在Form的外面
+                    Image("庫存頭腳")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                        .position(x: geometry.size.width / 2, y: geometry.safeAreaInsets.top - 50)
+                        .zIndex(1) // 确保图片在最前面
+                    
+                    // Form内容
+                    Form {
+                        Section(header: Text("新增食材")) {
+                            Toggle("手動輸入食材", isOn: $isManualEntry)
                             
-                            Picker("食材單位", selection: $manualIngredientUnit)
-                            {
-                                ForEach(predefinedUnits, id: \.self)
-                                { unit in
-                                    Text(unit).tag(unit)
+                            if isManualEntry {
+                                TextField("食材名稱", text: $manualIngredientName)
+                                
+                                Picker("食材單位", selection: $manualIngredientUnit) {
+                                    ForEach(predefinedUnits, id: \.self) { unit in
+                                        Text(unit).tag(unit)
+                                    }
                                 }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                        } else
-                        {
-                            TextField("搜索食材", text: $searchText)
-                                .autocapitalization(.none)
-                            
-                            Picker("選擇食材", selection: $selectedIngredientIndex)
-                            {
-                                ForEach(filteredIngredients.indices, id: \.self)
-                                { index in
-                                    Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
+                                .pickerStyle(MenuPickerStyle())
+                            } else {
+                                TextField("搜索食材", text: $searchText)
+                                    .autocapitalization(.none)
+                                
+                                Picker("選擇食材", selection: $selectedIngredientIndex) {
+                                    ForEach(filteredIngredients.indices, id: \.self) { index in
+                                        Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
+                                    }
                                 }
-                            }
-                            .pickerStyle(MenuPickerStyle())
-                        }
-                        
-                        TextField("請輸入食材數量", text: $newIngredientQuantity)
-                            .keyboardType(.numberPad)
-                    }
-                }
-            }
-            .toolbar
-            {
-                ToolbarItem(placement: .navigationBarTrailing)
-                {
-                    Button("新增")
-                    {
-                        if let SK_SUM = Int(newIngredientQuantity), SK_SUM > 0
-                        {
-                            let F_ID: Int
-                            let F_Name: String
-                            let F_Unit: String
-                            
-                            if isManualEntry
-                            {
-                                F_ID = -1 // Special value to indicate manual entry
-                                F_Name = manualIngredientName
-                                F_Unit = manualIngredientUnit
-                            } else
-                            {
-                                if filteredIngredients.isEmpty
-                                {
-                                    showAlert = true // Show alert if no ingredients are available
-                                    return
-                                }
-                                let selectedInfo = filteredIngredients[selectedIngredientIndex]
-                                F_ID = selectedInfo.F_ID
-                                F_Name = selectedInfo.F_Name
-                                F_Unit = selectedInfo.F_Unit
+                                .pickerStyle(MenuPickerStyle())
                             }
                             
-                            let newIngredient = StockIngredient(
-                                U_ID: UUID().uuidString,
-                                F_ID: F_ID,
-                                F_Name: F_Name,
-                                SK_SUM: SK_SUM,
-                                F_Unit: F_Unit
-                            )
-                            onAdd(newIngredient)
-                            let json = toJSONString(F_ID: newIngredient.F_ID, F_Name: newIngredient.F_Name, F_Unit: newIngredient.F_Unit!, SK_SUM: newIngredient.SK_SUM, U_ID: newIngredient.U_ID)
-                            sendDataToServer(json: json)
-                            
-                            print("新增食材信息：F_ID=\(newIngredient.F_ID), U_ID=\(newIngredient.U_ID), SK_SUM=\(newIngredient.SK_SUM)")
-                            
-                            isSheetPresented = false
-                            isEditing = false
-                            refreshTrigger.toggle()  // Toggle the refresh trigger to update the view
-                        } else
-                        {
-                            showAlert = true
+                            TextField("請輸入食材數量", text: $newIngredientQuantity)
+                                .keyboardType(.numberPad)
                         }
                     }
                 }
-            }
-            .alert(isPresented: $showAlert) {
-                Alert(
-                    title: Text("警告"),
-                    message: Text("請確認輸入的食材名稱或數量字元是否正確"),
-                    dismissButton: .default(Text("好的")) {
-                        searchText = ""
-                        newIngredientQuantity = ""
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("新增") {
+                            if let SK_SUM = Int(newIngredientQuantity), SK_SUM > 0 {
+                                let F_ID: Int
+                                let F_Name: String
+                                let F_Unit: String
+                                
+                                if isManualEntry {
+                                    F_ID = -1 // Special value to indicate manual entry
+                                    F_Name = manualIngredientName
+                                    F_Unit = manualIngredientUnit
+                                } else {
+                                    if filteredIngredients.isEmpty {
+                                        showAlert = true // Show alert if no ingredients are available
+                                        return
+                                    }
+                                    let selectedInfo = filteredIngredients[selectedIngredientIndex]
+                                    F_ID = selectedInfo.F_ID
+                                    F_Name = selectedInfo.F_Name
+                                    F_Unit = selectedInfo.F_Unit
+                                }
+                                
+                                let newIngredient = StockIngredient(
+                                    U_ID: UUID().uuidString,
+                                    F_ID: F_ID,
+                                    F_Name: F_Name,
+                                    SK_SUM: SK_SUM,
+                                    F_Unit: F_Unit
+                                )
+                                onAdd(newIngredient)
+                                let json = toJSONString(F_ID: newIngredient.F_ID, F_Name: newIngredient.F_Name, F_Unit: newIngredient.F_Unit!, SK_SUM: newIngredient.SK_SUM, U_ID: newIngredient.U_ID)
+                                sendDataToServer(json: json)
+                                
+                                print("新增食材信息：F_ID=\(newIngredient.F_ID), U_ID=\(newIngredient.U_ID), SK_SUM=\(newIngredient.SK_SUM)")
+                                
+                                isSheetPresented = false
+                                isEditing = false
+                                refreshTrigger.toggle()  // Toggle the refresh trigger to update the view
+                            } else {
+                                showAlert = true
+                            }
+                        }
                     }
-                )
+                }
+                .alert(isPresented: $showAlert) {
+                    Alert(
+                        title: Text("警告"),
+                        message: Text("請確認輸入的食材名稱或數量字元是否正確"),
+                        dismissButton: .default(Text("好的")) {
+                            searchText = ""
+                            newIngredientQuantity = ""
+                        }
+                    )
+                }
             }
-        }
-        .onAppear {
-            fetchIngredientNames()
+            .onAppear {
+                fetchIngredientNames()
+            }
         }
     }
     
@@ -253,6 +237,7 @@ struct AddIngredients: View {
 
 
 
+
 // MARK: - 网络管理器
 class NetworkManager {
     func fetchData(from urlString: String, completion: @escaping (Result<[Stock], Error>) -> Void) {
@@ -303,9 +288,9 @@ struct StockView: View
     {
         NavigationStack 
         {
-            ZStack 
+            ZStack
             {
-                VStack(alignment: .leading) 
+                ZStack(alignment: .leading)
                 {
                     Text("庫存")
                         .font(.largeTitle)
@@ -313,7 +298,7 @@ struct StockView: View
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.leading, 20)
                         .padding(.top, 20)  // 添加顶部间距来固定标题位置
-                        .offset(y: -230)  // 通过偏移使标题固定在所需位置
+                        .offset(y: -340)  // 通过偏移使标题固定在所需位置
                     
                     VStack 
                     {
@@ -349,7 +334,7 @@ struct StockView: View
                                         .font(.system(size: 18))
                                         .foregroundColor(.gray)
                             }
-                            .offset(x: 100,y: -55)
+                            .offset(x: 100,y: 0)
                         } else {
                             ScrollView {
                                 LazyVGrid(columns: columns, spacing: 20) {
@@ -417,6 +402,7 @@ struct StockView: View
                                                 .background(Color(UIColor.systemBackground))
                                                 .cornerRadius(8)
                                                 .shadow(radius: 4)
+                                                .frame(width: 170)
                                             }
                                             
                                             if isEditing {
@@ -438,7 +424,9 @@ struct StockView: View
                                         }
                                     }
                                 }
-                                .padding()
+                                .padding(.top ,70)
+                                .padding(.leading , 15)
+                                .padding(.trailing , 15)
                             }
                         }
                     }
