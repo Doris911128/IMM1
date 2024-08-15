@@ -17,9 +17,9 @@ struct Rec_Col_View: View
                 .tabItem {
                     Label("我的最愛", systemImage: "heart.fill")
                 }
-            AIRecipeView()
+            AIRecipeView(U_ID: " ")
                 .tabItem {
-                    Label("AI食譜", systemImage: "book.pages")
+                    Label("AI食譜庫", systemImage: "book.pages")
                 }
         }
     }

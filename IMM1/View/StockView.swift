@@ -69,30 +69,30 @@ struct AddIngredients: View {
                 // Form内容
                 Form
                 {
-                    Section(header: Text("新增食材")) 
+                    Section(header: Text("新增食材"))
                     {
                         Toggle("手動輸入食材", isOn: $isManualEntry)
                         
-                        if isManualEntry 
+                        if isManualEntry
                         {
                             TextField("食材名稱", text: $manualIngredientName)
                             
-                            Picker("食材單位", selection: $manualIngredientUnit) 
+                            Picker("食材單位", selection: $manualIngredientUnit)
                             {
-                                ForEach(predefinedUnits, id: \.self) 
+                                ForEach(predefinedUnits, id: \.self)
                                 { unit in
                                     Text(unit).tag(unit)
                                 }
                             }
                             .pickerStyle(MenuPickerStyle())
-                        } else 
+                        } else
                         {
                             TextField("搜索食材", text: $searchText)
                                 .autocapitalization(.none)
                             
                             Picker("選擇食材", selection: $selectedIngredientIndex)
                             {
-                                ForEach(filteredIngredients.indices, id: \.self) 
+                                ForEach(filteredIngredients.indices, id: \.self)
                                 { index in
                                     Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
                                 }
@@ -100,31 +100,31 @@ struct AddIngredients: View {
                             .pickerStyle(MenuPickerStyle())
                         }
                         
-                        TextField("請输入食材数量", text: $newIngredientQuantity)
+                        TextField("請輸入食材數量", text: $newIngredientQuantity)
                             .keyboardType(.numberPad)
                     }
                 }
             }
-            .toolbar 
+            .toolbar
             {
                 ToolbarItem(placement: .navigationBarTrailing)
                 {
-                    Button("新增") 
+                    Button("新增")
                     {
-                        if let SK_SUM = Int(newIngredientQuantity), SK_SUM > 0 
+                        if let SK_SUM = Int(newIngredientQuantity), SK_SUM > 0
                         {
                             let F_ID: Int
                             let F_Name: String
                             let F_Unit: String
                             
-                            if isManualEntry 
+                            if isManualEntry
                             {
                                 F_ID = -1 // Special value to indicate manual entry
                                 F_Name = manualIngredientName
                                 F_Unit = manualIngredientUnit
-                            } else 
+                            } else
                             {
-                                if filteredIngredients.isEmpty 
+                                if filteredIngredients.isEmpty
                                 {
                                     showAlert = true // Show alert if no ingredients are available
                                     return
@@ -151,7 +151,7 @@ struct AddIngredients: View {
                             isSheetPresented = false
                             isEditing = false
                             refreshTrigger.toggle()  // Toggle the refresh trigger to update the view
-                        } else 
+                        } else
                         {
                             showAlert = true
                         }
@@ -161,7 +161,7 @@ struct AddIngredients: View {
             .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text("警告"),
-                    message: Text("请确认输入的食材名称或数量字符是否正确"),
+                    message: Text("請確認輸入的食材名稱或數量字元是否正確"),
                     dismissButton: .default(Text("好的")) {
                         searchText = ""
                         newIngredientQuantity = ""
@@ -284,140 +284,188 @@ class NetworkManager {
 }
 
 // MARK: - 主庫存視圖
-struct StockView: View {
+struct StockView: View
+{
     @State private var ingredients: [StockIngredient] = []
     @State private var isAddSheetPresented = false
     @State private var isEditing: Bool = false
     @State private var showAlert = false
     @State private var triggerRefresh: Bool = false // 用于触发视图刷新
+    @State private var isLoading: Bool = true // 加载状态
+    @State private var loadingError: String? = nil // 加載错误信息
     
     let columns = [
         GridItem(.flexible()),
         GridItem(.flexible())
     ]
     
-    var body: some View {
-        NavigationStack {
-            VStack {
-                Text("庫存")
-                    .font(.title)
-                    .padding()
-                
-                if ingredients.isEmpty {
-                    Spacer()
-                    Text("目前無庫存項目")
-                    Spacer()
-                } else {
-                    ScrollView {
-                        LazyVGrid(columns: columns, spacing: 20) {
-                            ForEach(ingredients.indices, id: \.self) { index in
-                                ZStack(alignment: .topLeading) {
-                                    VStack {
-                                        // 顯示圖片
-                                        if let imageUrl = ingredients[index].Food_imge, let url = URL(string: imageUrl) {
-                                            AsyncImage(url: url) { phase in
-                                                switch phase {
-                                                case .empty:
-                                                    ProgressView()
-                                                case .success(let image):
-                                                    image
-                                                        .resizable()
-                                                        .aspectRatio(contentMode: .fill)
-                                                        .frame(width: 150, height: 150)
-                                                        .clipShape(Circle())
-                                                case .failure:
+    var body: some View
+    {
+        NavigationStack 
+        {
+            ZStack 
+            {
+                VStack(alignment: .leading) 
+                {
+                    Text("庫存")
+                        .font(.largeTitle)
+                        .bold()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading, 20)
+                        .padding(.top, 20)  // 添加顶部间距来固定标题位置
+                        .offset(y: -230)  // 通过偏移使标题固定在所需位置
+                    
+                    VStack 
+                    {
+                        //                if isLoading
+                        //                {
+                        //                    //MARK: 想要載入中轉圈圈動畫
+                        //                    VStack
+                        //                    {
+                        //                        Spacer()
+                        //                        ProgressView("載入中...").progressViewStyle(CircularProgressViewStyle())
+                        //                        Spacer()
+                        //                    }
+                        //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        //                } else if let error = loadingError
+                        //                {
+                        //                    VStack
+                        //                    {
+                        //                        Text("載入失敗: \(error)").font(.body).foregroundColor(.red)
+                        //                        Spacer().frame(height: 120)
+                        //                    }
+                        //                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                        //                }else
+                        if ingredients.isEmpty 
+                        {
+                            VStack 
+                            {
+                                Image("空庫存")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 180, height: 180)
+                                //目前無庫存項目
+                                    Text("暫未新增任何親最愛食譜")
+                                        .font(.system(size: 18))
+                                        .foregroundColor(.gray)
+                            }
+                            .offset(x: 100,y: -55)
+                        } else {
+                            ScrollView {
+                                LazyVGrid(columns: columns, spacing: 20) {
+                                    ForEach(ingredients.indices, id: \.self) { index in
+                                        ZStack(alignment: .topLeading) {
+                                            VStack {
+                                                // 显示图片
+                                                if let imageUrl = ingredients[index].Food_imge, let url = URL(string: imageUrl) {
+                                                    AsyncImage(url: url) { phase in
+                                                        switch phase {
+                                                        case .empty:
+                                                            ProgressView()
+                                                        case .success(let image):
+                                                            image
+                                                                .resizable()
+                                                                .aspectRatio(contentMode: .fill)
+                                                                .frame(width: 150, height: 150)
+                                                                .clipShape(Circle())
+                                                        case .failure:
+                                                            Image(systemName: "photo")
+                                                                .resizable()
+                                                                .aspectRatio(contentMode: .fill)
+                                                                .frame(width: 150, height: 150)
+                                                                .clipShape(Circle())
+                                                        @unknown default:
+                                                            EmptyView()
+                                                        }
+                                                    }
+                                                    .padding(.bottom, 8) // 调整图片与文字之间的距离
+                                                } else {
                                                     Image(systemName: "photo")
                                                         .resizable()
                                                         .aspectRatio(contentMode: .fill)
                                                         .frame(width: 150, height: 150)
                                                         .clipShape(Circle())
-                                                @unknown default:
-                                                    EmptyView()
+                                                        .padding(.bottom, 8) // 调整图片与文字之间的距离
                                                 }
+                                                
+                                                HStack {
+                                                    Text(ingredients[index].F_Name)
+                                                        .lineLimit(1) // 限制为1行，超出部分显示省略号
+                                                        .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
+                                                    
+                                                    Spacer()
+                                                    
+                                                    if isEditing {
+                                                        TextField("食材數量", value: $ingredients[index].SK_SUM, formatter: NumberFormatter())
+                                                            .keyboardType(.numberPad)
+                                                            .frame(width: 50) // 限制 TextField 宽度
+                                                            .multilineTextAlignment(.trailing)
+                                                            .padding(.leading, -20) // 调整 TextField 左侧 padding
+                                                            .onChange(of: ingredients[index].SK_SUM) { newValue in
+                                                                sendEditedIngredientData(F_ID: ingredients[index].F_ID, U_ID: ingredients[index].U_ID, SK_SUM: newValue)
+                                                            }
+                                                    } else {
+                                                        HStack {
+                                                            Text("\(ingredients[index].SK_SUM)")
+                                                            Text(ingredients[index].F_Unit ?? "")
+                                                        }
+                                                        .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
+                                                        .multilineTextAlignment(.trailing)
+                                                    }
+                                                }
+                                                .padding()
+                                                .background(Color(UIColor.systemBackground))
+                                                .cornerRadius(8)
+                                                .shadow(radius: 4)
                                             }
-                                            .padding(.bottom, 8) // 調整圖片與文字之間的距離
-                                        } else {
-                                            Image(systemName: "photo")
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                                .frame(width: 150, height: 150)
-                                                .clipShape(Circle())
-                                                .padding(.bottom, 8) // 調整圖片與文字之間的距離
-                                        }
-                                        
-                                        HStack {
-                                            Text(ingredients[index].F_Name)
-                                                .lineLimit(1) // 限制為1行，超出部分顯示省略號
-                                                .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                            
-                                            Spacer()
                                             
                                             if isEditing {
-                                                TextField("食材數量", value: $ingredients[index].SK_SUM, formatter: NumberFormatter())
-                                                    .keyboardType(.numberPad)
-                                                    .frame(width: 50) // 限制 TextField 寬度
-                                                    .multilineTextAlignment(.trailing)
-                                                    .padding(.leading, -20) // 调整 TextField 左侧 padding
-                                                    .onChange(of: ingredients[index].SK_SUM) { newValue in
-                                                        sendEditedIngredientData(F_ID: ingredients[index].F_ID, U_ID: ingredients[index].U_ID, SK_SUM: newValue)
+                                                Button(action: {
+                                                    toggleSelection(index)
+                                                }) {
+                                                    ZStack {
+                                                        Circle()
+                                                            .fill(ingredients[index].isSelectedForDeletion ? Color.gray : Color.orange)
+                                                            .frame(width: 30, height: 30)
+                                                        
+                                                        Image(systemName: ingredients[index].isSelectedForDeletion ? "checkmark.square" : "square")
+                                                            .foregroundColor(.white)
                                                     }
-                                            } else {
-                                                HStack {
-                                                    Text("\(ingredients[index].SK_SUM)")
-                                                    Text(ingredients[index].F_Unit ?? "")
                                                 }
-                                                .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                                .multilineTextAlignment(.trailing)
+                                                .buttonStyle(BorderlessButtonStyle())
+                                                .offset(x: 5, y: 0) // 调整按钮的位置
                                             }
                                         }
-                                        .padding()
-                                        .background(Color(UIColor.systemBackground))
-                                        .cornerRadius(8)
-                                        .shadow(radius: 4)
-                                    }
-                                    
-                                    if isEditing {
-                                        Button(action: {
-                                            toggleSelection(index)
-                                        }) {
-                                            ZStack {
-                                                Circle()
-                                                    .fill(ingredients[index].isSelectedForDeletion ? Color.gray : Color.orange)
-                                                    .frame(width: 30, height: 30)
-                                                
-                                                Image(systemName: ingredients[index].isSelectedForDeletion ? "checkmark.square" : "square")
-                                                    .foregroundColor(.white)
-                                            }
-                                        }
-                                        .buttonStyle(BorderlessButtonStyle())
-                                        .offset(x: 5, y: 0) // 調整按鈕的位置
                                     }
                                 }
+                                .padding()
                             }
                         }
-                        .padding()
                     }
                 }
                 
-                HStack {
-                    if isEditing {
-                        Button("新增食材") {
-                            isAddSheetPresented.toggle()
+                // 编辑按钮部分
+                VStack {
+                    Spacer()
+                    HStack {
+                        if isEditing {
+                            Button("新增食材") {
+                                isAddSheetPresented.toggle()
+                            }
+                            .padding()
                         }
-                        .padding()
                     }
+                    .padding()
                 }
-                .padding()
-                .sheet(isPresented: $isAddSheetPresented) {
-                    AddIngredients(onAdd: { newIngredient in
-                        ingredients.append(newIngredient)
-                        triggerRefresh.toggle()
-                    }, isSheetPresented: $isAddSheetPresented, isEditing: $isEditing)
-                }
-                .onAppear {
-                    fetchData()
-                }
-                .id(triggerRefresh)
+            }
+            .sheet(isPresented: $isAddSheetPresented) {
+                AddIngredients(onAdd: { newIngredient in
+                    ingredients.append(newIngredient)
+                    triggerRefresh.toggle()
+                }, isSheetPresented: $isAddSheetPresented, isEditing: $isEditing)
+            }
+            .onAppear {
+                fetchData()
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -426,7 +474,8 @@ struct StockView: View {
                             Button("編輯") {
                                 isEditing.toggle()
                             }
-                        } else {
+                        } else 
+                        {
                             Button(action: {
                                 if ingredients.contains { $0.isSelectedForDeletion } {
                                     showAlert.toggle()
@@ -437,6 +486,7 @@ struct StockView: View {
                                 Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "確定")
                             }
                             .padding()
+                            
                             .alert(isPresented: $showAlert) {
                                 Alert(title: Text("確認刪除"), message: Text("您確定要刪除所選的食材嗎？"), primaryButton: .default(Text("確定")) {
                                     let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
@@ -463,6 +513,8 @@ struct StockView: View {
             }
         }
         .id(triggerRefresh)
+
+
     }
     
     private func fetchData() {

@@ -444,9 +444,9 @@ struct EditPlanView: View
                     .onAppear {
                         fetchFoodOptions()
                     }
-                    let names = ["我的最愛","健康推薦" ,"懶人分類", "減肥分類", "省錢分類", "放縱分類", "素食分類", "清倉分類", "公開食譜","AI食譜"]
+                    let names = ["我的最愛","健康推薦" ,"懶人分類", "減肥分類", "省錢分類", "放縱分類", "素食分類", "庫存菜單", "公開食譜","AI食譜"]
                     
-                    let contentText = ["美食珍藏庫，專屬小天地","數據分析師，量身訂製法","便捷又快速，食材易準備","低卡且低脂，健康拿滿分","用料超便宜，荷包省省省","高熱量美食，滿滿罪惡感","吃素不單調，色香味俱全","食材訂料理，庫存大清理","食譜大推薦，宜相互分享","創意無窮盡，樂趣多更多"]
+                    let contentText = ["美食珍藏庫，專屬小天地","數據分析師，量身訂製法","便捷又快速，食材易準備","低卡且低脂，健康拿滿分","用料超便宜，荷包省省省","高熱量美食，滿滿罪惡感","吃素不單調，色香味俱全","食材訂料理，菜色便整理","食譜大推薦，宜相互分享","創意無窮盡，樂趣多更多"]
                     
                     let showOptions = [foodOptions7,foodOptions8, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6,foodOptions9,foodOptions10]
                     
