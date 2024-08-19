@@ -160,14 +160,14 @@ struct RecipeView: View
         self._ingredients = ingredients // 正确绑定 ingredients
     }
     
-    var body: some View 
+    var body: some View
     {
-        if recipes.isEmpty 
+        if recipes.isEmpty
         {
-            VStack 
+            VStack
             {
                 Spacer().frame(height: 200) // 调整此高度以控制顶部间距
-                VStack 
+                VStack
                 {
                     Image("採購")
                         .resizable()
@@ -183,41 +183,41 @@ struct RecipeView: View
                 Spacer() // 自动将内容推到中心位置
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
-        } else if !ingredients.isEmpty
-        { // 检查是否有库存
-            VStack 
-            {
-                Spacer().frame(height: 200) // 调整此高度以控制顶部间距
-                VStack
-                {
+        } else if recipes.allSatisfy({ recipe in
+            // 確認所有 recipes 中的食材是否都存在於 ingredients 中
+            ingredients.contains(where: { $0.F_ID == recipe.sqlResult.fid })
+        }) {
+            VStack {
+                Spacer().frame(height: 200)
+                VStack {
                     Image("已採購")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 180, height: 180) // 调整图片大小
+                        .frame(width: 180, height: 180)
                 }
-                VStack 
-                {
+                VStack {
                     Text("已有所需採購食材，快去烹飪吧")
                         .font(.system(size: 18))
                         .foregroundColor(.gray)
                 }
-                Spacer() // 自动将内容推到中心位置
+                Spacer()
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
-        } else 
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+ else
         {
-            List 
+            List
             {
                 ForEach(recipes, id: \.sqlResult.id)
                 { wrapper in
                     if !shouldHideIngredient(wrapper.sqlResult.id) && (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
                         Section(header: EmptyView())
                         {
-                            HStack(alignment: .top) 
+                            HStack(alignment: .top)
                             {
-                                if let imageUrl = URL(string: wrapper.sqlResult.foodImage) 
+                                if let imageUrl = URL(string: wrapper.sqlResult.foodImage)
                                 {
-                                    AsyncImage(url: imageUrl) 
+                                    AsyncImage(url: imageUrl)
                                     { phase in
                                         switch phase
                                         {
@@ -247,11 +247,11 @@ struct RecipeView: View
                                                 .cornerRadius(10)
                                         }
                                     }
-                                    .onAppear 
+                                    .onAppear
                                     {
                                         print("Loading image from URL: \(imageUrl)")
                                     }
-                                } else 
+                                } else
                                 {
                                     Image(systemName: "photo")
                                         .resizable()
@@ -334,7 +334,7 @@ struct RecipeView: View
     }
 }
 
-struct ShopView: View 
+struct ShopView: View
 {
     @State private var recipes: [RecipeWrapper] = []
     @State private var isLoading = true
@@ -468,7 +468,7 @@ struct ShopView: View
         }
     }
     
-    private func loadIngredients() 
+    private func loadIngredients()
     {
         // 加载库存食材的逻辑
         let networkManager = NetworkManager()

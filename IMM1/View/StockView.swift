@@ -57,43 +57,35 @@ struct AddIngredients: View {
     {
         NavigationView
         {
-            ZStack
-            {
-                // 背景图片，放在Form的外面
+            ZStack {
+                // 背景图片，放置在背景层
                 Image("庫存頭腳")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 100, height: 100)
-                    .offset(y: -340) // 调整图片的垂直位置
-                    .zIndex(1) // 确保图片在最前面
-                // Form内容
-                Form
-                {
-                    Section(header: Text("新增食材"))
-                    {
+                    .frame(width: UIScreen.main.bounds.width, height: 100) // 适配屏幕宽度，调整高度
+                    .position(x: UIScreen.main.bounds.width / 2, y: 0) // 固定位置在顶部
+                    .zIndex(1) // 设置为背景层
+                
+                // Form内容，放置在前景层
+                Form {
+                    Section(header: Text("新增食材")) {
                         Toggle("手動輸入食材", isOn: $isManualEntry)
                         
-                        if isManualEntry
-                        {
+                        if isManualEntry {
                             TextField("食材名稱", text: $manualIngredientName)
                             
-                            Picker("食材單位", selection: $manualIngredientUnit)
-                            {
-                                ForEach(predefinedUnits, id: \.self)
-                                { unit in
+                            Picker("食材單位", selection: $manualIngredientUnit) {
+                                ForEach(predefinedUnits, id: \.self) { unit in
                                     Text(unit).tag(unit)
                                 }
                             }
                             .pickerStyle(MenuPickerStyle())
-                        } else
-                        {
+                        } else {
                             TextField("搜索食材", text: $searchText)
                                 .autocapitalization(.none)
                             
-                            Picker("選擇食材", selection: $selectedIngredientIndex)
-                            {
-                                ForEach(filteredIngredients.indices, id: \.self)
-                                { index in
+                            Picker("選擇食材", selection: $selectedIngredientIndex) {
+                                ForEach(filteredIngredients.indices, id: \.self) { index in
                                     Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
                                 }
                             }
@@ -104,6 +96,7 @@ struct AddIngredients: View {
                             .keyboardType(.numberPad)
                     }
                 }
+                .zIndex(0) // 确保Form内容在图片之上
             }
             .toolbar
             {

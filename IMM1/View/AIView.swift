@@ -1,84 +1,93 @@
+// AIView.swift
+
 import SwiftUI
 
-struct DataModel: Codable {
+// 用於編碼和解碼 JSON 資料的結構
+struct DataModel: Codable
+{
     var text: String
 }
 
-struct RecipeResponse: Codable {
+// 處理伺服器回應的 JSON 資料
+struct RecipeResponse: Codable
+{
     var output: String
 }
 
-struct IdentifiableOption: Identifiable {
+
+// ForEach 循環中使用
+struct IdentifiableOption: Identifiable
+{
     var id = UUID()
     var title: String
 }
 
+struct ResponseWrapper: Codable
+{
+    var chatRecords: [ChatRecord] // 根據實際的 JSON 結構定義
+}
 
-// 用於顯示歷史對話紀錄的視圖
-struct ChatHistoryView: View {
+//MARK: 此畫面主結構＿歷史聊天紀錄
+struct ChatRecord: Identifiable, Codable
+{
+    var id: Int { Recipe_ID }
+    let Recipe_ID: Int
+    let U_ID: String
+    let input: String
+    let output: String
+    //var isAIColed : Bool
+}
+
+//MARK: 用於顯示歷史對話紀錄的視圖
+struct ChatHistoryView: View
+{
     @State private var chatRecords: [ChatRecord] = []
     @State private var currentUserID: String? = nil
     
-    var body: some View {
-        VStack {
-            Text("歷史對話紀錄")
-                .font(.system(size: 22))
-                .padding()
-            
-            List(chatRecords) { record in
-                VStack(alignment: .leading) {
-                    Text("問：\(record.input)")
-                        .fontWeight(.bold)
-                    Text("答：\(record.output)")
-                        .foregroundColor(.gray)
-                }
-                .padding()
-            }
-        }
-        .onAppear {
-            fetchUserID { userID in
-                guard let userID = userID else {
-                    print("Failed to get user ID")
-                    return
-                }
-                self.currentUserID = userID
-                fetchChatRecords(for: userID)
-            }
-        }
-    }
-    
-    func fetchUserID(completion: @escaping (String?) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/getUserID.php") else {
+    //MARK: 從伺服器獲取用戶的唯一 ID (U_ID)
+    func fetchUserID(completion: @escaping (String?) -> Void)
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/getUserID.php")
+        else
+        {
             completion(nil)
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error {
+            if let error = error
+            {
                 print("Error: \(error.localizedDescription)")
                 completion(nil)
                 return
             }
             
-            guard let data = data else {
+            guard let data = data
+            else
+            {
                 print("No data received")
                 completion(nil)
                 return
             }
             
-            do {
+            do
+            {
                 let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String]
                 let uID = json?["U_ID"]
                 completion(uID)
-            } catch {
+            } catch
+            {
                 print("Decoding error: \(error.localizedDescription)")
                 completion(nil)
             }
         }.resume()
     }
     
-    func fetchChatRecords(for userID: String) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php") else { return }
+    //MARK: 根據用戶的 ID 從伺服器獲取該用戶的聊天記錄
+    func fetchChatRecords(for userID: String)
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php")
+        else { return }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
@@ -86,13 +95,16 @@ struct ChatHistoryView: View {
                 return
             }
             
-            guard let data = data else {
+            guard let data = data
+            else
+            {
                 print("No data received")
                 return
             }
             
             // Print raw JSON
-            if let jsonString = String(data: data, encoding: .utf8) {
+            if let jsonString = String(data: data, encoding: .utf8)
+            {
                 print("Raw JSON: \(jsonString)")
             }
             
@@ -110,23 +122,86 @@ struct ChatHistoryView: View {
             }
         }.resume()
     }
+    var body: some View
+    {
+        VStack
+        {
+            Text("歷史對話紀錄")
+                .font(.system(size: 22))
+                .bold()
+                .padding()
+                .offset(y:5)
+            
+            ScrollView
+            {
+                if chatRecords.isEmpty
+                {
+                    // 顯示暫時無歷史紀錄的視圖
+                    VStack
+                    {
+                        Image("空ai紀錄")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 180, height: 180)
+                        Text("暫時無歷史紀錄")
+                            .font(.system(size: 18))
+                            .foregroundColor(.gray)
+                    }
+                    .offset(y:180)
+                } else {
+                    VStack(spacing: 20) {  // 设置卡片之间的垂直间距
+                        ForEach(chatRecords) { record in
+                            ZStack
+                            {
+                                // 背景卡片
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.white)
+                                    .shadow(radius: 4)
+                                
+                                VStack(alignment: .leading)
+                                {
+                                    HStack
+                                    {
+                                        Text("問：\(record.input)")
+                                            .fontWeight(.bold)
+                                        Spacer()
+                                        VStack
+                                        {
+                                            Image(systemName: "bookmark.fill")
+                                                .font(.title)
+                                                .foregroundColor(.red)
+                                        }
+                                        .offset(y:-22)
+                                    }
+                                    Text("答：\(record.output)")
+                                        .foregroundColor(.gray)
+                                }
+                                .padding() // 内容内边距
+                            }
+                            .padding(.horizontal)  // 设置卡片的水平间距
+                        }
+                    }
+                    .padding(.vertical) // 添加顶端和底端的间距
+                }
+            }
+        }
+        .onAppear
+        {
+            fetchUserID { userID in
+                guard let userID = userID
+                else
+                {
+                    print("Failed to get user ID")
+                    return
+                }
+                self.currentUserID = userID
+                fetchChatRecords(for: userID)
+            }
+        }
+    }
 }
 
-struct ResponseWrapper: Codable {
-    var chatRecords: [ChatRecord] // 根據實際的 JSON 結構定義
-}
-
-struct ChatRecord: Identifiable, Codable {
-    var id: Int { Recipe_ID }
-    let Recipe_ID: Int
-    let U_ID: String
-    let input: String
-    let output: String
-}
-
-
-
-
+//MARK: 主要的互動界面
 struct AIView: View {
     @State private var messageText: String = ""
     @State private var messages: [String] = []
@@ -138,7 +213,7 @@ struct AIView: View {
     @State private var selectedItems: Set<String> = []
     @State private var showHistory: Bool = false
     @State private var isLoading1 = false
-
+    
     var body: some View {
         VStack {
             VStack(spacing: 0) {
@@ -179,31 +254,31 @@ struct AIView: View {
             }
             .frame(maxWidth: .infinity)
             ScrollView {
-               
-                    ForEach(messages.indices, id: \.self) { index in
-                        HStack {
-                            if messages[index].starts(with: "答：") {
-                                ServerMessageView(message: messages[index])
-                            } else {
-                                UserMessageView(message: messages[index])
-                            }
+                
+                ForEach(messages.indices, id: \.self) { index in
+                    HStack {
+                        if messages[index].starts(with: "答：") {
+                            ServerMessageView(message: messages[index])
+                        } else {
+                            UserMessageView(message: messages[index])
                         }
+                    }
+                    .padding()
+                }
+                if isLoading1 {
+                    LoadingAnimationView()
+                        .frame(maxWidth: .infinity, maxHeight: 300)
                         .padding()
-                    }
-                    if isLoading1 {
-                        LoadingAnimationView()
-                            .frame(maxWidth: .infinity, maxHeight: 300)
-                            .padding()
-                    }
-                    if isLoading {
-                        LoadingView()
-                            .frame(width: 300,height: 300)
-                            .padding()
-                            
-                    }
-                 
+                }
+                if isLoading {
+                    LoadingView()
+                        .frame(width: 300,height: 300)
+                        .padding()
                     
                 }
+                
+                
+            }
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 3) {
@@ -295,12 +370,12 @@ struct AIView: View {
     
     func fetchData() {
         guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe.php") else { return }
-
+        
         // 開始加載動畫
         DispatchQueue.main.async {
             self.isLoading = true
         }
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Error: \(error.localizedDescription)")
@@ -316,7 +391,7 @@ struct AIView: View {
                 }
                 return
             }
-
+            
             guard let data = data else {
                 print("No data received")
                 DispatchQueue.main.async {
@@ -331,7 +406,7 @@ struct AIView: View {
                 }
                 return
             }
-
+            
             // 解碼 JSON 回應
             do {
                 let decoder = JSONDecoder()
@@ -369,7 +444,7 @@ struct AIView: View {
             }
         }.resume()
     }
-
+    
 }
 
 
