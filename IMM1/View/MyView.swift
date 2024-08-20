@@ -7,7 +7,53 @@
 // MARK: 設置View
 import SwiftUI
 import PhotosUI
+struct PresetImageSelectionView: View {
+    let columns = [
+            GridItem(.flexible()),
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ]
+    @Environment(\.presentationMode) var presentationMode
 
+    @State private var selectedImageName: String?
+    @State private var showConfirmationAlert = false
+    @Binding var userImage: Data?
+    let presetImages = ["我的最愛", "已採購", "公開食譜","分類未新增最愛","自訂食材預設圖片","空庫存","空AI食譜","省錢分類","庫存菜單","庫存頭腳","素食分類","健康推薦","採購","烹飪","最愛","減肥分類","過往食譜","懶人分類","AI食譜"] // 將這裡的名稱替換為你的預設圖片名稱
+    
+    var body: some View {
+           ScrollView {
+               LazyVGrid(columns: columns, spacing: 20) {
+                   ForEach(presetImages, id: \.self) { imageName in
+                       Button(action: {
+                           self.selectedImageName = imageName
+                           self.showConfirmationAlert = true
+                       }) {
+                           Image(imageName)
+                               .resizable()
+                               .scaledToFit()
+                               .frame(width: 100, height: 100)
+                               .clipShape(Circle())
+                               .padding()
+                       }
+                   }
+               }
+               .padding()
+           }
+           .alert(isPresented: $showConfirmationAlert) {
+               Alert(
+                   title: Text("確認選擇"),
+                   message: Text("確定要使用這張圖片嗎？"),
+                   primaryButton: .default(Text("確認")) {
+                       if let imageName = self.selectedImageName {
+                           self.userImage = UIImage(named: imageName)?.pngData()
+                           self.presentationMode.wrappedValue.dismiss() // 返回到原本的畫面
+                       }
+                   },
+                   secondaryButton: .cancel(Text("取消"))
+               )
+           }
+       }
+   }
 struct MyView: View
 {
     @AppStorage("userImage") private var userImage: Data?
@@ -15,7 +61,9 @@ struct MyView: View
     @AppStorage("signin") private var signin: Bool = false
     
     @Binding var select: Int
-    
+    @State private var showingImagePicker = false
+    @State private var showingActionSheet = false
+    @State private var showPresetImages = false
     @State private var selectIndex = 0
     @State var disID: Int = 1  // 添加一個外部可綁定的 Dis_ID
     @State private var shouldRefreshView = false // 添加一个属性来存储是否需要刷新视图
@@ -133,70 +181,78 @@ struct MyView: View
             {
                 VStack(spacing: 20)
                 {
-                    // MARK: 編輯
-                    //                HStack
-                    //                {
-                    //                    Spacer()
-                    //                    NavigationLink(destination: MydataView(information: self.$information))
-                    //                    {
-                    //                        Text("編輯")
-                    //                            .frame(maxWidth: .infinity, alignment: .trailing)
-                    //                    }
-                    //                    .transition(.opacity.animation(.easeInOut.speed(2)))
-                    //                }
                     // MARK: 頭像
                     VStack(spacing: 20)
-                    {
-                        if let userImage=self.userImage,
-                           let image=UIImage(data: userImage)
+                    {if let userImage = self.userImage,
+                        let image = UIImage(data: userImage) 
                         {
-                            PhotosPicker(selection: self.$pickImage, matching: .any(of: [.images, .livePhotos]))
-                            {
-                                Circle()
-                                    .fill(.gray)
-                                    .scaledToFit()
-                                    .frame(width: 160)
-                                    .overlay
-                                {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .clipShape(Circle())
-                                }
-                            }
-                            .onChange(of: self.pickImage)
-                            {
-                                image in
-                                Task
-                                {
-                                    if let data=try? await image?.loadTransferable(type: Data.self)
-                                    {
-                                        self.userImage=data
-                                    }
-                                }
-                            }
-                        }else
-                        {
-                            PhotosPicker(selection: self.$pickImage, matching: .any(of: [.images, .livePhotos]))
-                            {
-                                Circle()
-                                    .fill(.gray)
-                                    .scaledToFit()
-                                    .frame(width: 160)
-                            }
-                            .onChange(of: self.pickImage)
-                            {
-                                image in
-                                Task
-                                {
-                                    if let data=try? await image?.loadTransferable(type: Data.self)
-                                    {
-                                        self.userImage=data
-                                    }
-                                }
-                            }
-                        }
-                    }
+                         Button(action: {
+                             self.showingActionSheet = true
+                         }) {
+                             Circle()
+                                 .fill(.gray)
+                                 .scaledToFit()
+                                 .frame(width: 160)
+                                 .overlay {
+                                     Image(uiImage: image)
+                                         .resizable()
+                                         .scaledToFill()
+                                         .clipShape(Circle())
+                                 }
+                         }
+                         .actionSheet(isPresented: $showingActionSheet) {
+                             ActionSheet(title: Text("選擇圖片"), buttons: [
+                                 .default(Text("從相簿選取")) {
+                                     self.showingImagePicker = true
+                                 },
+                                 .default(Text("使用系統預設圖片")) {
+                                     self.showPresetImages = true
+                                 },
+                                 .cancel()
+                             ])
+                         }
+                     } else {
+                         Button(action: {
+                             self.showingActionSheet = true
+                         }) {
+                             Circle()
+                                 .fill(.gray)
+                                 .scaledToFit()
+                                 .frame(width: 160)
+                                 .overlay {
+                                     Image("放縱分類")
+                                         .resizable()
+                                         .scaledToFill()
+                                         .clipShape(Circle())
+                                 }
+                         }
+                         .actionSheet(isPresented: $showingActionSheet) {
+                             ActionSheet(title: Text("選擇圖片"), buttons: [
+                                 .default(Text("從相簿選取")) {
+                                     self.showingImagePicker = true
+                                 },
+                                 .default(Text("使用系統預設圖片")) {
+                                     self.showPresetImages = true
+                                 },
+                                 .cancel()
+                             ])
+                         }
+                     }
+                 }
+                 .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
+                 .onChange(of: pickImage) { newItem in
+                     Task {
+                         if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                             self.userImage = data
+                         }
+                     }
+                 }
+                 .sheet(isPresented: $showPresetImages) {
+                     PresetImageSelectionView(userImage: $userImage)
+                 }
+             
+
+
                     
                     // MARK: 標籤
                     //                VStack(spacing: 20)

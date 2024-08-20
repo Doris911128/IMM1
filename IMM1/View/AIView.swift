@@ -14,7 +14,6 @@ struct RecipeResponse: Codable
     var output: String
 }
 
-
 // ForEach 循環中使用
 struct IdentifiableOption: Identifiable
 {
@@ -28,15 +27,32 @@ struct ResponseWrapper: Codable
 }
 
 //MARK: 此畫面主結構＿歷史聊天紀錄
-struct ChatRecord: Identifiable, Codable
+struct ChatRecord: Identifiable, Codable 
 {
     var id: Int { Recipe_ID }
     let Recipe_ID: Int
     let U_ID: String
     let input: String
     let output: String
-    //var isAIColed : Bool
+    var isAIColed: Bool
+
+    // 自定義解碼方法，將 Int 轉換為 Bool
+    enum CodingKeys: String, CodingKey
+    {
+        case Recipe_ID, U_ID, input, output, isAIColed = "isAICol"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        Recipe_ID = try container.decode(Int.self, forKey: .Recipe_ID)
+        U_ID = try container.decode(String.self, forKey: .U_ID)
+        input = try container.decode(String.self, forKey: .input)
+        output = try container.decode(String.self, forKey: .output)
+        let isAIColInt = try container.decode(Int.self, forKey: .isAIColed)
+        isAIColed = isAIColInt == 1
+    }
 }
+
 
 //MARK: 用於顯示歷史對話紀錄的視圖
 struct ChatHistoryView: View
@@ -86,8 +102,12 @@ struct ChatHistoryView: View
     //MARK: 根據用戶的 ID 從伺服器獲取該用戶的聊天記錄
     func fetchChatRecords(for userID: String)
     {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php")
-        else { return }
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(userID)")
+        else
+        {
+            print("Invalid URL")
+            return
+        }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
@@ -114,7 +134,8 @@ struct ChatHistoryView: View
                 let records = try decoder.decode([ChatRecord].self, from: data)
                 
                 // Filter the records for the current user
-                DispatchQueue.main.async {
+                DispatchQueue.main.async 
+                {
                     self.chatRecords = records.filter { $0.U_ID == userID }
                 }
             } catch {
@@ -122,6 +143,7 @@ struct ChatHistoryView: View
             }
         }.resume()
     }
+    
     var body: some View
     {
         VStack
@@ -165,12 +187,24 @@ struct ChatHistoryView: View
                                         Text("問：\(record.input)")
                                             .fontWeight(.bold)
                                         Spacer()
-                                        VStack
-                                        {
-                                            Image(systemName: "bookmark.fill")
-                                                .font(.title)
-                                                .foregroundColor(.red)
+                                        
+                                        VStack {
+                                            Button(action: {
+                                                toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAIColed: !record.isAIColed) { result in
+                                                    switch result {
+                                                    case .success(let response):
+                                                        print("Toggled AICol successfully: \(response)")
+                                                    case .failure(let error):
+                                                        print("Error toggling AICol: \(error.localizedDescription)")
+                                                    }
+                                                }
+                                            }) {
+                                                Image(systemName: record.isAIColed ? "bookmark.fill" : "bookmark")
+                                                    .font(.title)
+                                                    .foregroundColor(.red)
+                                            }
                                         }
+
                                         .offset(y:-22)
                                     }
                                     Text("答：\(record.output)")
@@ -202,7 +236,8 @@ struct ChatHistoryView: View
 }
 
 //MARK: 主要的互動界面
-struct AIView: View {
+struct AIView: View 
+{
     @State private var messageText: String = ""
     @State private var messages: [String] = []
     @State private var isLoading: Bool = false
@@ -276,8 +311,6 @@ struct AIView: View {
                         .padding()
                     
                 }
-                
-                
             }
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -323,6 +356,7 @@ struct AIView: View {
         }
     }
     
+    //MARK: 點擊發送按鈕時被調用
     func sendMessage() {
         guard !messageText.isEmpty else { return }
         let dataModel = DataModel(text: messageText)
@@ -333,7 +367,7 @@ struct AIView: View {
         sendToDatabase(dataModel: dataModel)
     }
     
-    
+    //MARK: 獲取最新的 AI 回應
     func sendToDatabase(dataModel: DataModel) {
         guard let url = URL(string: "http://163.17.9.107/food/php/AI_Recipe.php") else { return }
         var request = URLRequest(url: url)
@@ -368,6 +402,7 @@ struct AIView: View {
         }.resume()
     }
     
+    //MARK: 獲取最新的 AI 回應 更新到 messages 中
     func fetchData() {
         guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe.php") else { return }
         
