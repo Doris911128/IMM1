@@ -55,7 +55,7 @@ struct AIRecipeView: View
                     let recipes = try decoder.decode([ChatRecord].self, from: data)
                     DispatchQueue.main.async {
                         // 过滤出 isAIColed 为 true 的数据，表示收藏的内容
-                        self.chatRecords = recipes.filter { $0.isAIColed }
+                        self.chatRecords = recipes.filter { $0.isAICol }
                     }
                 } catch {
                     DispatchQueue.main.async {
@@ -164,7 +164,7 @@ struct AIRecipeView: View
                                         
                                         VStack {
                                             Button(action: {
-                                                toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAIColed: !record.isAIColed) { result in
+                                                toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
                                                     switch result {
                                                     case .success(let response):
                                                         print("Toggled AICol successfully: \(response)")
@@ -173,7 +173,7 @@ struct AIRecipeView: View
                                                     }
                                                 }
                                             }) {
-                                                Image(systemName: record.isAIColed ? "bookmark.fill" : "bookmark")
+                                                Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
                                                     .font(.title)
                                                     .foregroundColor(.red)
                                             }

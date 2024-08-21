@@ -121,64 +121,92 @@ extension View
         }.resume()
     }
     
+    
+    
+    
     // MARK: 切換根據收藏狀態切換按鈕顯示
-        func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAIColed: Bool, completion: @escaping (Result<String, Error>) -> Void) {
-            guard let url = URL(string: "http://163.17.9.107/food/php/UpdateAICol.php") else {
-                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+    func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAICol: Bool, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/php/UpdateAICol.php") else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let bodyData = "U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)&isAICol=\(isAICol ? 1 : 0)"
+        request.httpBody = bodyData.data(using: .utf8)
+        request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
                 return
             }
             
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            let bodyData = "Recipe_ID=\(Recipe_ID)&isAIColed=\(isAIColed ? 1 : 0)&U_ID=\(U_ID)"
-            request.httpBody = bodyData.data(using: .utf8)
-            request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            guard let httpResponse = response as? HTTPURLResponse else {
+                let statusError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
+                completion(.failure(statusError))
+                return
+            }
             
-            URLSession.shared.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    completion(.failure(error))
-                    return
-                }
-                
-                guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
+            if httpResponse.statusCode == 200 {
+                if let data = data {
+                    do {
+                        if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                           let message = jsonResponse["message"] as? String {
+                            completion(.success(message))
+                        } else {
+                            let parseError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure"])
+                            completion(.failure(parseError))
+                        }
+                    } catch {
+                        completion(.failure(error))
+                    }
+                } else {
                     let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
                     completion(.failure(dataError))
-                    return
                 }
-                
-                completion(.success(responseString))
-            }.resume()
-        }
+            } else {
+                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    print("Server error response: \(responseString)")
+                }
+                let serverError = NSError(domain: "", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Server error"])
+                completion(.failure(serverError))
+            }
+        }.resume()
+    }
+
+
 
     // MARK: 檢查收藏狀態
-        func checkAIColed(U_ID: String, Recipe_ID: Int, completion: @escaping (Result<Bool, Error>) -> Void) {
-            guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)") else {
-                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+    func checkAIColed(U_ID: String, Recipe_ID: Int, completion: @escaping (Result<Bool, Error>) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)") else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
                 return
             }
             
-            var request = URLRequest(url: url)
-            request.httpMethod = "GET"
+            guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
+                let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
+                completion(.failure(dataError))
+                return
+            }
             
-            URLSession.shared.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    completion(.failure(error))
-                    return
-                }
-                
-                guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
-                    let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
-                    completion(.failure(dataError))
-                    return
-                }
-                
-                if responseString.contains("\"isAICol\":true") {
-                    completion(.success(true))
-                } else {
-                    completion(.success(false))
-                }
-            }.resume()
-        }
+            if responseString.contains("\"isAICol\":true") {
+                completion(.success(true))
+            } else {
+                completion(.success(false))
+            }
+        }.resume()
+    }
 }
 
 struct TextLimit: ViewModifier

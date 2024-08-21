@@ -27,29 +27,29 @@ struct ResponseWrapper: Codable
 }
 
 //MARK: 此畫面主結構＿歷史聊天紀錄
-struct ChatRecord: Identifiable, Codable 
+struct ChatRecord: Identifiable, Codable
 {
     var id: Int { Recipe_ID }
     let Recipe_ID: Int
     let U_ID: String
     let input: String
     let output: String
-    var isAIColed: Bool
-
+    var isAICol: Bool
+    
     // 自定義解碼方法，將 Int 轉換為 Bool
     enum CodingKeys: String, CodingKey
     {
-        case Recipe_ID, U_ID, input, output, isAIColed = "isAICol"
+        case Recipe_ID, U_ID, input, output, isAICol = "isAICol"
     }
-
+    
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         Recipe_ID = try container.decode(Int.self, forKey: .Recipe_ID)
         U_ID = try container.decode(String.self, forKey: .U_ID)
         input = try container.decode(String.self, forKey: .input)
         output = try container.decode(String.self, forKey: .output)
-        let isAIColInt = try container.decode(Int.self, forKey: .isAIColed)
-        isAIColed = isAIColInt == 1
+        let isAIColInt = try container.decode(Int.self, forKey: .isAICol)
+        isAICol = isAIColInt == 1
     }
 }
 
@@ -134,7 +134,7 @@ struct ChatHistoryView: View
                 let records = try decoder.decode([ChatRecord].self, from: data)
                 
                 // Filter the records for the current user
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     self.chatRecords = records.filter { $0.U_ID == userID }
                 }
@@ -173,58 +173,56 @@ struct ChatHistoryView: View
                 } else {
                     VStack(spacing: 20) {  // 设置卡片之间的垂直间距
                         ForEach(chatRecords) { record in
-                            ZStack
-                            {
-                                // 背景卡片
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.white)
-                                    .shadow(radius: 4)
-                                
-                                VStack(alignment: .leading)
-                                {
-                                    HStack
-                                    {
-                                        Text("問：\(record.input)")
-                                            .fontWeight(.bold)
-                                        Spacer()
-                                        
-                                        VStack {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.white)
+                                        .shadow(radius: 4)
+
+                                    VStack(alignment: .leading) {
+                                        HStack {
+                                            Text("問：\(record.input)")
+                                                .fontWeight(.bold)
+                                            Spacer()
+                                            
                                             Button(action: {
-                                                toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAIColed: !record.isAIColed) { result in
+                                                toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
                                                     switch result {
-                                                    case .success(let response):
-                                                        print("Toggled AICol successfully: \(response)")
+                                                    case .success(let message):
+                                                        DispatchQueue.main.async {
+                                                            if let index = chatRecords.firstIndex(where: { $0.Recipe_ID == record.Recipe_ID }) {
+                                                                chatRecords[index].isAICol.toggle() // 更新收藏狀態
+                                                            }
+                                                            print("isAICol Action successful: \(message)") // 打印成功消息
+                                                        }
                                                     case .failure(let error):
-                                                        print("Error toggling AICol: \(error.localizedDescription)")
+                                                        DispatchQueue.main.async {
+                                                            print("Error toggling AICol: \(error.localizedDescription)")
+                                                        }
                                                     }
                                                 }
                                             }) {
-                                                Image(systemName: record.isAIColed ? "bookmark.fill" : "bookmark")
+                                                Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
                                                     .font(.title)
                                                     .foregroundColor(.red)
                                             }
-                                        }
+                                            .offset(y: -22)
 
-                                        .offset(y:-22)
+                                        }
+                                        Text("答：\(record.output)")
+                                            .foregroundColor(.gray)
                                     }
-                                    Text("答：\(record.output)")
-                                        .foregroundColor(.gray)
+                                    .padding()
                                 }
-                                .padding() // 内容内边距
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)  // 设置卡片的水平间距
-                        }
                     }
                     .padding(.vertical) // 添加顶端和底端的间距
                 }
             }
         }
-        .onAppear
-        {
+        .onAppear {
             fetchUserID { userID in
-                guard let userID = userID
-                else
-                {
+                guard let userID = userID else {
                     print("Failed to get user ID")
                     return
                 }
@@ -236,7 +234,7 @@ struct ChatHistoryView: View
 }
 
 //MARK: 主要的互動界面
-struct AIView: View 
+struct AIView: View
 {
     @State private var messageText: String = ""
     @State private var messages: [String] = []
