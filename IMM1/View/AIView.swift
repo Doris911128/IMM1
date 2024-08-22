@@ -36,7 +36,7 @@ struct ChatRecord: Identifiable, Codable
     let output: String
     var isAICol: Bool
     
-    // 自定義解碼方法，將 Int 轉換為 Bool
+    // 自定义解码方法，将 Int 转换为 Bool
     enum CodingKeys: String, CodingKey
     {
         case Recipe_ID, U_ID, input, output, isAICol = "isAICol"
@@ -59,45 +59,7 @@ struct ChatHistoryView: View
 {
     @State private var chatRecords: [ChatRecord] = []
     @State private var currentUserID: String? = nil
-    
-    //MARK: 從伺服器獲取用戶的唯一 ID (U_ID)
-    func fetchUserID(completion: @escaping (String?) -> Void)
-    {
-        guard let url = URL(string: "http://163.17.9.107/food/php/getUserID.php")
-        else
-        {
-            completion(nil)
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error
-            {
-                print("Error: \(error.localizedDescription)")
-                completion(nil)
-                return
-            }
-            
-            guard let data = data
-            else
-            {
-                print("No data received")
-                completion(nil)
-                return
-            }
-            
-            do
-            {
-                let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String]
-                let uID = json?["U_ID"]
-                completion(uID)
-            } catch
-            {
-                print("Decoding error: \(error.localizedDescription)")
-                completion(nil)
-            }
-        }.resume()
-    }
+
     
     //MARK: 根據用戶的 ID 從伺服器獲取該用戶的聊天記錄
     func fetchChatRecords(for userID: String)
@@ -173,48 +135,48 @@ struct ChatHistoryView: View
                 } else {
                     VStack(spacing: 20) {  // 设置卡片之间的垂直间距
                         ForEach(chatRecords) { record in
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(Color.white)
-                                        .shadow(radius: 4)
-
-                                    VStack(alignment: .leading) {
-                                        HStack {
-                                            Text("問：\(record.input)")
-                                                .fontWeight(.bold)
-                                            Spacer()
-                                            
-                                            Button(action: {
-                                                toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
-                                                    switch result {
-                                                    case .success(let message):
-                                                        DispatchQueue.main.async {
-                                                            if let index = chatRecords.firstIndex(where: { $0.Recipe_ID == record.Recipe_ID }) {
-                                                                chatRecords[index].isAICol.toggle() // 更新收藏狀態
-                                                            }
-                                                            print("isAICol Action successful: \(message)") // 打印成功消息
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.white)
+                                    .shadow(radius: 4)
+                                
+                                VStack(alignment: .leading) {
+                                    HStack {
+                                        Text("問：\(record.input)")
+                                            .fontWeight(.bold)
+                                        Spacer()
+                                        
+                                        Button(action: {
+                                            toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
+                                                switch result {
+                                                case .success(let message):
+                                                    DispatchQueue.main.async {
+                                                        if let index = chatRecords.firstIndex(where: { $0.Recipe_ID == record.Recipe_ID }) {
+                                                            chatRecords[index].isAICol.toggle() // 更新收藏狀態
                                                         }
-                                                    case .failure(let error):
-                                                        DispatchQueue.main.async {
-                                                            print("Error toggling AICol: \(error.localizedDescription)")
-                                                        }
+                                                        print("isAICol Action successful: \(message)") // 打印成功消息
+                                                    }
+                                                case .failure(let error):
+                                                    DispatchQueue.main.async {
+                                                        print("Error toggling AICol: \(error.localizedDescription)")
                                                     }
                                                 }
-                                            }) {
-                                                Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
-                                                    .font(.title)
-                                                    .foregroundColor(.red)
                                             }
-                                            .offset(y: -22)
-
+                                        }) {
+                                            Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
+                                                .font(.title)
+                                                .foregroundColor(.red)
                                         }
-                                        Text("答：\(record.output)")
-                                            .foregroundColor(.gray)
+                                        .offset(y: -22)
+                                        
                                     }
-                                    .padding()
+                                    Text("答：\(record.output)")
+                                        .foregroundColor(.gray)
                                 }
-                                .padding(.horizontal)
+                                .padding()
                             }
+                            .padding(.horizontal)
+                        }
                     }
                     .padding(.vertical) // 添加顶端和底端的间距
                 }

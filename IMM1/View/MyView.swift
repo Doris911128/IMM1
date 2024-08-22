@@ -190,9 +190,10 @@ struct MyView: View
                              self.showingActionSheet = true
                          }) {
                              Circle()
-                                 .fill(.gray)
+                                 .tint(Color("BackColor"))
                                  .scaledToFit()
                                  .frame(width: 160)
+                                 .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)  // 添加阴影
                                  .overlay {
                                      Image(uiImage: image)
                                          .resizable()
@@ -384,7 +385,7 @@ struct MyView: View
                                     
                                 }
                                 Toggle("", isOn: self.$colorScheme)
-                                    .tint(Color("sidebuttomcolor"))
+                                    .tint(Color("BottonColor"))
                                     .scaleEffect(0.75)
                                     .offset(x: 30)
                                     .onChange(of:self.colorScheme){

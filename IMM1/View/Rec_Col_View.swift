@@ -21,11 +21,15 @@ struct Rec_Col_View: View
                 .tabItem {
                     Label("AI食譜庫", systemImage: "book.pages")
                 }
+            Custom_recipesView(U_ID: " ")
+                .tabItem {
+                    Label("自訂食譜庫", systemImage: "book.pages")
+                }
         }
     }
 }
 
-#Preview 
+#Preview
 {
     Rec_Col_View()
 }

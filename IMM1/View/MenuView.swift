@@ -2,8 +2,6 @@
 //  食譜份數暫時未新增因要更動版面
 //  立即主食譜顯示+烹飪模式AI
 
-//
-//
 
 import SwiftUI
 import Foundation
@@ -54,31 +52,31 @@ struct MenuView: View, RecipeProtocol
                     HStack
                     {
                         Spacer()
-                        NavigationLink(destination: CookingAiView(disID: Dis_ID))
-                        {
-                            HStack
-                            {
-                                ZStack
-                                {
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 40, height: 40)
-                                    
-                                    Image("chef-hat-one-2")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 30, height: 30)
-                                }
-                                
-                                Text("AI Cooking")
-                            }
-                            .foregroundColor(.white)
-                            .padding(.vertical, 10) // 控制按鈕上下內邊距
-                            .padding(.horizontal,10) // 控制按鈕左右內邊距
-                            .background(Color.orange)
-                            .clipShape(CustomCorners(cornerRadius: 30, corners: [.topLeft, .bottomLeft]))
-                            .shadow(radius: 10)
-                        }
+//                        NavigationLink(destination: CookingAiView(disID: Dis_ID))
+//                        {
+//                            HStack
+//                            {
+//                                ZStack
+//                                {
+//                                    Circle()
+//                                        .fill(Color.white)
+//                                        .frame(width: 40, height: 40)
+//                                    
+//                                    Image("chef-hat-one-2")
+//                                        .resizable()
+//                                        .scaledToFit()
+//                                        .frame(width: 30, height: 30)
+//                                }
+//                                
+//                                Text("AI Cooking")
+//                            }
+//                            .foregroundColor(.white)
+//                            .padding(.vertical, 10) // 控制按鈕上下內邊距
+//                            .padding(.horizontal,10) // 控制按鈕左右內邊距
+//                            .background(Color.orange)
+//                            .clipShape(CustomCorners(cornerRadius: 30, corners: [.topLeft, .bottomLeft]))
+//                            .shadow(radius: 10)
+//                        }
                         .padding(.bottom, 50) // 調整按鈕的垂直位置
                     }
                 }

@@ -338,7 +338,7 @@ struct StockView: View
                                         .scaledToFit()
                                         .frame(width: 180, height: 180)
                                     //目前無庫存項目
-                                    Text("暫未新增任何親最愛食譜")
+                                    Text("暫未新增任何庫存")
                                         .font(.system(size: 18))
                                         .foregroundColor(.gray)
                                 }

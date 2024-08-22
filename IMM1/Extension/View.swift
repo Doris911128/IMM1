@@ -122,7 +122,44 @@ extension View
     }
     
     
-    
+    //MARK: 從伺服器獲取用戶的唯一 ID (U_ID)給ai歷史用
+    func fetchUserID(completion: @escaping (String?) -> Void)
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/getUserID.php")
+        else
+        {
+            completion(nil)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error
+            {
+                print("Error: \(error.localizedDescription)")
+                completion(nil)
+                return
+            }
+            
+            guard let data = data
+            else
+            {
+                print("No data received")
+                completion(nil)
+                return
+            }
+            
+            do
+            {
+                let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: String]
+                let uID = json?["U_ID"]
+                completion(uID)
+            } catch
+            {
+                print("Decoding error: \(error.localizedDescription)")
+                completion(nil)
+            }
+        }.resume()
+    }
     
     // MARK: 切換根據收藏狀態切換按鈕顯示
     func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAICol: Bool, completion: @escaping (Result<String, Error>) -> Void) {
@@ -176,8 +213,6 @@ extension View
         }.resume()
     }
 
-
-
     // MARK: 檢查收藏狀態
     func checkAIColed(U_ID: String, Recipe_ID: Int, completion: @escaping (Result<Bool, Error>) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)") else {
@@ -200,6 +235,8 @@ extension View
                 return
             }
             
+            print("Raw response string: \(responseString)") // 添加這行來調試
+            
             if responseString.contains("\"isAICol\":true") {
                 completion(.success(true))
             } else {
@@ -207,6 +244,7 @@ extension View
             }
         }.resume()
     }
+
 }
 
 struct TextLimit: ViewModifier

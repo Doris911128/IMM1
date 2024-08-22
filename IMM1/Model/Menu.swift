@@ -81,16 +81,19 @@ struct Food: Codable
     let F_ID: Int //ID
     let F_Name: String //名稱
     let F_Unit: String //食材單位
+    let Food_imge: String //食材照片
     
     // 添加初始化方法，接受传递的 F_ID
     init(F_ID: Int = 0,
          F_Name: String = "",
-         F_Unit: String  = ""
+         F_Unit: String  = "",
+         Food_imge: String  = ""
     )
     {
         self.F_ID = F_ID
         self.F_Name = F_Name
         self.F_Unit = F_Unit
+        self.Food_imge = Food_imge
     }
 }
 

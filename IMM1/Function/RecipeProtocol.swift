@@ -136,9 +136,9 @@ extension RecipeProtocol
                 return
             }
             
-            if let data = data, let cookingText = String(data: data, encoding: .utf8) 
+            if let data = data, let cookingText = String(data: data, encoding: .utf8)
             {
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     var mutableSelf = self
                     mutableSelf.cookingMethod = cookingText
@@ -272,20 +272,29 @@ extension RecipeProtocol
                     .font(.title2)
                     .offset(x: -130)
                 
-                if let selectedDish = selectedDish
+                // 水平滚动视图显示食材
+                ScrollView(.horizontal, showsIndicators: false)
                 {
-                    let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
-                    
-                    ForEach(filteredAmounts, id: \.F_ID)
-                    { amount in
-                        if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
+                    HStack(spacing: -20)
+                    {
+                        if let selectedDish = selectedDish
                         {
-                            Text("\(food.F_Name) \(amount.A_Amount) \(food.F_Unit)")
+                            let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
+                            
+                            ForEach(filteredAmounts, id: \.A_ID) { amount in
+                                if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
+                                {
+                                    IngredientCardView(
+                                        imageName: food.Food_imge,  // 使用 food.Food_imge 加载图片
+                                        amount: "\(amount.A_Amount)",  // 将数量转换为字符串
+                                        unit: food.F_Unit,
+                                        name: food.F_Name
+                                    )
+                                }
+                            }
                         }
                     }
-                } else
-                {
-                    LoadingView()//載入畫面
+                    //.padding(.horizontal, 15)
                 }
                 
                 Text("料理方法")
@@ -299,10 +308,11 @@ extension RecipeProtocol
                         Text(method)
                             .padding(.leading, 20)
                             .padding(.trailing, 20)
-                    } else
-                    {
-                        LoadingView()//載入畫面
                     }
+                    //                    else
+                    //                    {
+                    //                        LoadingView()//載入畫面
+                    //                    }
                 }
                 
                 Text("參考影片")
@@ -313,7 +323,8 @@ extension RecipeProtocol
                 // 使用 WebView 播放 YouTube 视频
                 if let videoURLString = dishesData.first?.D_Video,
                    let videoID = URLComponents(string: videoURLString)?.queryItems?.first(where: { $0.name == "v" })?.value,
-                   let embedURL = URL(string: "https://www.youtube.com/embed/\(videoID)") {
+                   let embedURL = URL(string: "https://www.youtube.com/embed/\(videoID)")
+                {
                     WebView(url: embedURL)
                         .frame(width: 350, height: 200)  // 设置 WebView 的大小
                         .cornerRadius(15)  // 设置圆角
@@ -321,13 +332,14 @@ extension RecipeProtocol
                             RoundedRectangle(cornerRadius: 15)
                                 .stroke(Color("BottonColor"), lineWidth: 2)  // 添加边框
                         )
-                } else {
+                } else
+                {
                     Text("無影片資訊")
                         .foregroundColor(.gray)
                         .padding()
                 }
             }
-            .onAppear 
+                .onAppear
             {
                 if let cookingUrl = selectedDish?.D_Cook
                 {
@@ -335,5 +347,61 @@ extension RecipeProtocol
                 }
             }
         )
+    }
+}
+
+//MARK: 食材左右滑動
+struct IngredientCardView: View
+{
+    let imageName: String
+    let amount: String
+    let unit: String
+    let name: String
+    
+    var body: some View
+    {
+        VStack(spacing: 3)
+        {
+            // 使用 AsyncImage 加载食材图片
+            AsyncImage(url: URL(string: imageName))
+            { phase in
+                switch phase
+                {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 60, height: 60)
+                        .clipShape(Circle()) // 将图片裁剪为圆形
+                        .shadow(radius: 3) // 可选：为图片添加阴影
+                case .failure:
+                    Circle() // 显示为圆形的灰色占位符
+                        .fill(Color.gray)
+                        .frame(width: 60, height: 60)
+                case .empty:
+                    ProgressView()
+                        .frame(width: 60, height: 60)
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            
+            // 显示食材的数量和单位
+            Text("\(amount) \(unit)")
+                .font(.system(size: 18))
+                .bold()
+                .foregroundColor(.black)
+            
+            // 显示食材名称
+            Text(name)
+                .font(.footnote)
+                .multilineTextAlignment(.center)
+                .foregroundColor(.gray)
+        }
+        .padding(10)
+        .background(Color("BottonColor").opacity(0.2))
+        .clipShape(Capsule())  // 使用 Capsule 代替 RoundedRectangle 使其成为胶囊形状
+        .shadow(radius: 3)
+        .frame(width: 120)  // 根据内容调整宽度
     }
 }

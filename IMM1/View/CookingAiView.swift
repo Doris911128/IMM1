@@ -7,23 +7,28 @@
 
 import SwiftUI
 
+
 // 定義字體大小枚舉
 enum FontSize
 {
     case small, medium, large
 }
 
-struct CookingAiView: View 
+struct CookingAiView: View
 {
     var disID: Int // 新增接收 Dis_ID
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes?
+    @State private var scrollOffset: CGFloat = 0 // 滑动偏移
+    @State private var gesture: String = ""
+    @State private var currentIndex: Int = 0 // 当前卡片索引
+    @State private var stepsCount: Int = 0 // 新增狀態變量來跟蹤步驟數量
     
-    var body: some View 
+    var body: some View
     {
-        NavigationView 
+        NavigationView
         {
-            VStack(spacing: 0) 
+            VStack(spacing: 0)
             {
                 HStack
                 {
@@ -37,35 +42,81 @@ struct CookingAiView: View
                 .background(Color.white)
                 .zIndex(1)
                 
-                ScrollView(.horizontal, showsIndicators: false) 
+                ScrollView(.horizontal, showsIndicators: false)
                 {
                     HStack(spacing: 20)
                     {
                         if let selectedDish = selectedDish
                         {
-                            CardView(dish: selectedDish)
+                            CardView(dish: selectedDish, stepsCount: $stepsCount) // 传递步驟數量
                                 .frame(maxWidth: .infinity, alignment: .center) // 卡片水平居中
+                                .offset(x: scrollOffset) // 应用滑动偏移
+
                         }
                     }
                     .padding(.horizontal)
                     .frame(maxHeight: .infinity, alignment: .center) // 让卡片垂直居中
+                    
                 }
                 
-                // 添加相機視圖
-                CameraView()
-                    .frame(width: 100, height: 100) // 使用 frame 修飾符調整大小
-                    .background(Color.black)
-                    .cornerRadius(10)
+                // 添加 HandPoseDetectionView
+//                HandPoseDetectionView(onGestureDetected: { detectedGesture in
+//                    self.gesture = detectedGesture
+//                    updateScrollOffset()
+//                })
+                .frame(width: 100, height: 100)
+                .background(Color.black)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.blue, lineWidth: 2)
+                )
+                .padding()
+                
+                // 显示步骤数量
+                Text("当前食谱步骤数: \(stepsCount)")
+                    .font(.title2)
                     .padding()
             }
             .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
         }
-        .onAppear 
+        .onAppear
         {
             loadDishesData() // 畫面加載時加載菜譜數據
         }
     }
     
+    func updateScrollOffset() {
+            let screenWidth = UIScreen.main.bounds.width
+            let cardWidth = screenWidth * 0.85
+            let stepCard = stepsCount
+            
+            switch gesture {
+            case "👎":
+                if currentIndex < stepCard - 1 {
+                    currentIndex += 1
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        scrollOffset -= cardWidth
+                    }
+                    print("当前卡片索引: \(currentIndex + 1), 总步骤数: \(stepCard)")
+
+                }
+            case "👍":
+                if currentIndex > 0 {
+                    currentIndex -= 1
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        scrollOffset += cardWidth
+                    }
+                    print("当前卡片索引: \(currentIndex + 1), 总步骤数: \(stepCard)")
+                }
+            case "✋":
+                break
+            default:
+                break
+            }
+        }
+
+        
     // 從後端載入菜譜數據的方法
     func loadDishesData()
     {
@@ -82,23 +133,23 @@ struct CookingAiView: View
         request.addValue("application/json", forHTTPHeaderField: "Accept")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil 
+            guard let data = data, error == nil
             else
             {
                 print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
                 return
             }
             
-            do 
+            do
             {
                 let decoder = JSONDecoder()
                 let dishesData = try decoder.decode([Dishes].self, from: data)
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     self.dishesData = dishesData
                     self.selectedDish = dishesData.first { $0.Dis_ID == disID }
                 }
-            } catch 
+            } catch
             {
                 print("JSON 解析錯誤: \(error)")
             }
@@ -107,11 +158,10 @@ struct CookingAiView: View
 }
 
 
-
-
 struct CardView: View
 {
     let dish: Dishes
+    @Binding var stepsCount: Int // 绑定步驟數量
     @State private var cookSteps: [String] = ["載入中..."]
     @State private var fontSize: FontSize = .medium // 新增狀態變量來跟蹤字體大小
     
@@ -129,9 +179,15 @@ struct CardView: View
         { data, response, error in
             if let data = data, let details = String(data: data, encoding: .utf8)
             {
+                let steps = splitSteps(details)
                 DispatchQueue.main.async
                 {
+                    cookSteps = steps
                     cookSteps = splitSteps(details)
+                    stepsCount = steps.count // 更新步驟數量
+                    print("此道料理有 \(steps.count) 步驟")
+                    
+
                 }
             }
             else
