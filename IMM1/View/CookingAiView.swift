@@ -60,10 +60,10 @@ struct CookingAiView: View
                 }
                 
                 // 添加 HandPoseDetectionView
-//                HandPoseDetectionView(onGestureDetected: { detectedGesture in
-//                    self.gesture = detectedGesture
-//                    updateScrollOffset()
-//                })
+                HandPoseDetectionView(onGestureDetected: { detectedGesture in
+                    self.gesture = detectedGesture
+                    updateScrollOffset()
+                })
                 .frame(width: 100, height: 100)
                 .background(Color.black)
                 .cornerRadius(10)
@@ -73,10 +73,10 @@ struct CookingAiView: View
                 )
                 .padding()
                 
-                // 显示步骤数量
-                Text("当前食谱步骤数: \(stepsCount)")
-                    .font(.title2)
-                    .padding()
+//                // 显示步骤数量
+//                Text("当前食谱步骤数: \(stepsCount)")
+//                    .font(.title2)
+//                    .padding()
             }
             .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
         }
@@ -98,7 +98,7 @@ struct CookingAiView: View
                     withAnimation(.easeInOut(duration: 0.5)) {
                         scrollOffset -= cardWidth
                     }
-                    print("当前卡片索引: \(currentIndex + 1), 总步骤数: \(stepCard)")
+                    print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
 
                 }
             case "👍":
@@ -107,7 +107,7 @@ struct CookingAiView: View
                     withAnimation(.easeInOut(duration: 0.5)) {
                         scrollOffset += cardWidth
                     }
-                    print("当前卡片索引: \(currentIndex + 1), 总步骤数: \(stepCard)")
+                    print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
                 }
             case "✋":
                 break

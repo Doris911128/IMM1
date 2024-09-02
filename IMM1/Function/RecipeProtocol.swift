@@ -265,12 +265,13 @@ extension RecipeProtocol
     func CookbookView(safeArea: EdgeInsets) -> AnyView
     {
         return AnyView(
-            VStack(spacing: 20)
+            VStack(spacing: 15)
             {
                 Text("所需食材")
                     .foregroundStyle(.orange)
                     .font(.title2)
                     .offset(x: -130)
+                    .bold()
                 
                 // 水平滚动视图显示食材
                 ScrollView(.horizontal, showsIndicators: false)
@@ -301,24 +302,40 @@ extension RecipeProtocol
                     .foregroundStyle(.orange)
                     .font(.title2)
                     .offset(x: -130)
+                    .bold()
+                
                 ScrollView
                 {
                     if let method = cookingMethod
                     {
-                        Text(method)
-                            .padding(.leading, 20)
-                            .padding(.trailing, 20)
+                        // 将方法按行分割成数组
+                        let steps = method.components(separatedBy: "\n")
+                        
+                        // 循环遍历每一步骤并添加圆点
+                        ForEach(steps, id: \.self)
+                        { step in
+                            HStack(alignment: .top)
+                            {
+                                Text("•") // 圆点
+                                    .font(.title)
+                                    .foregroundColor(.orange)
+                                Text(step)
+                                    .padding(.leading, 5)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 5)
+                        }
                     }
-                    //                    else
-                    //                    {
-                    //                        LoadingView()//載入畫面
-                    //                    }
+                    // else {
+                    //     LoadingView() // 载入画面
+                    // }
                 }
                 
                 Text("參考影片")
                     .foregroundStyle(.orange)
                     .font(.title2)
                     .offset(x: -130)
+                    .bold()
                 
                 // 使用 WebView 播放 YouTube 视频
                 if let videoURLString = dishesData.first?.D_Video,
@@ -373,11 +390,11 @@ struct IngredientCardView: View
                         .scaledToFit()
                         .frame(width: 60, height: 60)
                         .clipShape(Circle()) // 将图片裁剪为圆形
-                        .shadow(radius: 3) // 可选：为图片添加阴影
+                    //.shadow(radius: 3) // 可选：为图片添加阴影
                 case .failure:
-                    Circle() // 显示为圆形的灰色占位符
-                        .fill(Color.gray)
+                    Image("自訂食材預設圖片")
                         .frame(width: 60, height: 60)
+                        .clipShape(Circle()) // 将图片裁剪为圆形
                 case .empty:
                     ProgressView()
                         .frame(width: 60, height: 60)
@@ -396,12 +413,14 @@ struct IngredientCardView: View
             Text(name)
                 .font(.footnote)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.gray)
+                .foregroundColor(Color("BackColor"))
         }
         .padding(10)
-        .background(Color("BottonColor").opacity(0.2))
+        .background(Color("BottonColor")
+                    //.opacity(0.2)
+        )
         .clipShape(Capsule())  // 使用 Capsule 代替 RoundedRectangle 使其成为胶囊形状
-        .shadow(radius: 3)
+        .shadow(radius: 3)  // 添加陰影
         .frame(width: 120)  // 根据内容调整宽度
     }
 }

@@ -331,7 +331,7 @@ struct PlanView: View {
                                 .clipShape(Capsule())
                             }
                         }
-                        .padding(5)
+                        .padding(3)
                     }
                     .padding(.horizontal)
                 }.scrollIndicators(.hidden)
