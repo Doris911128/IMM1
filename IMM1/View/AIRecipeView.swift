@@ -1,4 +1,3 @@
-//
 //  AIRecipeView.swift
 //  IMM1
 //
@@ -7,69 +6,49 @@
 
 import SwiftUI
 
-struct AIRecipeView: View
+struct AIRecipeView: View, AIRecipeP
 {
     let U_ID: String // 用於添加收藏
     
-    @State private var chatRecords: [ChatRecord] = []
-    @State private var isLoading: Bool = true // 加载状态
-    @State private var loadingError: String? = nil // 加載错误信息
+    @State var chatRecords: [ChatRecord] = []
+    @State private var isLoading: Bool = true // 載入狀態
+    @State private var loadingError: String? = nil // 載入錯誤訊息
     
     @State private var currentUserID: String? = nil // 用於保存當前用戶 ID
     
-    // 加载用户收藏的 AI 生成的食谱数据
-    func loadAICData(for userID: String)
+    var data: [ChatRecord]
     {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetAIC.php?U_ID=\(userID)") else
-        {
-            print("Invalid URL")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error
-            {
-                print("Error: \(error.localizedDescription)")
-                return
-            }
-            
-            guard let data = data
-            else
-            {
-                print("No data received")
-                return
-            }
-            
-            // 打印接收到的原始 JSON 数据
-            if let jsonString = String(data: data, encoding: .utf8)
-            {
-                print("Raw JSON: \(jsonString)")
-            }
-            
-            // 解码 JSON 响应
-            do
-            {
-                let decoder = JSONDecoder()
-                let records = try decoder.decode([ChatRecord].self, from: data)
-                
-                // 更新 UI 並打印記錄數量
-                DispatchQueue.main.async
-                {
-                    print("Decoded \(records.count) records")
-                    self.chatRecords = records
-                    self.isLoading = false
-                }
-            } catch
-            {
-                DispatchQueue.main.async
-                {
-                    self.loadingError = "Failed to decode JSON: \(error.localizedDescription)"
-                    self.isLoading = false
-                    print("Decoding error: \(error.localizedDescription)")
-                }
-            }
-        }.resume()
+        chatRecords
     }
+    
+    // MARK: - AIRecipeP 協議要求的實作方法
+    func itemName() -> String
+    {
+        return chatRecords.first?.input ?? "Unknown AI Recipe"
+    }
+    
+    func itemImageURL() -> URL?
+    {
+        return nil // AI 食譜通常沒有封面圖片
+    }
+    
+    func HeaderView(size: CGSize, recordInput: String? = nil) -> AnyView
+    {
+        // 返回簡易名稱
+        return AnyView(
+            Text(itemName())
+                .font(.largeTitle)
+                .bold()
+                .padding()
+        )
+    }
+    
+    func AICookbookView(safeArea: EdgeInsets) -> AnyView
+    {
+        // 這裡直接呼叫協定擴充中的預設實現，保持程式碼簡潔
+        return self.AICookbookView(safeArea: safeArea)
+    }
+    
     // MARK: body
     var body: some View
     {
@@ -82,8 +61,7 @@ struct AIRecipeView: View
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 20)
-                
-                // 以下部分的逻辑保持不变，以确保程序运行稳定
+            
                 if isLoading
                 {
                     //MARK: 想要載入中轉圈圈動畫
@@ -108,13 +86,13 @@ struct AIRecipeView: View
                     AIEmptyStateView()
                 } else
                 {
-                    ScrollView(showsIndicators:false)
+                    ScrollView(showsIndicators: false) 
                     {
-                        LazyVStack
+                        LazyVStack 
                         {
-                            ForEach(chatRecords)
+                            ForEach(chatRecords) 
                             { record in
-                                NavigationLink(destination: DetailedRecipeView(record: record))
+                                NavigationLink(destination: AIRecipeBlock(U_ID: U_ID, record: record)) 
                                 {
                                     AIR_Block(record: record)
                                 }
@@ -124,17 +102,14 @@ struct AIRecipeView: View
                     }
                 }
             }
-            .onAppear
-            {
+            .onAppear {
                 fetchUserID { userID in
-                    guard let userID = userID
-                    else
-                    {
+                    guard let userID = userID else {
                         print("Failed to get user ID")
                         return
                     }
                     self.currentUserID = userID
-                    loadAICData(for: userID) // 加载数据
+                    loadAICData(for: userID, chatRecords: $chatRecords, isLoading: $isLoading, loadingError: $loadingError)
                 }
             }
         }
@@ -171,52 +146,13 @@ struct AIR_Block: View
                     }
                     .offset(y: -18)
                 }
-                Text("答：\(String(record.output.prefix(30)))...") // 将 Substring 转换为 String
+                Text("答：\(String(record.output.prefix(30)))...") // 將 Substring 轉換為 String
                     .foregroundColor(.gray)
             }
             .frame(height: 50)
             .padding()
         }
         .padding(.horizontal)
-    }
-}
-
-//MARK: 載入的詳細視圖
-struct DetailedRecipeView: View
-{
-    let record: ChatRecord // 傳遞進來的單個 ChatRecord
-    
-    var body: some View
-    {
-        VStack(alignment: .leading)
-        {
-            HStack
-            {
-                Spacer()
-                Button(action: {
-                    toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
-                        switch result
-                        {
-                        case .success(let message):
-                            print("isAICol Action successful: \(message)")
-                        case .failure(let error):
-                            print("Error toggling AICol: \(error.localizedDescription)")
-                        }
-                    }
-                })
-                {
-                    Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
-                        .font(.title)
-                        .foregroundColor(.red)
-                }
-                .offset(y: -22)
-            }
-            Text(record.output)
-                .foregroundColor(.gray)
-                .padding(.top, 10)
-        }
-        .padding()
-        .navigationBarTitle(record.input, displayMode: .inline)
     }
 }
 
@@ -241,12 +177,13 @@ struct AIEmptyStateView: View
                     .foregroundColor(.blue)
                     .underline()
             }
+            Spacer().frame(height: 150)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-
-#Preview
-{
-    AIRecipeView(U_ID:"hhwWhJvWJk")
-}
+//
+//#Preview
+//{
+//    AIRecipeView(U_ID:"hhwWhJvWJk")
+//}

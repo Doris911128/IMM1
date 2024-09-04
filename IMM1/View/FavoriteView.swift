@@ -10,9 +10,10 @@ struct FavoriteView: View
     let U_ID: String // 用於添加我的最愛
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes? = nil
-    @State private var isLoading: Bool = true // 加载状态
-    @State private var loadingError: String? = nil // 加載错误信息
+    @State private var isLoading: Bool = true // 載入狀態
+    @State private var loadingError: String? = nil // 加載錯誤訊息
     
+    // MARK: 載入最愛資料func
     func loadUFavData()
     {
         guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php")
@@ -107,9 +108,9 @@ struct FavoriteView: View
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                 } else if dishesData.isEmpty
                 {
-                    ZStack 
+                    ZStack
                     {
-                        GeometryReader 
+                        GeometryReader
                         { geometry in
                             VStack
                             {
@@ -117,17 +118,17 @@ struct FavoriteView: View
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 180, height: 180)
-                                    .position(x: geometry.size.width / 2, y: geometry.size.height / 3) // 向上移动图片
+                                    .position(x: geometry.size.width / 2, y: geometry.size.height / 3) // 向上移動圖片
                             }
                             VStack
                             {
                                 Spacer().frame(height: geometry.size.height / 2) // 向下移动文字
-                                VStack 
+                                VStack
                                 {
                                     Text("暫未新增任何親最愛食譜")
                                         .font(.system(size: 18))
                                         .foregroundColor(.gray)
-                                    NavigationLink(destination: PastRecipesView()) 
+                                    NavigationLink(destination: PastRecipesView())
                                     {
                                         Text("前往“過往食譜”添加更多＋＋")
                                             .font(.system(size: 18))
@@ -148,7 +149,7 @@ struct FavoriteView: View
                         {
                             ForEach(dishesData, id: \.Dis_ID)
                             { dish in
-                                NavigationLink(destination: Recipe_IP_View(U_ID: "", Dis_ID: dish.Dis_ID))
+                                NavigationLink(destination: MRecipeView(U_ID: "", Dis_ID: dish.Dis_ID, showAICookingButton: false))
                                 {
                                     RecipeBlock(imageName: dish.D_image, title: dish.Dis_Name, U_ID: "", Dis_ID: dish.Dis_ID)
                                 }
@@ -167,8 +168,10 @@ struct FavoriteView: View
 }
 
 
-struct FavoriteView_Previews: PreviewProvider {
-    static var previews: some View {
+struct FavoriteView_Previews: PreviewProvider 
+{
+    static var previews: some View 
+    {
         ContentView()
     }
 }

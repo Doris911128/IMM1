@@ -7,53 +7,8 @@
 // MARK: 設置View
 import SwiftUI
 import PhotosUI
-struct PresetImageSelectionView: View {
-    let columns = [
-            GridItem(.flexible()),
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ]
-    @Environment(\.presentationMode) var presentationMode
 
-    @State private var selectedImageName: String?
-    @State private var showConfirmationAlert = false
-    @Binding var userImage: Data?
-    let presetImages = ["我的最愛", "已採購", "公開食譜","分類未新增最愛","自訂食材預設圖片","空庫存","空AI食譜","省錢分類","庫存菜單","庫存頭腳","素食分類","健康推薦","採購","烹飪","最愛","減肥分類","過往食譜","懶人分類","AI食譜"] // 將這裡的名稱替換為你的預設圖片名稱
-    
-    var body: some View {
-           ScrollView {
-               LazyVGrid(columns: columns, spacing: 20) {
-                   ForEach(presetImages, id: \.self) { imageName in
-                       Button(action: {
-                           self.selectedImageName = imageName
-                           self.showConfirmationAlert = true
-                       }) {
-                           Image(imageName)
-                               .resizable()
-                               .scaledToFit()
-                               .frame(width: 100, height: 100)
-                               .clipShape(Circle())
-                               .padding()
-                       }
-                   }
-               }
-               .padding()
-           }
-           .alert(isPresented: $showConfirmationAlert) {
-               Alert(
-                   title: Text("確認選擇"),
-                   message: Text("確定要使用這張圖片嗎？"),
-                   primaryButton: .default(Text("確認")) {
-                       if let imageName = self.selectedImageName {
-                           self.userImage = UIImage(named: imageName)?.pngData()
-                           self.presentationMode.wrappedValue.dismiss() // 返回到原本的畫面
-                       }
-                   },
-                   secondaryButton: .cancel(Text("取消"))
-               )
-           }
-       }
-   }
+// MARK: MyView
 struct MyView: View
 {
     @AppStorage("userImage") private var userImage: Data?
@@ -66,13 +21,13 @@ struct MyView: View
     @State private var showPresetImages = false
     @State private var selectIndex = 0
     @State var disID: Int = 1  // 添加一個外部可綁定的 Dis_ID
-    @State private var shouldRefreshView = false // 添加一个属性来存储是否需要刷新视图
+    @State private var shouldRefreshView = false // 新增一個屬性來儲存是否需要刷新視圖
     @State private var pickImage: PhotosPickerItem?
     @State var isDarkMode: Bool = false
     @State private var isNameSheetPresented = false //更新名字完後會自動關掉ＳＨＥＥＴ
     
     @Environment(\.presentationMode) private var presentationMode
-    @EnvironmentObject var user: User // 从环境中获取用户信息
+    @EnvironmentObject var user: User // 從環境中獲取用戶資訊
     
     private let label: [InformationLabel]=[
         InformationLabel(image: "person.fill", label: "名稱"),
@@ -106,24 +61,30 @@ struct MyView: View
                     // 將獲取的用戶信息設置到 user 物件中
                     self.user.update(with: userInfo)
                 }
-            } catch let error {
+            } catch let error
+            {
                 print("Error decoding user info: \(error)")
             }
         }.resume()
     }
     
-    // 登出操作
-    func logout() {
-        guard var urlComponents = URLComponents(string: "http://163.17.9.107/food/php/Login.php") else {
+    // MARK: 登出操作 - logout
+    func logout()
+    {
+        guard var urlComponents = URLComponents(string: "http://163.17.9.107/food/php/Login.php") else 
+        {
             print("Invalid URL")
             return
         }
         // 添加参数以指示登出操作
-        urlComponents.queryItems = [
+        urlComponents.queryItems = 
+        [
             URLQueryItem(name: "logout", value: "true")
         ]
         
-        guard let url = urlComponents.url else {
+        guard let url = urlComponents.url 
+        else
+        {
             print("Failed to construct URL")
             return
         }
@@ -131,8 +92,11 @@ struct MyView: View
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let _ = data, error == nil else {
+        URLSession.shared.dataTask(with: request) 
+        { data, response, error in
+            guard let _ = data, error == nil 
+            else
+            {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
@@ -148,14 +112,18 @@ struct MyView: View
     
     //    private let tag: [String]=["高血壓", "尿酸", "高血脂", "美食尋寶家", "7日打卡"]
     
-    // MARK: 設定顯示資訊
-    private func setInformation(index: Int) -> String {
-        switch(index) {
+    // MARK: 設定顯示性別資訊
+    private func setInformation(index: Int) -> String
+    {
+        switch(index) 
+        {
         case 0:
             return self.user.name
         case 1:
-            if let genderInt = Int(self.user.gender) {
-                switch genderInt {
+            if let genderInt = Int(self.user.gender) 
+            {
+                switch genderInt 
+                {
                 case 0:
                     return "男性"
                 case 1:
@@ -163,7 +131,8 @@ struct MyView: View
                 default:
                     return "隱私"
                 }
-            } else {
+            } else 
+            {
                 return "" // 如果无法转换为整数，则返回隐私
             }
         case 2:
@@ -173,6 +142,7 @@ struct MyView: View
         }
     }
     
+    // MARK: MyView body
     var body: some View
     {
         NavigationStack
@@ -184,76 +154,82 @@ struct MyView: View
                     // MARK: 頭像
                     VStack(spacing: 20)
                     {if let userImage = self.userImage,
-                        let image = UIImage(data: userImage) 
+                        let image = UIImage(data: userImage)
                         {
-                         Button(action: {
-                             self.showingActionSheet = true
-                         }) {
-                             Circle()
-                                 .tint(Color("BackColor"))
-                                 .scaledToFit()
-                                 .frame(width: 160)
-                                 .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)  // 添加阴影
-                                 .overlay {
-                                     Image(uiImage: image)
-                                         .resizable()
-                                         .scaledToFill()
-                                         .clipShape(Circle())
-                                 }
-                         }
-                         .actionSheet(isPresented: $showingActionSheet) {
-                             ActionSheet(title: Text("選擇圖片"), buttons: [
-                                 .default(Text("從相簿選取")) {
-                                     self.showingImagePicker = true
-                                 },
-                                 .default(Text("使用系統預設圖片")) {
-                                     self.showPresetImages = true
-                                 },
-                                 .cancel()
-                             ])
-                         }
-                     } else {
-                         Button(action: {
-                             self.showingActionSheet = true
-                         }) {
-                             Circle()
-                                 .fill(.gray)
-                                 .scaledToFit()
-                                 .frame(width: 160)
-                                 .overlay {
-                                     Image("放縱分類")
-                                         .resizable()
-                                         .scaledToFill()
-                                         .clipShape(Circle())
-                                 }
-                         }
-                         .actionSheet(isPresented: $showingActionSheet) {
-                             ActionSheet(title: Text("選擇圖片"), buttons: [
-                                 .default(Text("從相簿選取")) {
-                                     self.showingImagePicker = true
-                                 },
-                                 .default(Text("使用系統預設圖片")) {
-                                     self.showPresetImages = true
-                                 },
-                                 .cancel()
-                             ])
-                         }
-                     }
-                 }
-                 .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
-                 .onChange(of: pickImage) { newItem in
-                     Task {
-                         if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                             self.userImage = data
-                         }
-                     }
-                 }
-                 .sheet(isPresented: $showPresetImages) {
-                     PresetImageSelectionView(userImage: $userImage)
-                 }
-             
-
-
+                        Button(action: {
+                            self.showingActionSheet = true
+                        }) {
+                            Circle()
+                                .tint(Color("BackColor"))
+                                .scaledToFit()
+                                .frame(width: 160)
+                                .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)  // 添加陰影
+                                .overlay
+                            {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .clipShape(Circle())
+                                }
+                        }
+                        .actionSheet(isPresented: $showingActionSheet) 
+                        {
+                            ActionSheet(title: Text("選擇圖片"), buttons: [
+                                .default(Text("從相簿選取")) 
+                                {
+                                    self.showingImagePicker = true
+                                },
+                                .default(Text("使用系統預設圖片")) 
+                                {
+                                    self.showPresetImages = true
+                                },
+                                .cancel()
+                            ])
+                        }
+                    } else 
+                        {
+                        Button(action: {
+                            self.showingActionSheet = true
+                        }) {
+                            Circle()
+                                .fill(.gray)
+                                .scaledToFit()
+                                .frame(width: 160)
+                                .overlay {
+                                    Image("放縱分類")
+                                        .resizable()
+                                        .scaledToFill()
+                                        .clipShape(Circle())
+                                }
+                        }
+                        .actionSheet(isPresented: $showingActionSheet) 
+                        {
+                            ActionSheet(title: Text("選擇圖片"), buttons: [
+                                .default(Text("從相簿選取")) {
+                                    self.showingImagePicker = true
+                                },
+                                .default(Text("使用系統預設圖片")) {
+                                    self.showPresetImages = true
+                                },
+                                .cancel()
+                            ])
+                        }
+                    }
+                    }
+                    .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
+                    .onChange(of: pickImage) { newItem in
+                        Task {
+                            if let data = try? await newItem?.loadTransferable(type: Data.self) 
+                            {
+                                self.userImage = data
+                            }
+                        }
+                    }
+                    .sheet(isPresented: $showPresetImages) 
+                    {
+                        PresetImageSelectionView(userImage: $userImage)
+                    }
+                    
                     
                     // MARK: 標籤
                     //                VStack(spacing: 20)
@@ -282,6 +258,7 @@ struct MyView: View
                     //                        }
                     //                    }
                     //                }
+                    
                     //MARK: 下方資訊(個人資訊＋設置)
                     List
                     {
@@ -330,41 +307,46 @@ struct MyView: View
                         }
                         .listRowSeparator(.hidden)
                         
-                        // MARK: 設定_內容
+                        // MARK: 設定_內容＆連結處
                         Section(header:Text("設置"))
                         {
-                            // MARK: 健康
+                            // MARK: 健康 連結
                             HStack
                             {
-                                NavigationLink(destination: DynamicView()) {
+                                NavigationLink(destination: DynamicView()) 
+                                {
                                     InformationLabel(image: "chart.xyaxis.line", label: "健康")
                                 }
                             }
-                            // MARK: 過往食譜
+                            // MARK: 過往食譜 連結
                             HStack
                             {
-                                NavigationLink(destination: PastRecipesView()) {
+                                NavigationLink(destination: PastRecipesView()) 
+                                {
                                     InformationLabel(image: "clock.arrow.circlepath", label: "過往食譜")
                                 }
                             }
-                            // MARK: 食材紀錄
+                            // MARK: 食材紀錄 連結
                             HStack
                             {
-                                NavigationLink(destination: StockView()) {
+                                NavigationLink(destination: StockView()) 
+                                {
                                     InformationLabel(image: "doc.on.clipboard", label: "檢視庫存")
                                 }
                             }
-                            // MARK: 飲食偏好->暫時食譜顯示
+                            // MARK: 飲食偏好->暫時食譜顯示 連結
                             HStack
                             {
-                                NavigationLink(destination: MenuView(U_ID: " ", Dis_ID: self.disID)) {
+                                NavigationLink(destination: AIRecipeView(U_ID: " ")) 
+                                {
                                     InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
                                 }
                             }
-                            // MARK: 我的最愛
+                            // MARK: 我的最愛 連結
                             HStack
                             {
-                                NavigationLink(destination: Rec_Col_View()) {
+                                NavigationLink(destination: Rec_Col_View()) 
+                                {
                                     InformationLabel(image: "tray.2.fill", label: "食譜收藏庫")
                                 }
                             }
@@ -431,13 +413,16 @@ struct MyView: View
             }
         }
         .preferredColorScheme(self.colorScheme ? .light:.dark) //控制深淺模式切換
-        .onAppear {
+        .onAppear 
+        {
             fetchUserInfo()
         }
     }
 }
 
-struct NameSheetView: View {
+// MARK: NameSheetView 更改用戶頭名稱
+struct NameSheetView: View
+{
     @Binding var name: String
     @Binding var isPresented: Bool
     
@@ -482,10 +467,69 @@ struct NameSheetView: View {
     }
 }
 
+// MARK: PresetImageSelectionView 更改用戶頭像改小熊貓
+struct PresetImageSelectionView: View
+{
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
+    @Environment(\.presentationMode) var presentationMode
+    
+    @State private var selectedImageName: String?
+    @State private var showConfirmationAlert = false
+    @Binding var userImage: Data?
+    let presetImages = ["我的最愛", "已採購", "公開食譜","分類未新增最愛","自訂食材預設圖片","空庫存","空AI食譜","省錢分類","庫存菜單","庫存頭腳","素食分類","健康推薦","採購","烹飪","最愛","減肥分類","過往食譜","懶人分類","AI食譜"] // 將這裡的名稱替換為你的預設圖片名稱
+    
+    var body: some View
+    {
+        ScrollView
+        {
+            LazyVGrid(columns: columns, spacing: 20)
+            {
+                ForEach(presetImages, id: \.self)
+                { imageName in
+                    Button(action: {
+                        self.selectedImageName = imageName
+                        self.showConfirmationAlert = true
+                    }) {
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
+                            .clipShape(Circle())
+                            .padding()
+                    }
+                }
+            }
+            .padding()
+        }
+        .alert(isPresented: $showConfirmationAlert)
+        {
+            Alert(
+                title: Text("確認選擇"),
+                message: Text("確定要使用這張圖片嗎？"),
+                primaryButton: .default(Text("確認"))
+                {
+                    if let imageName = self.selectedImageName {
+                        self.userImage = UIImage(named: imageName)?.pngData()
+                        self.presentationMode.wrappedValue.dismiss() // 返回到原本的畫面
+                    }
+                },
+                secondaryButton: .cancel(Text("取消"))
+            )
+        }
+    }
+}
 
-struct MyView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
+struct MyView_Previews: PreviewProvider
+{
+    static var previews: some View
+    {
+        NavigationStack
+        {
             MyView(select: .constant(0), disID: 1)  // 提供常數綁定
         }
     }

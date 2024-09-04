@@ -37,7 +37,6 @@
 		0447AFC62B872C980080D222 /* HyperglycemiaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0447AFB22B872C980080D222 /* HyperglycemiaView.swift */; };
 		0447AFC72B872C980080D222 /* BMIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0447AFB32B872C980080D222 /* BMIView.swift */; };
 		0447AFC82B872C980080D222 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0447AFB42B872C980080D222 /* ContentView.swift */; };
-		0447AFC92B872C980080D222 /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0447AFB52B872C980080D222 /* MenuView.swift */; };
 		0447AFD12B872D110080D222 /* MemberButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0447AFCB2B872D110080D222 /* MemberButton.swift */; };
 		0447AFD22B872D110080D222 /* CustomButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0447AFCC2B872D110080D222 /* CustomButton.swift */; };
 		0447AFD32B872D110080D222 /* TagButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0447AFCD2B872D110080D222 /* TagButton.swift */; };
@@ -55,8 +54,10 @@
 		04CE658A2C58C929001B45C9 /* AIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CE65892C58C929001B45C9 /* AIView.swift */; };
 		04CE659A2C5A055F001B45C9 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CE65992C5A055F001B45C9 /* CameraView.swift */; };
 		04FE2EA22C1C278A00A3C730 /* Color.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 04FE2EA12C1C278A00A3C730 /* Color.xcassets */; };
-		0F67D0EF2BF05D870094B4C2 /* Recipe_IP_View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */; };
 		1C0081722BF07CD000720927 /* PastRecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0081712BF07CD000720927 /* PastRecipesView.swift */; };
+		1C14F56B2C8806E900F2F1ED /* AIRecipeBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C14F56A2C8806E900F2F1ED /* AIRecipeBlock.swift */; };
+		1C14F56D2C88073800F2F1ED /* MRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C14F56C2C88073800F2F1ED /* MRecipeView.swift */; };
+		1C14F56F2C8846C200F2F1ED /* AIphptoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C14F56E2C8846C200F2F1ED /* AIphptoView.swift */; };
 		1C923BF22C61C3540015D6AE /* RecipeProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C923BF12C61C3540015D6AE /* RecipeProtocol.swift */; };
 		1C923BFA2C621AFC0015D6AE /* RedPanda.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C923BF92C621AFC0015D6AE /* RedPanda.xcassets */; };
 		1C9A27482C009DFA006CE811 /* other.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C9A27472C009DFA006CE811 /* other.xcassets */; };
@@ -104,7 +105,6 @@
 		0447AFB22B872C980080D222 /* HyperglycemiaView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HyperglycemiaView.swift; sourceTree = "<group>"; };
 		0447AFB32B872C980080D222 /* BMIView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BMIView.swift; sourceTree = "<group>"; };
 		0447AFB42B872C980080D222 /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		0447AFB52B872C980080D222 /* MenuView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
 		0447AFCB2B872D110080D222 /* MemberButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MemberButton.swift; sourceTree = "<group>"; };
 		0447AFCC2B872D110080D222 /* CustomButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomButton.swift; sourceTree = "<group>"; };
 		0447AFCD2B872D110080D222 /* TagButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TagButton.swift; sourceTree = "<group>"; };
@@ -123,8 +123,10 @@
 		04CE65892C58C929001B45C9 /* AIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIView.swift; sourceTree = "<group>"; };
 		04CE65992C5A055F001B45C9 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		04FE2EA12C1C278A00A3C730 /* Color.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Color.xcassets; sourceTree = "<group>"; };
-		0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recipe_IP_View.swift; sourceTree = "<group>"; };
 		1C0081712BF07CD000720927 /* PastRecipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastRecipesView.swift; sourceTree = "<group>"; };
+		1C14F56A2C8806E900F2F1ED /* AIRecipeBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRecipeBlock.swift; sourceTree = "<group>"; };
+		1C14F56C2C88073800F2F1ED /* MRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MRecipeView.swift; sourceTree = "<group>"; };
+		1C14F56E2C8846C200F2F1ED /* AIphptoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIphptoView.swift; sourceTree = "<group>"; };
 		1C923BF12C61C3540015D6AE /* RecipeProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeProtocol.swift; sourceTree = "<group>"; };
 		1C923BF92C621AFC0015D6AE /* RedPanda.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = RedPanda.xcassets; sourceTree = "<group>"; };
 		1C9A27472C009DFA006CE811 /* other.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = other.xcassets; sourceTree = "<group>"; };
@@ -236,8 +238,9 @@
 		0447AFA12B872C980080D222 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				0447AFAD2B872C980080D222 /* AdjustedView.swift */,
 				04CE65892C58C929001B45C9 /* AIView.swift */,
+				1C14F56E2C8846C200F2F1ED /* AIphptoView.swift */,
+				0447AFAD2B872C980080D222 /* AdjustedView.swift */,
 				1C9E4EE92C6C5BB90021B5C3 /* AIRecipeView.swift */,
 				0447AFB32B872C980080D222 /* BMIView.swift */,
 				0447AFAB2B872C980080D222 /* CookView.swift */,
@@ -253,12 +256,11 @@
 				0447AFB22B872C980080D222 /* HyperglycemiaView.swift */,
 				1C9E4EE12C69ABDE0021B5C3 /* LoadingView.swift */,
 				0447AFA42B872C980080D222 /* MyView.swift */,
-				0447AFB52B872C980080D222 /* MenuView.swift */,
+				1C14F56C2C88073800F2F1ED /* MRecipeView.swift */,
 				0447AFAE2B872C980080D222 /* NowView.swift */,
 				0447AFA92B872C980080D222 /* PlanView.swift */,
 				1C0081712BF07CD000720927 /* PastRecipesView.swift */,
 				1C9E4EE72C6C52140021B5C3 /* Rec_Col_View.swift */,
-				0F67D0EE2BF05D870094B4C2 /* Recipe_IP_View.swift */,
 				0447AFB02B872C980080D222 /* StockView.swift */,
 				0447AFAA2B872C980080D222 /* SigninView.swift */,
 				0447AFB12B872C980080D222 /* SignupView.swift */,
@@ -272,6 +274,7 @@
 			isa = PBXGroup;
 			children = (
 				0447AFCC2B872D110080D222 /* CustomButton.swift */,
+				1C14F56A2C8806E900F2F1ED /* AIRecipeBlock.swift */,
 				0447AFD02B872D110080D222 /* EditPlanView.swift */,
 				0447AFCE2B872D110080D222 /* FoodSelectionView.swift */,
 				0447AFCF2B872D110080D222 /* InformationLabel.swift */,
@@ -376,7 +379,6 @@
 				0447AF802B872BBC0080D222 /* String.swift in Sources */,
 				0447AFB62B872C980080D222 /* ShopView.swift in Sources */,
 				0447AF862B872BE40080D222 /* ImagePicker.swift in Sources */,
-				0447AFC92B872C980080D222 /* MenuView.swift in Sources */,
 				0447AF982B872C520080D222 /* User.swift in Sources */,
 				0447AFB82B872C980080D222 /* MyView.swift in Sources */,
 				0447AFD32B872D110080D222 /* TagButton.swift in Sources */,
@@ -387,6 +389,7 @@
 				0447AFBD2B872C980080D222 /* PlanView.swift in Sources */,
 				1C9A274A2C009E29006CE811 /* CookingAiView.swift in Sources */,
 				04CE659A2C5A055F001B45C9 /* CameraView.swift in Sources */,
+				1C14F56F2C8846C200F2F1ED /* AIphptoView.swift in Sources */,
 				0447AFBF2B872C980080D222 /* CookView.swift in Sources */,
 				0447AFC62B872C980080D222 /* HyperglycemiaView.swift in Sources */,
 				0447AF852B872BE40080D222 /* Recipe.swift in Sources */,
@@ -394,15 +397,16 @@
 				0447AFBE2B872C980080D222 /* SigninView.swift in Sources */,
 				1C9E4EE42C69B7C70021B5C3 /* GIFImageView.swift in Sources */,
 				0447AFD62B872D110080D222 /* EditPlanView.swift in Sources */,
+				1C14F56D2C88073800F2F1ED /* MRecipeView.swift in Sources */,
 				0447AFD52B872D110080D222 /* InformationLabel.swift in Sources */,
 				0447AFBA2B872C980080D222 /* SpinnerView.swift in Sources */,
 				0447AFB72B872C980080D222 /* FavoriteView.swift in Sources */,
-				0F67D0EF2BF05D870094B4C2 /* Recipe_IP_View.swift in Sources */,
 				0447AFB92B872C980080D222 /* HyperlipidemiaView.swift in Sources */,
 				0447AFD22B872D110080D222 /* CustomButton.swift in Sources */,
 				0447AF612B8729C80080D222 /* IMM1App.swift in Sources */,
 				049CD6C02BCB742B00D7AA8E /* Response.swift in Sources */,
 				0447AFBB2B872C980080D222 /* HomeView.swift in Sources */,
+				1C14F56B2C8806E900F2F1ED /* AIRecipeBlock.swift in Sources */,
 				049CD69A2BC9156A00D7AA8E /* BMI.swift in Sources */,
 				0447AFC32B872C980080D222 /* ForgePasswordView.swift in Sources */,
 				0447AF962B872C520080D222 /* Dynamic.swift in Sources */,

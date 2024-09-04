@@ -4,15 +4,17 @@ import SwiftUI
 import UIKit
 import Foundation
 
-struct DishService 
+// MARK: [struct] DishService
+struct DishService
 {
-    static func loadDishes(completion: @escaping ([Dishes]) -> Void) 
+    static func loadDishes(completion: @escaping ([Dishes]) -> Void)
     {
-        guard let url = URL(string: "http://163.17.9.107/food/php/Dishes.php") 
+        guard let url = URL(string: "http://163.17.9.107/food/php/Dishes.php")
         else { return }
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil 
+        URLSession.shared.dataTask(with: url) 
+        { data, response, error in
+            guard let data = data, error == nil
             else
             {
                 print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
@@ -20,12 +22,15 @@ struct DishService
                 return
             }
             
-            do {
+            do 
+            {
                 let dishes = try JSONDecoder().decode([Dishes].self, from: data)
-                DispatchQueue.main.async {
+                DispatchQueue.main.async 
+                {
                     completion(dishes)
                 }
-            } catch {
+            } catch
+            {
                 print("Error decoding JSON: \(error)")
                 completion([])
             }
@@ -33,15 +38,22 @@ struct DishService
     }
 }
 
-struct NowView: View {
+// MARK: NowView
+struct NowView: View
+{
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes? = nil
     @EnvironmentObject private var user: User
     
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                VStack {
+    // MARK: NowView body
+    var body: some View
+    {
+        NavigationStack 
+        {
+            ZStack 
+            {
+                VStack 
+                {
                     Text("立即煮")
                         .font(.largeTitle)
                         .bold()
@@ -49,10 +61,13 @@ struct NowView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     // MARK: 料理顯示區
-                    ScrollView(showsIndicators: false) {
+                    ScrollView(showsIndicators: false) 
+                    {
                         VStack {
-                            if let selectedDish = selectedDish {
-                                NavigationLink(destination: MenuView(U_ID: " ", Dis_ID: selectedDish.Dis_ID)) {
+                            if let selectedDish = selectedDish 
+                            {
+                                NavigationLink(destination: MRecipeView(U_ID: " ", Dis_ID: selectedDish.Dis_ID)) 
+                                {
                                     RecipeBlock(
                                         imageName: selectedDish.D_image,
                                         title: selectedDish.Dis_Name,
@@ -63,17 +78,25 @@ struct NowView: View {
                             }
                         }
                         .padding(.trailing, 12)
-                        
+                        .background(
+                            CustomCorners(cornerRadius: 30, corners: [.topLeft, .bottomRight]) // 應用 CustomCorners
+                                .fill(Color.white)
+                                .shadow(radius: 5)
+                        )
                     }
                 }
             }
         }
-        .onAppear {
-            user.fetchUserInfo { fetchedUser in
-                if let fetchedUser = fetchedUser {
+        .onAppear 
+        {
+            user.fetchUserInfo 
+            { fetchedUser in
+                if let fetchedUser = fetchedUser 
+                {
                     self.user.update(with: fetchedUser)
                     
-                    DishService.loadDishes { dishes in
+                    DishService.loadDishes 
+                    { dishes in
                         self.dishesData = dishes
                         self.selectedDish = dishes.first
                     }

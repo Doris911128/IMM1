@@ -1,4 +1,3 @@
-//
 //  RecipeProtocol.swift
 //  IMM1
 //
@@ -11,116 +10,214 @@
 import SwiftUI
 import Foundation
 
+// MARK: - 基礎協議：RecipeProtocol
+
+// 是所有食譜相館的基礎協議，含通用數用和方法具體見RecipeP、AIRecipeP
 protocol RecipeProtocol: View
 {
+    associatedtype DataType
+    var data: [DataType] { get }
+    
     var U_ID: String { get }
+    
+    // 返回菜名或 AI 記錄名稱
+    func itemName() -> String
+    
+    // 返回封面圖片的 URL，如果沒有圖片可以返回 nil
+    func itemImageURL() -> URL?
+    
+    //適用於顯示頂部的封面圖片或背景
+    func CoverView(safeArea: EdgeInsets, size: CGSize) -> AnyView
+    
+    // 標題視圖，根據滾動狀態顯示標題或其他信息
+    func HeaderView(size: CGSize, recordInput: String?) -> AnyView
+}
+
+// MARK: 子協議：RecipeP
+// 用於顯示單菜食譜的協議，繼承自RecipeProtocol 含載入選單資料、顯示食材清單及烹調方法
+protocol RecipeP: RecipeProtocol where DataType == Dishes
+{
     var Dis_ID: Int { get }
-    var isFavorited: Bool? { get set } // 使用可选值
+    var isFavorited: Bool? { get set }
     var dishesData: [Dishes] { get set }
     var foodData: [Food] { get set }
     var amountData: [Amount] { get set }
     var cookingMethod: String? { get set }
     var selectedDish: Dishes? { get set }
     
-    func loadMenuData()
+    // 從給定的 URL 載入烹飪方法
     func loadCookingMethod(from urlString: String)
+    
+    // 過濾對應菜色的食材數量
     func filteredAmounts(for dish: Dishes) -> [Amount]
-    func CoverView(safeArea: EdgeInsets, size: CGSize) -> AnyView
-    func HeaderView(size: CGSize) -> AnyView
+    
+    // 烹飪書畫面，包括所需食材和烹飪方法
     func CookbookView(safeArea: EdgeInsets) -> AnyView
 }
 
+// MARK: 子協議：AIRecipeP
+// 用於顯示AI生成食譜的協議，繼承自RecipeProtocol 含載入AI資料、顯示數據內容方法
+protocol AIRecipeP: RecipeProtocol where DataType == ChatRecord
+{
+    var chatRecords: [ChatRecord] { get set }
+    
+    // 顯示 AI 烹飪書視圖，包括所需食材和 AI 生成的烹飪方法
+    func AICookbookView(safeArea: EdgeInsets) -> AnyView
+}
+
+// MARK: extension：RecipeProtocol
 extension RecipeProtocol
 {
-    // MARK: 過濾對應菜品的食材數量
-    func filteredAmounts(for dish: Dishes) -> [Amount]
+    // MARK: 封面畫面
+    // 適用於顯示頂部的封面圖片或背景
+    func CoverView(safeArea: EdgeInsets, size: CGSize) -> AnyView 
     {
-        return amountData.filter { $0.Dis_ID == dish.Dis_ID }
+        let height: CGFloat = size.height * 0.5
+
+        return AnyView(
+            GeometryReader 
+            { reader in
+                let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
+                let size: CGSize = reader.size
+                let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
+
+                // 判斷圖片URL是否存在，存在則使用AsyncImage，否則使用默認圖片
+                ZStack(alignment: .bottom) 
+                {
+                    if let imageUrl = itemImageURL()
+                    {
+                        AsyncImage(url: imageUrl) 
+                        { phase in
+                            switch phase
+                            {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
+                                    .clipped()
+                            case .empty, .failure:
+                                Color.gray
+                            @unknown default:
+                                EmptyView()
+                            }
+                        }
+                    } else 
+                    {
+                        Image("自訂食材預設圖片")
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
+                            .clipped() // 防止圖片溢出框架
+                    }
+
+                    // 漸變背景和標題部分
+                    LinearGradient(colors: 
+                    [
+                        Color("menusheetbackgroundcolor").opacity(0 - progress),
+                        Color("menusheetbackgroundcolor").opacity(0.2 - progress),
+                        Color("menusheetbackgroundcolor").opacity(0.4 - progress),
+                        Color("menusheetbackgroundcolor").opacity(0.6 - progress),
+                        Color("menusheetbackgroundcolor").opacity(0.8 - progress),
+                        Color("menusheetbackgroundcolor")
+                    ], startPoint: .top, endPoint: .bottom)
+
+                    VStack(spacing: 0) 
+                    {
+                        Text(itemName())
+                            .bold()
+                            .font(.largeTitle)
+                            .foregroundStyle(.orange)
+                            .bold()
+                            .font(.body)
+                            .foregroundStyle(.gray)
+                            .padding(.top)
+                    }
+                    .opacity(1.1 + (progress > 0 ? -progress : progress))
+                    .padding(.bottom, 50)
+                    .offset(y: minY < 0 ? minY : 0)
+                }
+                .offset(y: -minY)
+                .onChange(of: progress) 
+                {
+                    print("CoverView的progress值: \(progress)")
+                }
+            }
+            .frame(height: height + safeArea.top)
+        )
+    }
+
+    
+    // MARK: 標題畫面
+    // 標題視圖，根據滾動狀態顯示標題或其他信息
+    func HeaderView(size: CGSize, recordInput: String? = nil) -> AnyView
+    {
+        let name = itemName()
+        
+        return AnyView(
+            GeometryReader
+            { reader in
+                let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
+                let height: CGFloat = size.height * 0.5
+                let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
+                
+                HStack(spacing: 20)
+                {
+                    if progress > 6
+                    {
+                        Spacer(minLength: 0)
+                    } else
+                    {
+                        Spacer(minLength: 0)
+                        
+                        // 滑動後顯示對應料理名稱
+                        Text(name)
+                            .bold()
+                            .font(.title3)
+                            .transition(.opacity.animation(.smooth))
+                            .foregroundStyle(.orange)
+                            .multilineTextAlignment(.center)
+                        Spacer(minLength: 0)
+                    }
+                }
+                .foregroundStyle(.orange)
+                .padding()
+                .background(Color("menusheetbackgroundcolor").opacity(progress > 6 ? 0 : 1))
+                .animation(.smooth.speed(2), value: progress < 6)
+                .offset(y: -minY)
+                .onChange(of: progress) 
+                {
+                    print("HeaderView的progress值: \(progress)")
+                }
+            }
+        )
     }
     
-    // MARK: 讀取php從後端加載菜譜數據
-    func loadMenuData()
+}
+
+// MARK: extension：RecipeP
+extension RecipeP
+{
+    func itemName() -> String
     {
-        assert(Dis_ID > 0, "Dis_ID 必須大於 0")
-        
-        let urlString = "http://163.17.9.107/food/php/Dishes.php?id=\(Dis_ID)"
-        print("正在從此URL請求數據: \(urlString)")
-        
-        guard let encodedURLString = urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: encodedURLString)
+        return dishesData.first(where: { $0.Dis_ID == Dis_ID })?.Dis_Name ?? "Unknown Dish"
+    }
+    
+    func itemImageURL() -> URL?
+    {
+        guard let urlString = dishesData.first(where: { $0.Dis_ID == Dis_ID })?.D_image,
+              let url = URL(string: urlString), UIApplication.shared.canOpenURL(url)
         else
         {
-            print("生成的 URL 無效")
-            return
+            return nil
         }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.addValue("application/json", forHTTPHeaderField: "Accept")
-        
-        URLSession.shared.dataTask(with: request)
-        { data, response, error in
-            guard let data = data, error == nil
-            else
-            {
-                print("網絡請求錯誤: \(error?.localizedDescription ?? "未知錯誤")")
-                return
-            }
-            
-            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode)
-            {
-                print("HTTP 錯誤: \(httpResponse.statusCode)")
-                return
-            }
-            
-            do
-            {
-                let decoder = JSONDecoder()
-                let dishesData = try decoder.decode([Dishes].self, from: data)
-                DispatchQueue.main.async
-                {
-                    var mutableSelf = self
-                    mutableSelf.dishesData = dishesData
-                    mutableSelf.selectedDish = mutableSelf.dishesData.first(where: { $0.Dis_ID == mutableSelf.Dis_ID })
-                    mutableSelf.foodData = mutableSelf.selectedDish?.foods ?? []
-                    mutableSelf.amountData = mutableSelf.selectedDish?.amounts ?? []
-                    
-                    if let cookingUrl = mutableSelf.selectedDish?.D_Cook
-                    {
-                        mutableSelf.loadCookingMethod(from: cookingUrl)
-                    }
-                    
-                    if let jsonStr = String(data: data, encoding: .utf8)
-                    {
-                        print("接收到的 JSON 數據: \(jsonStr)")
-                    }
-                    
-                    checkIfFavorited(U_ID: U_ID, Dis_ID: "\(Dis_ID)")
-                    { result in
-                        switch result
-                        {
-                        case .success(let favorited):
-                            DispatchQueue.main.async
-                            {
-                                mutableSelf.isFavorited = favorited
-                            }
-                        case .failure(let error):
-                            print("Error checking favorite status: \(error.localizedDescription)")
-                        }
-                    }
-                }
-            } catch
-            {
-                print("JSON 解析錯誤: \(error)")
-                if let jsonStr = String(data: data, encoding: .utf8)
-                {
-                    print("接收到的數據字串: \(jsonStr)")
-                }
-            }
-        }.resume()
+        return url
     }
     
-    // MARK: 從URL加載烹飪方法
+
+    
+    // MARK: loadCookingMethod
+    //從給定的 URL 載入烹飪方法
     func loadCookingMethod(from urlString: String)
     {
         guard let url = URL(string: urlString)
@@ -147,215 +244,134 @@ extension RecipeProtocol
         }.resume()
     }
     
-    // MARK: 封面畫面
-    func CoverView(safeArea: EdgeInsets, size: CGSize) -> AnyView
+    // MARK: filteredAmounts過濾對應菜色的食材數量
+    func filteredAmounts(for dish: Dishes) -> [Amount]
     {
-        let height: CGFloat = size.height * 0.5
-        
-        return AnyView(
-            GeometryReader
-            { reader in
-                let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
-                let size: CGSize = reader.size
-                let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
-                
-                if let dish = dishesData.first
-                {
-                    AsyncImage(url: URL(string: dish.D_image)) { phase in
-                        switch phase
-                        {
-                        case .success(let image):
-                            image.resizable()
-                                .scaledToFill()
-                                .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
-                                .clipped()
-                                .overlay(
-                                    ZStack(alignment: .bottom)
-                                    {
-                                        LinearGradient(colors: [
-                                            Color("menusheetbackgroundcolor").opacity(0 - progress),
-                                            Color("menusheetbackgroundcolor").opacity(0.2 - progress),
-                                            Color("menusheetbackgroundcolor").opacity(0.4 - progress),
-                                            Color("menusheetbackgroundcolor").opacity(0.6 - progress),
-                                            Color("menusheetbackgroundcolor").opacity(0.8 - progress),
-                                            Color("menusheetbackgroundcolor")
-                                        ], startPoint: .top, endPoint: .bottom)
-                                        
-                                        VStack(spacing: 0)
-                                        {
-                                            Text(dish.Dis_Name)
-                                                .bold()
-                                                .font(.largeTitle)
-                                                .foregroundStyle(.orange)
-                                                .bold()
-                                                .font(.body)
-                                                .foregroundStyle(.gray)
-                                                .padding(.top)
-                                        }
-                                        .opacity(1.1 + (progress > 0 ? -progress : progress))
-                                        .padding(.bottom, 50)
-                                        .offset(y: minY < 0 ? minY : 0)
-                                    }
-                                )
-                        case .empty, .failure:
-                            Color.gray
-                        @unknown default:
-                            EmptyView()
-                        }
-                    }
-                    .offset(y: -minY)
-                    .onChange(of: progress)
-                    {
-                        print("CoverView的progress值: \(progress)")
-                    }
-                } else
-                {
-                    Color.gray.frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
-                }
-            }
-                .frame(height: height + safeArea.top)
-        )
+        return amountData.filter { $0.Dis_ID == dish.Dis_ID }
     }
     
-    // MARK: 標題畫面
-    func HeaderView(size: CGSize) -> AnyView
-    {
-        let Dis_Name = dishesData.first(where: { $0.Dis_ID == Dis_ID })?.Dis_Name ?? "Unknown Dish"
-        
-        return AnyView(
-            GeometryReader
-            { reader in
-                let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
-                let height: CGFloat = size.height * 0.5
-                let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
-                
-                HStack(spacing: 20)
-                {
-                    if(progress > 6)
-                    {
-                        Spacer(minLength: 0)
-                    } else
-                    {
-                        Spacer(minLength: 0)
-                        
-                        // 滑動後顯示對應料理名稱
-                        Text(Dis_Name)
-                            .bold()
-                            .font(.title3)
-                            .transition(.opacity.animation(.smooth))
-                            .foregroundStyle(.orange)
-                            .multilineTextAlignment(.center)
-                        Spacer(minLength: 0)
-                    }
-                }
-                .foregroundStyle(.orange)
-                .padding()
-                .background(Color("menusheetbackgroundcolor").opacity(progress > 6 ? 0 : 1))
-                .animation(.smooth.speed(2), value: progress<6)
-                .offset(y: -minY)
-                .onChange(of: progress)
-                {
-                    print("HeaderView的progress值: \(progress)")
-                }
-            }
-        )
-    }
-    
-    // MARK: 烹飪書畫面
+    // MARK: CookbookView烹飪書畫面
+    //包括所需食材和烹飪方法
     func CookbookView(safeArea: EdgeInsets) -> AnyView
     {
         return AnyView(
-            VStack(spacing: 15)
+            VStack(spacing: 18)
             {
-                Text("所需食材")
-                    .foregroundStyle(.orange)
-                    .font(.title2)
-                    .offset(x: -130)
-                    .bold()
-                
-                // 水平滚动视图显示食材
-                ScrollView(.horizontal, showsIndicators: false)
+                // MARK: 所需食材
+                VStack
                 {
-                    HStack(spacing: -20)
+                    Text("所需食材")
+                        .foregroundStyle(.orange)
+                        .font(.title2)
+                        .offset(x: -130)
+                        .bold()
+                    
+                    // 水平滚动视图显示食材
+                    ScrollView(.horizontal, showsIndicators: false)
                     {
-                        if let selectedDish = selectedDish
+                        HStack(spacing: -20)
                         {
-                            let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
-                            
-                            ForEach(filteredAmounts, id: \.A_ID) { amount in
-                                if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
-                                {
-                                    IngredientCardView(
-                                        imageName: food.Food_imge,  // 使用 food.Food_imge 加载图片
-                                        amount: "\(amount.A_Amount)",  // 将数量转换为字符串
-                                        unit: food.F_Unit,
-                                        name: food.F_Name
-                                    )
+                            if let selectedDish = selectedDish
+                            {
+                                let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
+                                
+                                ForEach(filteredAmounts, id: \.A_ID) { amount in
+                                    if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
+                                    {
+                                        IngredientCardView(
+                                            imageName: food.Food_imge,  // 使用 food.Food_imge 加载图片
+                                            amount: "\(amount.A_Amount)",  // 将数量转换为字符串
+                                            unit: food.F_Unit,
+                                            name: food.F_Name
+                                        )
+                                    }
                                 }
                             }
                         }
+                        //.padding(.horizontal, 15)
                     }
-                    //.padding(.horizontal, 15)
                 }
                 
-                Text("料理方法")
-                    .foregroundStyle(.orange)
-                    .font(.title2)
-                    .offset(x: -130)
-                    .bold()
-                
-                ScrollView
+                // MARK: 料理方法
+                VStack
                 {
-                    if let method = cookingMethod
+                    Text("料理方法")
+                        .foregroundStyle(.orange)
+                        .font(.title2)
+                        .offset(x: -130)
+                        .bold()
+                    
+                    ScrollView
                     {
-                        // 将方法按行分割成数组
-                        let steps = method.components(separatedBy: "\n")
-                        
-                        // 循环遍历每一步骤并添加圆点
-                        ForEach(steps, id: \.self)
-                        { step in
-                            HStack(alignment: .top)
-                            {
-                                Text("•") // 圆点
-                                    .font(.title)
-                                    .foregroundColor(.orange)
-                                Text(step)
-                                    .padding(.leading, 5)
+                        if let method = cookingMethod
+                        {
+                            let steps = method.components(separatedBy: "\n")
+                            
+                            ForEach(steps, id: \.self)
+                            { step in
+                                let trimmedStep = step.trimmingCharacters(in: .whitespaces)
+                                let stepComponents = trimmedStep.split(maxSplits: 1, whereSeparator: { $0 == "." })
+                                
+                                if stepComponents.count == 2
+                                {
+                                    let stepNumber = stepComponents[0] + "." // 步驟編號部分
+                                    let stepDescription = stepComponents[1].trimmingCharacters(in: .whitespaces)  // 步驟描述部分
+                                    
+                                    HStack(alignment: .top)
+                                    {
+                                        Text(stepNumber)//步驟數字
+                                            .font(.body)
+                                            .bold()
+                                            .foregroundColor(.orange)
+                                            .frame(width: 20, alignment: .leading)
+                                        
+                                        Text(stepDescription)//各步驟煮法
+                                            .font(.body)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.leading,1) // 編號和文本距離
+                                            .lineSpacing(2)  // 行距
+                                    }
+                                    .padding(.horizontal, 25) // 内容左右的留白
+                                    .padding(.vertical, 3) // 上下留白
+                                }
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 5)
                         }
+                        // else {
+                        //     LoadingView() // 载入画面
+                        // }
                     }
-                    // else {
-                    //     LoadingView() // 载入画面
-                    // }
                 }
                 
-                Text("參考影片")
-                    .foregroundStyle(.orange)
-                    .font(.title2)
-                    .offset(x: -130)
-                    .bold()
-                
-                // 使用 WebView 播放 YouTube 视频
-                if let videoURLString = dishesData.first?.D_Video,
-                   let videoID = URLComponents(string: videoURLString)?.queryItems?.first(where: { $0.name == "v" })?.value,
-                   let embedURL = URL(string: "https://www.youtube.com/embed/\(videoID)")
+                // MARK: 參考影片
+                VStack
                 {
-                    WebView(url: embedURL)
-                        .frame(width: 350, height: 200)  // 设置 WebView 的大小
-                        .cornerRadius(15)  // 设置圆角
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 15)
-                                .stroke(Color("BottonColor"), lineWidth: 2)  // 添加边框
-                        )
-                } else
-                {
-                    Text("無影片資訊")
-                        .foregroundColor(.gray)
-                        .padding()
+                    Text("參考影片")
+                        .foregroundStyle(.orange)
+                        .font(.title2)
+                        .offset(x: -130)
+                        .bold()
+                    
+                    // 使用 WebView 播放 YouTube 视频
+                    if let videoURLString = dishesData.first?.D_Video,
+                       let videoID = URLComponents(string: videoURLString)?.queryItems?.first(where: { $0.name == "v" })?.value,
+                       let embedURL = URL(string: "https://www.youtube.com/embed/\(videoID)")
+                    {
+                        WebView(url: embedURL)
+                            .frame(width: 350, height: 200)  // 设置 WebView 的大小
+                            .cornerRadius(15)  // 设置圆角
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(Color("BottonColor"), lineWidth: 2)  // 添加边框
+                            )
+                    } else
+                    {
+                        Text("無影片資訊")
+                            .foregroundColor(.gray)
+                            .padding()
+                    }
                 }
-            }
+            }//最後一個包圍的vVStack
+            
                 .onAppear
             {
                 if let cookingUrl = selectedDish?.D_Cook
@@ -367,60 +383,16 @@ extension RecipeProtocol
     }
 }
 
-//MARK: 食材左右滑動
-struct IngredientCardView: View
+// MARK: extension：AIRecipeP
+extension AIRecipeP
 {
-    let imageName: String
-    let amount: String
-    let unit: String
-    let name: String
-    
-    var body: some View
+    func itemName() -> String
     {
-        VStack(spacing: 3)
-        {
-            // 使用 AsyncImage 加载食材图片
-            AsyncImage(url: URL(string: imageName))
-            { phase in
-                switch phase
-                {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle()) // 将图片裁剪为圆形
-                    //.shadow(radius: 3) // 可选：为图片添加阴影
-                case .failure:
-                    Image("自訂食材預設圖片")
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle()) // 将图片裁剪为圆形
-                case .empty:
-                    ProgressView()
-                        .frame(width: 60, height: 60)
-                @unknown default:
-                    EmptyView()
-                }
-            }
-            
-            // 显示食材的数量和单位
-            Text("\(amount) \(unit)")
-                .font(.system(size: 18))
-                .bold()
-                .foregroundColor(.black)
-            
-            // 显示食材名称
-            Text(name)
-                .font(.footnote)
-                .multilineTextAlignment(.center)
-                .foregroundColor(Color("BackColor"))
-        }
-        .padding(10)
-        .background(Color("BottonColor")
-                    //.opacity(0.2)
-        )
-        .clipShape(Capsule())  // 使用 Capsule 代替 RoundedRectangle 使其成为胶囊形状
-        .shadow(radius: 3)  // 添加陰影
-        .frame(width: 120)  // 根据内容调整宽度
+        return chatRecords.first?.input ?? "Unknown AI Recipe"
+    }
+    
+    func itemImageURL() -> URL?
+    {
+        return nil  // AI 生成的食譜可能沒有封面圖片
     }
 }

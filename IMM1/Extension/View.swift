@@ -1,4 +1,3 @@
-// 按下愛心食譜匯入資料庫暫時未成功！
 //  View.swift
 //  Graduation_Project
 //
@@ -16,13 +15,13 @@ extension View
 {
     func sendBMIData(height: Double, weight: Double, php: String)
     {
-        // 构建URL，包含查询参数
+        // 建構URL，包含查詢參數
         let urlString = "http://163.17.9.107/food/php/BMI.php?height=\(height)&weight=\(weight)"
         guard let url = URL(string: urlString)
         else { return }
         
         var request = URLRequest(url: url)
-        request.httpMethod = "GET"  // 修改为GET请求
+        request.httpMethod = "GET"  // 修改为GET請求
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let httpResponse = response as? HTTPURLResponse
@@ -34,7 +33,7 @@ extension View
                 print("Error sending data: \(error)")
             } else
             {
-                // 如果需要处理返回的数据，可以在这里添加代码
+                // 處理返回數據
                 if let data = data, let responseString = String(data: data, encoding: .utf8)
                 {
                     print("Response: \(responseString)")
@@ -50,8 +49,11 @@ extension View
     }
     
     // MARK: 愛心toggle
-    func toggleFavorite(U_ID: String, Dis_ID: Int, isFavorited: Bool, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php") else {
+    func toggleFavorite(U_ID: String, Dis_ID: Int, isFavorited: Bool, completion: @escaping (Result<String, Error>) -> Void)
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php")
+        else
+        {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
@@ -63,26 +65,34 @@ extension View
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+            if let error = error
+            {
                 completion(.failure(error))
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse else {
+            guard let httpResponse = response as? HTTPURLResponse
+            else
+            {
                 let statusError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
                 completion(.failure(statusError))
                 return
             }
             
-            if httpResponse.statusCode == 200 {
-                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+            if httpResponse.statusCode == 200
+            {
+                if let data = data, let responseString = String(data: data, encoding: .utf8)
+                {
                     completion(.success(responseString))
-                } else {
+                } else
+                {
                     let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
                     completion(.failure(dataError))
                 }
-            } else {
-                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+            } else
+            {
+                if let data = data, let responseString = String(data: data, encoding: .utf8)
+                {
                     print("Server error response: \(responseString)")
                 }
                 let serverError = NSError(domain: "", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Server error"])
@@ -92,8 +102,11 @@ extension View
     }
     
     // MARK: 檢查菜品是否已被收藏的方法
-    func checkIfFavorited(U_ID: String, Dis_ID: String, completion: @escaping (Result<Bool, Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php?U_ID=\(U_ID)&Dis_ID=\(Dis_ID)") else {
+    func checkIfFavorited(U_ID: String, Dis_ID: String, completion: @escaping (Result<Bool, Error>) -> Void)
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Favorite.php?U_ID=\(U_ID)&Dis_ID=\(Dis_ID)")
+        else
+        {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
@@ -102,20 +115,25 @@ extension View
         request.httpMethod = "GET"
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+            if let error = error
+            {
                 completion(.failure(error))
                 return
             }
             
-            guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
+            guard let data = data, let responseString = String(data: data, encoding: .utf8)
+            else
+            {
                 let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
                 completion(.failure(dataError))
                 return
             }
             
-            if responseString.contains("\"favorited\":true") {
+            if responseString.contains("\"favorited\":true")
+            {
                 completion(.success(true))
-            } else {
+            } else
+            {
                 completion(.success(false))
             }
         }.resume()
@@ -132,7 +150,8 @@ extension View
             return
         }
         
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        URLSession.shared.dataTask(with: url) 
+        { data, response, error in
             if let error = error
             {
                 print("Error: \(error.localizedDescription)")
@@ -161,9 +180,11 @@ extension View
         }.resume()
     }
     
-    // MARK: 切換根據收藏狀態切換按鈕顯示
+    // MARK: 根據收藏狀態切換ai按鈕顯示
     func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAICol: Bool, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/UpdateAICol.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/UpdateAICol.php") 
+        else
+        {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
@@ -174,37 +195,49 @@ extension View
         request.httpBody = bodyData.data(using: .utf8)
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+        URLSession.shared.dataTask(with: request) 
+        { data, response, error in
+            if let error = error 
+            {
                 completion(.failure(error))
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse else {
+            guard let httpResponse = response as? HTTPURLResponse 
+            else
+            {
                 let statusError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
                 completion(.failure(statusError))
                 return
             }
             
-            if httpResponse.statusCode == 200 {
-                if let data = data {
+            if httpResponse.statusCode == 200 
+            {
+                if let data = data 
+                {
                     do {
                         if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                           let message = jsonResponse["message"] as? String {
+                           let message = jsonResponse["message"] as? String 
+                        {
                             completion(.success(message))
-                        } else {
+                        } else 
+                        {
                             let parseError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure"])
                             completion(.failure(parseError))
                         }
-                    } catch {
+                    } catch 
+                    {
                         completion(.failure(error))
                     }
-                } else {
+                } else 
+                {
                     let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
                     completion(.failure(dataError))
                 }
-            } else {
-                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+            } else 
+            {
+                if let data = data, let responseString = String(data: data, encoding: .utf8) 
+                {
                     print("Server error response: \(responseString)")
                 }
                 let serverError = NSError(domain: "", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Server error"])
@@ -212,10 +245,13 @@ extension View
             }
         }.resume()
     }
-
-    // MARK: 檢查收藏狀態
-    func checkAIColed(U_ID: String, Recipe_ID: Int, completion: @escaping (Result<Bool, Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)") else {
+    
+    // MARK: 檢查ai收藏狀態
+    func checkAIColed(U_ID: String, Recipe_ID: Int, completion: @escaping (Result<Bool, Error>) -> Void)
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)") 
+        else
+        {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
@@ -223,13 +259,17 @@ extension View
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
+        URLSession.shared.dataTask(with: request) 
+        { data, response, error in
+            if let error = error
+            {
                 completion(.failure(error))
                 return
             }
             
-            guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
+            guard let data = data, let responseString = String(data: data, encoding: .utf8)
+            else
+            {
                 let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
                 completion(.failure(dataError))
                 return
@@ -237,14 +277,85 @@ extension View
             
             print("Raw response string: \(responseString)") // 添加這行來調試
             
-            if responseString.contains("\"isAICol\":true") {
+            if responseString.contains("\"isAICol\":true")
+            {
                 completion(.success(true))
-            } else {
+            } else
+            {
                 completion(.success(false))
             }
         }.resume()
     }
-
+    
+    // MARK: 加載收藏的 AI 生成的食譜數據
+    func loadAICData(
+        for userID: String,
+        chatRecords: Binding<[ChatRecord]>,
+        isLoading: Binding<Bool>,
+        loadingError: Binding<String?>
+    )
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetAIC.php?U_ID=\(userID)")
+        else
+        {
+            print("Invalid URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error
+            {
+                print("Error: \(error.localizedDescription)")
+                DispatchQueue.main.async
+                {
+                    loadingError.wrappedValue = "Failed to load data: \(error.localizedDescription)"
+                    isLoading.wrappedValue = false
+                }
+                return
+            }
+            
+            guard let data = data
+            else
+            {
+                print("No data received")
+                DispatchQueue.main.async
+                {
+                    loadingError.wrappedValue = "No data received"
+                    isLoading.wrappedValue = false
+                }
+                return
+            }
+            
+            // 打印接收到的原始 JSON 数据
+            if let jsonString = String(data: data, encoding: .utf8)
+            {
+                print("Raw JSON: \(jsonString)")
+            }
+            
+            // 解码 JSON 响应
+            do
+            {
+                let decoder = JSONDecoder()
+                let records = try decoder.decode([ChatRecord].self, from: data)
+                
+                // 更新 UI 並打印記錄數量
+                DispatchQueue.main.async
+                {
+                    print("Decoded \(records.count) records")
+                    chatRecords.wrappedValue = records
+                    isLoading.wrappedValue = false
+                }
+            } catch
+            {
+                DispatchQueue.main.async
+                {
+                    loadingError.wrappedValue = "Failed to decode JSON: \(error.localizedDescription)"
+                    isLoading.wrappedValue = false
+                    print("Decoding error: \(error.localizedDescription)")
+                }
+            }
+        }.resume()
+    }
 }
 
 struct TextLimit: ViewModifier

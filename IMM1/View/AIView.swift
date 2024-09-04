@@ -233,9 +233,7 @@ struct AIView: View
                         .foregroundColor(.orange)
                         .offset(x: -10, y: 0)
                     Spacer()
-                    Button(action: {
-                        showingImagePicker.toggle()
-                    }) {
+                    NavigationLink(destination: AIphotoView()) {
                         Image(systemName: "camera.fill")
                             .foregroundColor(.blue)
                             .imageScale(.large)
@@ -306,7 +304,8 @@ struct AIView: View
             }
         }
         .sheet(isPresented: $showingImagePicker) {
-            ImagePicker(selectedImage: $selectedImage)
+            ImagePicker(selectedImage: $selectedImage, sourceType:.photoLibrary)
+            
         }
         .onChange(of: selectedImage) { image in
             if let image = image {
