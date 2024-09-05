@@ -54,7 +54,8 @@ struct MRecipeView: View, RecipeP
                             {
                                 let filteredAmounts = amountData.filter { $0.Dis_ID == selectedDish.Dis_ID }
                                 
-                                ForEach(filteredAmounts, id: \.A_ID) { amount in
+                                ForEach(filteredAmounts, id: \.A_ID)
+                                { amount in
                                     if let food = foodData.first(where: { $0.F_ID == amount.F_ID })
                                     {
                                         IngredientCardView(
@@ -109,7 +110,7 @@ struct MRecipeView: View, RecipeP
                                             .padding(.leading,1) // 編號和文本距離
                                             .lineSpacing(2)  // 行距
                                     }
-                                    .padding(.horizontal, 25) // 内容左右的留白
+                                    .padding(.horizontal, 35) // 内容左右的留白
                                     .padding(.vertical, 3) // 上下留白
                                 }
                             }
@@ -173,7 +174,8 @@ struct MRecipeView: View, RecipeP
                     if progress > 6
                     {
                         Spacer(minLength: 0)
-                    } else {
+                    } else
+                    {
                         Spacer(minLength: 0)
                         Text(itemName())
                             .bold()
@@ -371,14 +373,16 @@ struct MRecipeView: View, RecipeP
                             }
                         }
                     }
-                }) {
+                }) 
+                {
                     Image(systemName: (isFavorited ?? false) ? "heart.fill" : "heart")
                         .font(.title2)
                         .foregroundStyle(.orange)
                 }
             }
         }
-        .onAppear {
+        .onAppear 
+        {
             print("顯示的 Dis_ID: \(Dis_ID)")
             loadMenuData()
         }

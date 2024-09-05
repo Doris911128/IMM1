@@ -273,8 +273,8 @@
 		0447AFCA2B872D110080D222 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
-				0447AFCC2B872D110080D222 /* CustomButton.swift */,
 				1C14F56A2C8806E900F2F1ED /* AIRecipeBlock.swift */,
+				0447AFCC2B872D110080D222 /* CustomButton.swift */,
 				0447AFD02B872D110080D222 /* EditPlanView.swift */,
 				0447AFCE2B872D110080D222 /* FoodSelectionView.swift */,
 				0447AFCF2B872D110080D222 /* InformationLabel.swift */,

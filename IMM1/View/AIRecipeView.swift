@@ -56,17 +56,16 @@ struct AIRecipeView: View, AIRecipeP
         {
             VStack
             {
-                Text("AI食譜庫")
+                Text("AI 食譜庫")
                     .font(.largeTitle)
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 20)
-            
+                
                 if isLoading
                 {
-                    //MARK: 想要載入中轉圈圈動畫
-                    VStack
-                    {
+                    // 載入中的轉圈動畫
+                    VStack {
                         Spacer()
                         ProgressView("載入中...").progressViewStyle(CircularProgressViewStyle())
                         Spacer()
@@ -76,23 +75,25 @@ struct AIRecipeView: View, AIRecipeP
                 {
                     VStack
                     {
-                        Text("載入失敗: \(error)").font(.body).foregroundColor(.red)
+                        Text("載入失敗: \(error)")
+                            .font(.body)
+                            .foregroundColor(.red)
                         Spacer().frame(height: 120)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                } else
-                if chatRecords.isEmpty
+                } else if chatRecords.isEmpty
                 {
+                    // 當沒有記錄時，顯示空狀態
                     AIEmptyStateView()
                 } else
                 {
-                    ScrollView(showsIndicators: false) 
+                    ScrollView(showsIndicators: false)
                     {
-                        LazyVStack 
+                        LazyVStack
                         {
-                            ForEach(chatRecords) 
+                            ForEach(chatRecords)
                             { record in
-                                NavigationLink(destination: AIRecipeBlock(U_ID: U_ID, record: record)) 
+                                NavigationLink(destination: AIRecipeBlock(U_ID: U_ID, record: record))
                                 {
                                     AIR_Block(record: record)
                                 }
@@ -102,9 +103,13 @@ struct AIRecipeView: View, AIRecipeP
                     }
                 }
             }
-            .onAppear {
-                fetchUserID { userID in
-                    guard let userID = userID else {
+            .onAppear
+            {
+                fetchUserID
+                { userID in
+                    guard let userID = userID
+                    else
+                    {
                         print("Failed to get user ID")
                         return
                     }
