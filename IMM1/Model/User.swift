@@ -2,7 +2,8 @@
 
 import Foundation
 
-class User: ObservableObject, Decodable {
+class User: ObservableObject, Decodable 
+{
     @Published var id: String
     @Published var account: String
     // MARK: 註解密碼部分1

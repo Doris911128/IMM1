@@ -1,10 +1,53 @@
-//  StockView.swift
+//  StockView.swift 庫存
 
 // 時刻監控食材變動數量＿警示框ＯＫ
 import SwiftUI
 
-// MARK: - 数据模型定义
-struct Stock: Codable {
+// MARK: 網路管理器 NetworkManager
+class NetworkManager
+{
+    // 使用 URLSession 來從指定的 URL 獲取資料，並將 JSON 資料解析為 Stock 結構 結果會通過 completion 閉包回傳，成功時回傳 [Stock]，失敗時回傳錯誤
+    func fetchData(from urlString: String, completion: @escaping (Result<[Stock], Error>) -> Void)
+    {
+        guard let url = URL(string: urlString)
+        else
+        {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無效的網址"])))
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url)
+        { data, response, error in
+            if let error = error
+            {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data
+            else
+            {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"])))
+                return
+            }
+            
+            do
+            {
+                let decoder = JSONDecoder()
+                let stocks = try decoder.decode([Stock].self, from: data)
+                completion(.success(stocks))
+            } catch
+            {
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+}
+
+// MARK: 結構 Stock
+// 儲存從伺服器接收到的[食材庫存]資料
+struct Stock: Codable
+{
     let F_ID: Int
     let F_Name: String?
     let U_ID: String?
@@ -13,7 +56,10 @@ struct Stock: Codable {
     var Food_imge: String?
 }
 
-struct StockIngredient: Identifiable {
+// MARK: 結構 StockIngredient
+// 儲存和顯示[庫存中的食材項目]，和[額外屬性]刪除、編輯 狀態
+struct StockIngredient: Identifiable
+{
     var id = UUID()
     let U_ID: String
     let F_ID: Int
@@ -22,19 +68,427 @@ struct StockIngredient: Identifiable {
     let F_Unit: String?
     var Food_imge: String?  // 新增食材圖片URL屬性
     var isSelectedForDeletion: Bool = false
-    var isEditing: Bool = false // 表示是否处于编辑模式
+    var isEditing: Bool = false // 表示是否處於編輯模式
 }
 
-struct IngredientInfo {
+// MARK: 結構 IngredientInfo
+// 儲食材的基本資訊，用於從後端獲取的食材列表中篩選和顯示
+struct IngredientInfo
+{
     let F_Name: String
     let F_ID: Int
     let F_Unit :String
     let Food_imge :String
-    
 }
 
-// MARK: - 新增食材視圖
-struct AddIngredients: View {
+// MARK: 主庫存視圖 - 顯示和管理 StockView
+struct StockView: View
+{
+    @State private var ingredients: [StockIngredient] = []
+    @State private var isAddSheetPresented = false
+    @State private var isEditing: Bool = false
+    @State private var showAlert = false
+    @State private var triggerRefresh: Bool = false // 用於觸發視圖刷新
+    @State private var isLoading: Bool = true // 載入狀態
+    @State private var loadingError: String? = nil // 加載錯誤訊息
+    
+    let columns =
+    [
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+    
+    // MARK: [func] fetchData 獲取當前庫存資料
+    // 獲取當前庫存資料，並將其轉換為 StockIngredient 的列表。
+    private func fetchData()
+    {
+        let networkManager = NetworkManager()
+        networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php")
+        { result in
+            switch result
+            {
+            case .success(let stocks):
+                self.ingredients = stocks.compactMap
+                { stock in
+                    let name = stock.F_Name ?? "未知食材"
+                    let unit = stock.F_Unit ?? "未指定單位"
+                    let SK_SUM = stock.SK_SUM ?? 0
+                    let image = stock.Food_imge ?? ""  // 確保Food_imge被正確解析
+                    
+                    return StockIngredient(U_ID: stock.U_ID ?? UUID().uuidString, F_ID: stock.F_ID, F_Name: name, SK_SUM: SK_SUM, F_Unit: unit, Food_imge: image)
+                }
+            case .failure(let error):
+                print("Error: \(error)")
+            }
+        }
+    }
+    
+    // MARK: [func] toggleSelection 標記需刪除處
+    // 切換食材的選中狀態，標記為刪除
+    private func toggleSelection(_ index: Int)
+    {
+        ingredients[index].isSelectedForDeletion.toggle()
+    }
+    
+    // MARK: [func] deleteSelectedIngredients 刪除標記和同步
+    // 刪除選中標記的食材，並同步刪除到伺服器
+    private func deleteSelectedIngredients()
+    {
+        let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
+        guard !selectedIngredients.isEmpty
+        else
+        {
+            print("No ingredients selected for deletion")
+            return
+        }
+        showAlert = true
+    }
+    
+    // MARK: [func] sendIngredientData 發送刪除資料
+    // 將刪除的食材資料發送到伺服器
+    private func sendIngredientData(F_ID: Int, U_ID: String)
+    {
+        let jsonDict: [String: Any] =
+        [
+            "F_ID": F_ID,
+            "U_ID": U_ID
+        ]
+        
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict),
+              let url = URL(string: "http://163.17.9.107/food/php/Stockdelete.php")
+        else
+        {
+            print("Error creating JSON or URL")
+            return
+        }
+        
+        print("Sending to server: F_ID=\(F_ID), U_ID=\(U_ID)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error
+            {
+                print("Error sending ingredient deletion data: \(error)")
+                return
+            }
+            
+            if let response = response as? HTTPURLResponse, response.statusCode == 200, let data = data,
+               let responseString = String(data: data, encoding: .utf8)
+            {
+                print("Server response: \(responseString)")
+            } else
+            {
+                print("Unexpected server response or data")
+            }
+        }.resume()
+    }
+    
+    // MARK: [func] sendEditedIngredientData 更新編輯
+    // 食材數量編輯後，將修改過的資料發送到伺服器進行更新
+    private func sendEditedIngredientData(F_ID: Int, U_ID: String, SK_SUM: Int)
+    {
+        let jsonDict: [String: Any] =
+        [
+            "F_ID": F_ID,
+            "U_ID": U_ID,
+            "SK_SUM": SK_SUM
+        ]
+        
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict),
+              let url = URL(string: "http://163.17.9.107/food/php/StockEdit.php")
+        else
+        {
+            print("Error creating JSON or URL")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData
+        
+        URLSession.shared.dataTask(with: request)
+        { data, response, error in
+            if let error = error
+            {
+                print("Error sending ingredient edited data: \(error)")
+                return
+            }
+            
+            if let response = response as? HTTPURLResponse, response.statusCode == 200, let data = data,
+               let responseString = String(data: data, encoding: .utf8)
+            {
+                print("Server response: \(responseString)")
+            } else {
+                print("Unexpected server response or data")
+            }
+        }.resume()
+    }
+    
+    // MARK: 主庫存視圖 body
+    var body: some View
+    {
+        NavigationStack
+        {
+            
+            VStack{
+                Text("庫存")
+                    .font(.largeTitle)
+                    .bold()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 20)
+                    .padding(.top, 20)  // 新增頂部間距來固定標題位置
+                
+                VStack
+                {
+                    //                if isLoading
+                    //                {
+                    //                    //MARK: 想要載入中轉圈圈動畫
+                    //                    VStack
+                    //                    {
+                    //                        Spacer()
+                    //                        ProgressView("載入中...").progressViewStyle(CircularProgressViewStyle())
+                    //                        Spacer()
+                    //                    }
+                    //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    //                } else if let error = loadingError
+                    //                {
+                    //                    VStack
+                    //                    {
+                    //                        Text("載入失敗: \(error)").font(.body).foregroundColor(.red)
+                    //                        Spacer().frame(height: 120)
+                    //                    }
+                    //                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    //                }else
+                    if ingredients.isEmpty
+                    {
+                        ZStack
+                        {
+                            VStack
+                            {
+                                Image("空庫存")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 180, height: 180)
+                                //目前無庫存項目
+                                Text("暫未新增任何庫存")
+                                    .font(.system(size: 18))
+                                    .foregroundColor(.gray)
+                            }
+                            .offset(x:0,y:150)
+                        }
+                        
+                    } else
+                    {
+                        ScrollView
+                        {
+                            LazyVGrid(columns: columns, spacing: 20)
+                            {
+                                ForEach(ingredients.indices, id: \.self)
+                                { index in
+                                    ZStack(alignment: .topLeading)
+                                    {
+                                        // MARK: 顯示圖片
+                                        VStack
+                                        {
+                                            if let imageUrl = ingredients[index].Food_imge, let url = URL(string: imageUrl)
+                                            {
+                                                AsyncImage(url: url)
+                                                { phase in
+                                                    switch phase
+                                                    {
+                                                    case .empty:
+                                                        ProgressView()
+                                                    case .success(let image):
+                                                        image
+                                                            .resizable()
+                                                            .aspectRatio(contentMode: .fill)
+                                                            .frame(width: 150, height: 150)
+                                                            .clipShape(Circle())
+                                                    case .failure:
+                                                        Image(systemName: "photo")
+                                                            .resizable()
+                                                            .aspectRatio(contentMode: .fill)
+                                                            .frame(width: 150, height: 150)
+                                                            .clipShape(Circle())
+                                                    @unknown default:
+                                                        EmptyView()
+                                                    }
+                                                }
+                                                .padding(.bottom, 8) // 調整圖片與文字之間的距離
+                                            } else
+                                            {
+                                                Image(systemName: "photo")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: 150, height: 150)
+                                                    .clipShape(Circle())
+                                                    .padding(.bottom, 8) // 調整圖片與文字之間的距離
+                                            }
+                                            
+                                            HStack
+                                            {
+                                                Text(ingredients[index].F_Name)
+                                                    .lineLimit(1) // 限制為1行，超出部分顯示省略號
+                                                    .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
+                                                
+                                                Spacer()
+                                                
+                                                if isEditing
+                                                {
+                                                    TextField("食材數量", value: $ingredients[index].SK_SUM, formatter: NumberFormatter())
+                                                        .keyboardType(.numberPad)
+                                                        .frame(width: 50) // 限制 TextField 寬度
+                                                        .multilineTextAlignment(.trailing)
+                                                        .padding(.leading, -20) // 調整 TextField 左側
+                                                        .onChange(of: ingredients[index].SK_SUM)
+                                                    { newValue in
+                                                        sendEditedIngredientData(F_ID: ingredients[index].F_ID, U_ID: ingredients[index].U_ID, SK_SUM: newValue)
+                                                    }
+                                                } else
+                                                {
+                                                    HStack
+                                                    {
+                                                        Text("\(ingredients[index].SK_SUM)")
+                                                        Text(ingredients[index].F_Unit ?? "")
+                                                    }
+                                                    .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
+                                                    .multilineTextAlignment(.trailing)
+                                                }
+                                            }
+                                            .padding()
+                                            .background(Color(UIColor.systemBackground))
+                                            .cornerRadius(8)
+                                            .shadow(radius: 4)
+                                        }
+                                        
+                                        if isEditing
+                                        {
+                                            Button(action: {
+                                                toggleSelection(index)
+                                            })
+                                            {
+                                                ZStack
+                                                {
+                                                    Circle()
+                                                        .fill(ingredients[index].isSelectedForDeletion ? Color.gray : Color.orange)
+                                                        .frame(width: 30, height: 30)
+                                                    
+                                                    Image(systemName: ingredients[index].isSelectedForDeletion ? "checkmark.square" : "square")
+                                                        .foregroundColor(.white)
+                                                }
+                                            }
+                                            .buttonStyle(BorderlessButtonStyle())
+                                            .offset(x: 5, y: 0) // 調整按鈕的位置
+                                        }
+                                        
+                                    }
+                                }
+                            }
+                            .padding()
+                        }
+                    }
+                }
+                
+                
+                // MARK: 編輯按鈕部分
+                Spacer()
+                HStack
+                {
+                    if isEditing
+                    {
+                        Button("新增食材")
+                        {
+                            isAddSheetPresented.toggle()
+                        }
+                        .padding()
+                    }
+                }
+                .padding()
+            }
+            .sheet(isPresented: $isAddSheetPresented)
+            {
+                AddIngredients(onAdd: 
+                { newIngredient in
+                    ingredients.append(newIngredient)
+                    triggerRefresh.toggle()
+                }, isSheetPresented: $isAddSheetPresented, isEditing: $isEditing)
+            }
+            .onAppear
+            {
+                fetchData()
+            }
+            .toolbar
+            {
+                ToolbarItem(placement: .navigationBarTrailing)
+                {
+                    HStack
+                    {
+                        if !isEditing
+                        {
+                            Button("編輯")
+                            {
+                                isEditing.toggle()
+                            }
+                        } else
+                        {
+                            Button(action: {
+                                if ingredients.contains { $0.isSelectedForDeletion }
+                                {
+                                    showAlert.toggle()
+                                } else
+                                {
+                                    isEditing.toggle()
+                                }
+                            })
+                            {
+                                Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "確定")
+                            }
+                            .padding()
+                            
+                            .alert(isPresented: $showAlert)
+                            {
+                                Alert(
+                                    title: Text("確認刪除"),
+                                    message: Text("您確定要刪除所選的食材嗎？"),
+                                    primaryButton: .default(Text("確定"))
+                                    {
+                                        let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
+                                        selectedIngredients.forEach { ingredient in
+                                            print("Deleting Ingredient: F_ID=\(ingredient.F_ID), U_ID=\(ingredient.U_ID)")
+                                            sendIngredientData(F_ID: ingredient.F_ID, U_ID: ingredient.U_ID)
+                                        }
+                                        
+                                        let indexSet = IndexSet(ingredients.indices.filter { ingredients[$0].isSelectedForDeletion })
+                                        ingredients.remove(atOffsets: indexSet)
+                                        
+                                        fetchData()
+                                        isEditing = false
+                                    }, secondaryButton: .cancel(Text("取消"))
+                                    {
+                                        ingredients.indices.forEach
+                                        { index in
+                                            ingredients[index].isSelectedForDeletion = false
+                                        }
+                                        isEditing = false
+                                    })
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .id(triggerRefresh)
+    }
+}
+
+// MARK: 新增食材至庫存 視圖 AddIngredients
+struct AddIngredients: View
+{
     @State private var selectedIngredientIndex = 0
     @State private var newIngredientQuantity: String = ""
     @State private var searchText = ""
@@ -50,42 +504,157 @@ struct AddIngredients: View {
     private let predefinedUnits = ["顆", "毫升", "個", "克", "瓣",  "塊", "片", "條", "支"]
     
     var onAdd: (StockIngredient) -> Void
+    
     @Binding var isSheetPresented: Bool
     @Binding var isEditing: Bool
     
+    // MARK: [var] filteredIngredients
+    // 用戶手動輸入關鍵字時，會篩選出符合條件的食材清單
+    var filteredIngredients: [IngredientInfo]
+    {
+        if searchText.isEmpty
+        {
+            return ingredientsInfo
+        } else
+        {
+            return ingredientsInfo.filter { $0.F_Name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
+    
+    // MARK: [func] toJSONString
+    func toJSONString(F_ID: Int, F_Name: String, F_Unit: String, SK_SUM: Int, U_ID: String) -> String?
+    {
+        let jsonDict: [String: Any] =
+        [
+            "F_ID": F_ID,
+            "F_Name": F_Name,
+            "F_Unit": F_Unit,
+            "SK_SUM": SK_SUM,
+            "U_ID": U_ID
+        ]
+        do
+        {
+            let jsonData = try JSONSerialization.data(withJSONObject: jsonDict, options: .prettyPrinted)
+            return String(data: jsonData, encoding: .utf8)
+        } catch
+        {
+            print("Error converting to JSON: \(error)")
+            return nil
+        }
+    }
+    
+    // MARK: [func] fetchIngredientNames
+    // 從伺服器獲取可用的食材名稱並存儲於 ingredientsInfo 中
+    private func fetchIngredientNames()
+    {
+        let networkManager = NetworkManager()
+        networkManager.fetchData(from: "http://163.17.9.107/food/php/Food.php")
+        { result in
+            switch result
+            {
+            case .success(let stocks):
+                ingredientsInfo = stocks.compactMap
+                { stock in
+                    if let name = stock.F_Name, let unit = stock.F_Unit, let imge = stock.Food_imge
+                    {
+                        return IngredientInfo(F_Name: name, F_ID: stock.F_ID, F_Unit: unit, Food_imge: imge)
+                    } else
+                    {
+                        return nil
+                    }
+                }
+            case .failure(let error):
+                print("Failed to fetch ingredient names: \(error)")
+            }
+        }
+    }
+
+    // MARK: [func] sendDataToServer
+    // 將新增加的食材資料以 JSON 格式發送到伺服器
+    private func sendDataToServer(json: String?)
+    {
+        guard let jsonData = json, let url = URL(string: "http://163.17.9.107/food/php/Stock.php")
+        else
+        {
+            print("Invalid URL or JSON data")
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = jsonData.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request)
+        { data, response, error in
+            if let error = error
+            {
+                print("Error sending data to server: \(error)")
+                return
+            }
+            
+            if let response = response as? HTTPURLResponse, let data = data
+            {
+                if response.statusCode == 200
+                {
+                    if let responseJSON = String(data: data, encoding: .utf8)
+                    {
+                        print("Response JSON: \(responseJSON)")
+                    } else
+                    {
+                        print("Received data could not be converted to JSON")
+                    }
+                } else
+                {
+                    print("Server responded with status code: \(response.statusCode)")
+                }
+            }
+        }.resume()
+    }
+    
+    // MARK: 新增食材視圖 body
     var body: some View
     {
         NavigationView
         {
-            ZStack {
-                // 背景图片，放置在背景层
+            ZStack
+            {
+                // 預設[空]圖片，放置在背景圖層
                 Image("庫存頭腳")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: UIScreen.main.bounds.width, height: 100) // 适配屏幕宽度，调整高度
-                    .position(x: UIScreen.main.bounds.width / 2, y: 0) // 固定位置在顶部
-                    .zIndex(1) // 设置为背景层
+                    .frame(width: UIScreen.main.bounds.width, height: 100) // 適配螢幕寬度，調整高度
+                    .position(x: UIScreen.main.bounds.width / 2, y: 0) // 固定位置在頂部
+                    .zIndex(1) // 設定為背景圖層
                 
-                // Form内容，放置在前景层
-                Form {
-                    Section(header: Text("新增食材")) {
+                // Form內容，放置在前景層
+                Form
+                {
+                    Section(header: Text("新增食材"))
+                    {
                         Toggle("手動輸入食材", isOn: $isManualEntry)
                         
-                        if isManualEntry {
+                        if isManualEntry
+                        {
                             TextField("食材名稱", text: $manualIngredientName)
                             
-                            Picker("食材單位", selection: $manualIngredientUnit) {
-                                ForEach(predefinedUnits, id: \.self) { unit in
+                            Picker("食材單位", selection: $manualIngredientUnit)
+                            {
+                                ForEach(predefinedUnits, id: \.self)
+                                { unit in
                                     Text(unit).tag(unit)
                                 }
                             }
                             .pickerStyle(MenuPickerStyle())
-                        } else {
+                        } else
+                        {
                             TextField("搜索食材", text: $searchText)
                                 .autocapitalization(.none)
                             
-                            Picker("選擇食材", selection: $selectedIngredientIndex) {
-                                ForEach(filteredIngredients.indices, id: \.self) { index in
+                            Picker("選擇食材", selection: $selectedIngredientIndex)
+                            {
+                                ForEach(filteredIngredients.indices, id: \.self)
+                                { index in
                                     Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
                                 }
                             }
@@ -96,7 +665,7 @@ struct AddIngredients: View {
                             .keyboardType(.numberPad)
                     }
                 }
-                .zIndex(0) // 确保Form内容在图片之上
+                .zIndex(0) // 確保Form內容在圖片之上
             }
             .toolbar
             {
@@ -112,14 +681,14 @@ struct AddIngredients: View {
                             
                             if isManualEntry
                             {
-                                F_ID = -1 // Special value to indicate manual entry
+                                F_ID = -1 // 特殊值表示手動輸入
                                 F_Name = manualIngredientName
                                 F_Unit = manualIngredientUnit
                             } else
                             {
                                 if filteredIngredients.isEmpty
                                 {
-                                    showAlert = true // Show alert if no ingredients are available
+                                    showAlert = true // 如果沒有可用成分，則顯示警報
                                     return
                                 }
                                 let selectedInfo = filteredIngredients[selectedIngredientIndex]
@@ -151,470 +720,31 @@ struct AddIngredients: View {
                     }
                 }
             }
-            .alert(isPresented: $showAlert) {
+            .alert(isPresented: $showAlert)
+            {
                 Alert(
                     title: Text("警告"),
                     message: Text("請確認輸入的食材名稱或數量字元是否正確"),
-                    dismissButton: .default(Text("好的")) {
+                    dismissButton: .default(Text("好的"))
+                    {
                         searchText = ""
                         newIngredientQuantity = ""
                     }
                 )
             }
         }
-        .onAppear {
+        .onAppear
+        {
             fetchIngredientNames()
         }
     }
-    
-    var filteredIngredients: [IngredientInfo] {
-        if searchText.isEmpty {
-            return ingredientsInfo
-        } else {
-            return ingredientsInfo.filter { $0.F_Name.localizedCaseInsensitiveContains(searchText) }
-        }
-    }
-    
-    private func fetchIngredientNames() {
-        let networkManager = NetworkManager()
-        networkManager.fetchData(from: "http://163.17.9.107/food/php/Food.php") { result in
-            switch result {
-            case .success(let stocks):
-                ingredientsInfo = stocks.compactMap { stock in
-                    if let name = stock.F_Name, let unit = stock.F_Unit, let imge = stock.Food_imge {
-                        return IngredientInfo(F_Name: name, F_ID: stock.F_ID, F_Unit: unit, Food_imge: imge)
-                    } else {
-                        return nil
-                    }
-                }
-            case .failure(let error):
-                print("Failed to fetch ingredient names: \(error)")
-            }
-        }
-    }
-    
-    func toJSONString(F_ID: Int, F_Name: String, F_Unit: String, SK_SUM: Int, U_ID: String) -> String? {
-        let jsonDict: [String: Any] = [
-            "F_ID": F_ID,
-            "F_Name": F_Name,
-            "F_Unit": F_Unit,
-            "SK_SUM": SK_SUM,
-            "U_ID": U_ID
-        ]
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: jsonDict, options: .prettyPrinted)
-            return String(data: jsonData, encoding: .utf8)
-        } catch {
-            print("Error converting to JSON: \(error)")
-            return nil
-        }
-    }
-    
-    private func sendDataToServer(json: String?) {
-        guard let jsonData = json, let url = URL(string: "http://163.17.9.107/food/php/Stock.php") else {
-            print("Invalid URL or JSON data")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData.data(using: .utf8)
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Error sending data to server: \(error)")
-                return
-            }
-            
-            if let response = response as? HTTPURLResponse, let data = data {
-                if response.statusCode == 200 {
-                    if let responseJSON = String(data: data, encoding: .utf8) {
-                        print("Response JSON: \(responseJSON)")
-                    } else {
-                        print("Received data could not be converted to JSON")
-                    }
-                } else {
-                    print("Server responded with status code: \(response.statusCode)")
-                }
-            }
-        }.resume()
-    }
+
 }
 
-
-
-
-
-// MARK: - 网络管理器
-class NetworkManager {
-    func fetchData(from urlString: String, completion: @escaping (Result<[Stock], Error>) -> Void) {
-        guard let url = URL(string: urlString) else {
-            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無效的網址"])))
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            
-            guard let data = data else {
-                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "未收到數據"])))
-                return
-            }
-            
-            do {
-                let decoder = JSONDecoder()
-                let stocks = try decoder.decode([Stock].self, from: data)
-                completion(.success(stocks))
-            } catch {
-                completion(.failure(error))
-            }
-        }.resume()
-    }
-}
-
-// MARK: - 主庫存視圖
-struct StockView: View
+struct StockView_Previews: PreviewProvider
 {
-    @State private var ingredients: [StockIngredient] = []
-    @State private var isAddSheetPresented = false
-    @State private var isEditing: Bool = false
-    @State private var showAlert = false
-    @State private var triggerRefresh: Bool = false // 用于触发视图刷新
-    @State private var isLoading: Bool = true // 加载状态
-    @State private var loadingError: String? = nil // 加載错误信息
-    
-    let columns = [
-        GridItem(.flexible()),
-        GridItem(.flexible())
-    ]
-    
-    var body: some View
+    static var previews: some View
     {
-        NavigationStack
-        {
-         
-                VStack{
-                    Text("庫存")
-                        .font(.largeTitle)
-                        .bold()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 20)
-                        .padding(.top, 20)  // 添加顶部间距来固定标题位置
-                    
-                    VStack
-                    {
-                        
-                        
-                        //                if isLoading
-                        //                {
-                        //                    //MARK: 想要載入中轉圈圈動畫
-                        //                    VStack
-                        //                    {
-                        //                        Spacer()
-                        //                        ProgressView("載入中...").progressViewStyle(CircularProgressViewStyle())
-                        //                        Spacer()
-                        //                    }
-                        //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        //                } else if let error = loadingError
-                        //                {
-                        //                    VStack
-                        //                    {
-                        //                        Text("載入失敗: \(error)").font(.body).foregroundColor(.red)
-                        //                        Spacer().frame(height: 120)
-                        //                    }
-                        //                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                        //                }else
-                        if ingredients.isEmpty
-                        {   ZStack
-                            {
-                                VStack
-                                {
-                                    Image("空庫存")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 180, height: 180)
-                                    //目前無庫存項目
-                                    Text("暫未新增任何庫存")
-                                        .font(.system(size: 18))
-                                        .foregroundColor(.gray)
-                                }
-                                .offset(x:0,y:150)
-                            }
-                            
-                        } else {
-                            ScrollView {
-                                LazyVGrid(columns: columns, spacing: 20) {
-                                    ForEach(ingredients.indices, id: \.self) { index in
-                                        ZStack(alignment: .topLeading) {
-                                            VStack {
-                                                // 显示图片
-                                                if let imageUrl = ingredients[index].Food_imge, let url = URL(string: imageUrl) {
-                                                    AsyncImage(url: url) { phase in
-                                                        switch phase {
-                                                        case .empty:
-                                                            ProgressView()
-                                                        case .success(let image):
-                                                            image
-                                                                .resizable()
-                                                                .aspectRatio(contentMode: .fill)
-                                                                .frame(width: 150, height: 150)
-                                                                .clipShape(Circle())
-                                                        case .failure:
-                                                            Image(systemName: "photo")
-                                                                .resizable()
-                                                                .aspectRatio(contentMode: .fill)
-                                                                .frame(width: 150, height: 150)
-                                                                .clipShape(Circle())
-                                                        @unknown default:
-                                                            EmptyView()
-                                                        }
-                                                    }
-                                                    .padding(.bottom, 8) // 调整图片与文字之间的距离
-                                                } else {
-                                                    Image(systemName: "photo")
-                                                        .resizable()
-                                                        .aspectRatio(contentMode: .fill)
-                                                        .frame(width: 150, height: 150)
-                                                        .clipShape(Circle())
-                                                        .padding(.bottom, 8) // 调整图片与文字之间的距离
-                                                }
-                                                
-                                                HStack {
-                                                    Text(ingredients[index].F_Name)
-                                                        .lineLimit(1) // 限制为1行，超出部分显示省略号
-                                                        .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                                    
-                                                    Spacer()
-                                                    
-                                                    if isEditing {
-                                                        TextField("食材數量", value: $ingredients[index].SK_SUM, formatter: NumberFormatter())
-                                                            .keyboardType(.numberPad)
-                                                            .frame(width: 50) // 限制 TextField 宽度
-                                                            .multilineTextAlignment(.trailing)
-                                                            .padding(.leading, -20) // 调整 TextField 左侧 padding
-                                                            .onChange(of: ingredients[index].SK_SUM) { newValue in
-                                                                sendEditedIngredientData(F_ID: ingredients[index].F_ID, U_ID: ingredients[index].U_ID, SK_SUM: newValue)
-                                                            }
-                                                    } else {
-                                                        HStack {
-                                                            Text("\(ingredients[index].SK_SUM)")
-                                                            Text(ingredients[index].F_Unit ?? "")
-                                                        }
-                                                        .foregroundColor(ingredients[index].isSelectedForDeletion ? .gray : .primary)
-                                                        .multilineTextAlignment(.trailing)
-                                                    }
-                                                }
-                                                .padding()
-                                                .background(Color(UIColor.systemBackground))
-                                                .cornerRadius(8)
-                                                .shadow(radius: 4)
-                                            }
-                                            
-                                            if isEditing {
-                                                Button(action: {
-                                                    toggleSelection(index)
-                                                }) {
-                                                    ZStack {
-                                                        Circle()
-                                                            .fill(ingredients[index].isSelectedForDeletion ? Color.gray : Color.orange)
-                                                            .frame(width: 30, height: 30)
-                                                        
-                                                        Image(systemName: ingredients[index].isSelectedForDeletion ? "checkmark.square" : "square")
-                                                            .foregroundColor(.white)
-                                                    }
-                                                }
-                                                .buttonStyle(BorderlessButtonStyle())
-                                                .offset(x: 5, y: 0) // 调整按钮的位置
-                                            }
-                                        }
-                                    }
-                                }
-                                .padding()
-                            }
-                        }
-                    }
-                
-                  
-                // 编辑按钮部分
-               
-                    Spacer()
-                    HStack {
-                        if isEditing {
-                            Button("新增食材") {
-                                isAddSheetPresented.toggle()
-                            }
-                            .padding()
-                        }
-                    }
-                    .padding()
-                }
-            
-        
-            .sheet(isPresented: $isAddSheetPresented) {
-                AddIngredients(onAdd: { newIngredient in
-                    ingredients.append(newIngredient)
-                    triggerRefresh.toggle()
-                }, isSheetPresented: $isAddSheetPresented, isEditing: $isEditing)
-            }
-            .onAppear {
-                fetchData()
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack {
-                        if !isEditing {
-                            Button("編輯") {
-                                isEditing.toggle()
-                            }
-                        } else
-                        {
-                            Button(action: {
-                                if ingredients.contains { $0.isSelectedForDeletion } {
-                                    showAlert.toggle()
-                                } else {
-                                    isEditing.toggle()
-                                }
-                            }) {
-                                Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "確定")
-                            }
-                            .padding()
-                            
-                            .alert(isPresented: $showAlert) {
-                                Alert(title: Text("確認刪除"), message: Text("您確定要刪除所選的食材嗎？"), primaryButton: .default(Text("確定")) {
-                                    let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
-                                    selectedIngredients.forEach { ingredient in
-                                        print("Deleting Ingredient: F_ID=\(ingredient.F_ID), U_ID=\(ingredient.U_ID)")
-                                        sendIngredientData(F_ID: ingredient.F_ID, U_ID: ingredient.U_ID)
-                                    }
-                                    
-                                    let indexSet = IndexSet(ingredients.indices.filter { ingredients[$0].isSelectedForDeletion })
-                                    ingredients.remove(atOffsets: indexSet)
-                                    
-                                    fetchData()
-                                    isEditing = false
-                                }, secondaryButton: .cancel(Text("取消")) {
-                                    ingredients.indices.forEach { index in
-                                        ingredients[index].isSelectedForDeletion = false
-                                    }
-                                    isEditing = false
-                                })
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .id(triggerRefresh)
-
-
-    }
-    
-    private func fetchData() {
-        let networkManager = NetworkManager()
-        networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php") { result in
-            switch result {
-            case .success(let stocks):
-                self.ingredients = stocks.compactMap { stock in
-                    let name = stock.F_Name ?? "未知食材"
-                    let unit = stock.F_Unit ?? "未指定单位"
-                    let SK_SUM = stock.SK_SUM ?? 0
-                    let image = stock.Food_imge ?? ""  // 确保Food_imge被正确解析
-                    
-                    return StockIngredient(U_ID: stock.U_ID ?? UUID().uuidString, F_ID: stock.F_ID, F_Name: name, SK_SUM: SK_SUM, F_Unit: unit, Food_imge: image)
-                }
-            case .failure(let error):
-                print("Error: \(error)")
-            }
-        }
-    }
-    
-    private func toggleSelection(_ index: Int) {
-        ingredients[index].isSelectedForDeletion.toggle()
-    }
-    
-    private func deleteSelectedIngredients() {
-        let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
-        guard !selectedIngredients.isEmpty else {
-            print("No ingredients selected for deletion")
-            return
-        }
-        showAlert = true
-    }
-    
-    private func sendIngredientData(F_ID: Int, U_ID: String) {
-        let jsonDict: [String: Any] = [
-            "F_ID": F_ID,
-            "U_ID": U_ID
-        ]
-        
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict),
-              let url = URL(string: "http://163.17.9.107/food/php/Stockdelete.php") else {
-            print("Error creating JSON or URL")
-            return
-        }
-        
-        print("Sending to server: F_ID=\(F_ID), U_ID=\(U_ID)")
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Error sending ingredient deletion data: \(error)")
-                return
-            }
-            
-            if let response = response as? HTTPURLResponse, response.statusCode == 200, let data = data,
-               let responseString = String(data: data, encoding: .utf8) {
-                print("Server response: \(responseString)")
-            } else {
-                print("Unexpected server response or data")
-            }
-        }.resume()
-    }
-    
-    private func sendEditedIngredientData(F_ID: Int, U_ID: String, SK_SUM: Int) {
-        let jsonDict: [String: Any] = [
-            "F_ID": F_ID,
-            "U_ID": U_ID,
-            "SK_SUM": SK_SUM
-        ]
-        
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict),
-              let url = URL(string: "http://163.17.9.107/food/php/StockEdit.php") else {
-            print("Error creating JSON or URL")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Error sending ingredient edited data: \(error)")
-                return
-            }
-            
-            if let response = response as? HTTPURLResponse, response.statusCode == 200, let data = data,
-               let responseString = String(data: data, encoding: .utf8) {
-                print("Server response: \(responseString)")
-            } else {
-                print("Unexpected server response or data")
-            }
-        }.resume()
-    }
-}
-
-struct StockView_Previews: PreviewProvider {
-    static var previews: some View {
         StockView()
     }
 }

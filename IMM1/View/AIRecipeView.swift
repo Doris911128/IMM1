@@ -49,7 +49,7 @@ struct AIRecipeView: View, AIRecipeP
         return self.AICookbookView(safeArea: safeArea)
     }
     
-    // MARK: body
+    // MARK: AIRecipeView body
     var body: some View
     {
         NavigationStack
@@ -121,7 +121,7 @@ struct AIRecipeView: View, AIRecipeP
     }
 }
 
-//MARK: 外部公模板
+//MARK: 外部公模板 AIR_Block
 struct AIR_Block: View
 {
     let record: ChatRecord
@@ -161,7 +161,7 @@ struct AIR_Block: View
     }
 }
 
-// MARK: 當AI食譜為空
+// MARK: 當AI食譜為空 AIEmptyStateView
 struct AIEmptyStateView: View
 {
     var body: some View

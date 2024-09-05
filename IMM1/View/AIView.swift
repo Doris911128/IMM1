@@ -42,7 +42,8 @@ struct ChatRecord: Identifiable, Codable
         case Recipe_ID, U_ID, input, output, isAICol = "isAICol"
     }
     
-    init(from decoder: Decoder) throws {
+    init(from decoder: Decoder) throws 
+    {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         Recipe_ID = try container.decode(Int.self, forKey: .Recipe_ID)
         U_ID = try container.decode(String.self, forKey: .U_ID)

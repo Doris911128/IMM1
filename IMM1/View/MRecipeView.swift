@@ -158,7 +158,6 @@ struct MRecipeView: View, RecipeP
         )
     }
     
-    
     // MARK: 標題畫面
     func HeaderView(size: CGSize, recordInput: String? = nil) -> AnyView
     {
