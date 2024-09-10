@@ -337,7 +337,7 @@ struct MyView: View
                             // MARK: 飲食偏好->暫時食譜顯示 連結
                             HStack
                             {
-                                NavigationLink(destination: AIRecipeView(U_ID: " ")) 
+                                NavigationLink(destination: Custom_recipesView(U_ID: " ")) 
                                 {
                                     InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
                                 }

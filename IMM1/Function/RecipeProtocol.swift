@@ -12,7 +12,7 @@ import Foundation
 
 // MARK: - 基礎協議：RecipeProtocol
 
-// 是所有食譜相館的基礎協議，含通用數用和方法具體見RecipeP、AIRecipeP
+// 是所有食譜相館的基礎協議，含通用數用和方法具體見RecipeP、AIRecipeP、CRecipeP
 protocol RecipeProtocol: View
 {
     associatedtype DataType
@@ -63,6 +63,16 @@ protocol AIRecipeP: RecipeProtocol where DataType == ChatRecord
     
     // 顯示 AI 烹飪書視圖，包括所需食材和 AI 生成的烹飪方法
     func AICookbookView(safeArea: EdgeInsets) -> AnyView
+}
+
+// MARK: 子協議：CRecipeP
+// 用於顯示用戶自建食譜的協議，繼承自RecipeProtocol 含載入AI資料、顯示數據內容方法
+protocol CRecipeP: RecipeProtocol where DataType == Recipe 
+{
+    var recipe: Recipe { get set } // 修正為單一 Recipe 型別
+    
+    // 顯示用戶自建的烹飪書視圖，包括所需食材和烹飪方法
+    func CCookbookView(safeArea: EdgeInsets) -> AnyView
 }
 
 // MARK: extension：RecipeProtocol
@@ -390,6 +400,20 @@ extension AIRecipeP
     func itemName() -> String
     {
         return chatRecords.first?.input ?? "Unknown AI Recipe"
+    }
+    
+    func itemImageURL() -> URL?
+    {
+        return nil  // AI 生成的食譜可能沒有封面圖片
+    }
+}
+
+// MARK: extension：CRecipeP
+extension CRecipeP
+{
+    func itemName() -> String
+    {
+        return recipe.name ?? "Unknown Recipe Name"
     }
     
     func itemImageURL() -> URL?

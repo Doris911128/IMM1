@@ -149,10 +149,8 @@ struct AIR_Block: View
                             .font(.title)
                             .foregroundColor(.red)
                     }
-                    .offset(y: -18)
+                    .offset(y: -30)
                 }
-                Text("答：\(String(record.output.prefix(30)))...") // 將 Substring 轉換為 String
-                    .foregroundColor(.gray)
             }
             .frame(height: 50)
             .padding()

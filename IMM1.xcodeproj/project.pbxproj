@@ -68,6 +68,8 @@
 		1C9E4EE82C6C52140021B5C3 /* Rec_Col_View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9E4EE72C6C52140021B5C3 /* Rec_Col_View.swift */; };
 		1C9E4EEA2C6C5BB90021B5C3 /* AIRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9E4EE92C6C5BB90021B5C3 /* AIRecipeView.swift */; };
 		1CA599992BF09D680087A795 /* RecipeBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CA599982BF09D680087A795 /* RecipeBlock.swift */; };
+		1CB7E2B82C902068000B8B08 /* CRecipeDetailBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB7E2B72C902068000B8B08 /* CRecipeDetailBlock.swift */; };
+		1CB7E2BA2C903092000B8B08 /* F_RecipeBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB7E2B92C903092000B8B08 /* F_RecipeBlock.swift */; };
 		1CDB20532C77230300AE12B0 /* Custom_recipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDB20522C77230300AE12B0 /* Custom_recipesView.swift */; };
 		1CDB20552C77242200AE12B0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDB20542C77242200AE12B0 /* ViewController.swift */; };
 		1CDB20572C77247500AE12B0 /* HandPoseDetectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CDB20562C77247500AE12B0 /* HandPoseDetectionView.swift */; };
@@ -137,6 +139,8 @@
 		1C9E4EE72C6C52140021B5C3 /* Rec_Col_View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rec_Col_View.swift; sourceTree = "<group>"; };
 		1C9E4EE92C6C5BB90021B5C3 /* AIRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRecipeView.swift; sourceTree = "<group>"; };
 		1CA599982BF09D680087A795 /* RecipeBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeBlock.swift; sourceTree = "<group>"; };
+		1CB7E2B72C902068000B8B08 /* CRecipeDetailBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CRecipeDetailBlock.swift; sourceTree = "<group>"; };
+		1CB7E2B92C903092000B8B08 /* F_RecipeBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F_RecipeBlock.swift; sourceTree = "<group>"; };
 		1CDB20522C77230300AE12B0 /* Custom_recipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Custom_recipesView.swift; sourceTree = "<group>"; };
 		1CDB20542C77242200AE12B0 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		1CDB20562C77247500AE12B0 /* HandPoseDetectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HandPoseDetectionView.swift; sourceTree = "<group>"; };
@@ -274,8 +278,10 @@
 			isa = PBXGroup;
 			children = (
 				1C14F56A2C8806E900F2F1ED /* AIRecipeBlock.swift */,
+				1CB7E2B72C902068000B8B08 /* CRecipeDetailBlock.swift */,
 				0447AFCC2B872D110080D222 /* CustomButton.swift */,
 				0447AFD02B872D110080D222 /* EditPlanView.swift */,
+				1CB7E2B92C903092000B8B08 /* F_RecipeBlock.swift */,
 				0447AFCE2B872D110080D222 /* FoodSelectionView.swift */,
 				0447AFCF2B872D110080D222 /* InformationLabel.swift */,
 				1CA599982BF09D680087A795 /* RecipeBlock.swift */,
@@ -381,6 +387,7 @@
 				0447AF862B872BE40080D222 /* ImagePicker.swift in Sources */,
 				0447AF982B872C520080D222 /* User.swift in Sources */,
 				0447AFB82B872C980080D222 /* MyView.swift in Sources */,
+				1CB7E2BA2C903092000B8B08 /* F_RecipeBlock.swift in Sources */,
 				0447AFD32B872D110080D222 /* TagButton.swift in Sources */,
 				1C9E4EE82C6C52140021B5C3 /* Rec_Col_View.swift in Sources */,
 				1C9E4EE62C69E0C40021B5C3 /* VideoPlayerView.swift in Sources */,
@@ -418,6 +425,7 @@
 				0447AFC52B872C980080D222 /* SignupView.swift in Sources */,
 				0447AFD42B872D110080D222 /* FoodSelectionView.swift in Sources */,
 				0447AFC72B872C980080D222 /* BMIView.swift in Sources */,
+				1CB7E2B82C902068000B8B08 /* CRecipeDetailBlock.swift in Sources */,
 				1CDB20552C77242200AE12B0 /* ViewController.swift in Sources */,
 				049CD6C22BCB794700D7AA8E /* BMIRecordViewModel.swift in Sources */,
 				1C9E4EE22C69ABDE0021B5C3 /* LoadingView.swift in Sources */,

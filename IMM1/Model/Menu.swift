@@ -10,19 +10,35 @@ import Foundation
 
 //解析JSON的
 // MARK: Dishes菜譜結構
-struct Dishes: Codable, Identifiable
-{
+struct Dishes: Codable, Identifiable {
     var id: Int { Dis_ID }
-    let Dis_ID: Int //ID
-    var Dis_Name: String //名稱
-    let D_Cook: String? //煮法
-    let D_image: String //照片
-    let D_Video: String? //影片
-    let Dis_serving: String? //份數
-    var category: String? // MARK: 由EditPlanView.swift 中更新分類
+    let Dis_ID: Int // ID
+    var Dis_Name: String // 名稱
+    let D_Cook: String? // 煮法
+    let D_image: String // 照片
+    let D_Video: String? // 影片
+    let Dis_serving: String? // 份數
+    var category: String? // MARK: 由 EditPlanView.swift 中更新分類
     var foods: [Food]?
     var amounts: [Amount]?
     var favorites: [Favorite]?
+    var category_id: Int? // 確保這是 Int 而不是 Int?
+
+    enum CodingKeys: String, CodingKey {
+        case Dis_ID
+        case Dis_Name
+        case D_Cook
+        case D_image
+        case D_Video
+        case Dis_serving
+        case category
+        case foods
+        case amounts
+        case favorites
+        case category_id
+    }
+
+    
     
     // 添加初始化方法，接受传递的 Dis_ID
     init(
@@ -35,8 +51,11 @@ struct Dishes: Codable, Identifiable
         category: String = "",
         foods: [Food] = [],
         amounts: [Amount] = [],
-        favorites: [Favorite] = []
+        favorites: [Favorite] = [],
+        category_id: Int = 0
+
     )
+        
     {
         self.Dis_ID = Dis_ID
         self.Dis_Name = Dis_Name
@@ -48,6 +67,8 @@ struct Dishes: Codable, Identifiable
         self.foods = foods
         self.amounts = amounts
         self.favorites = favorites
+        self.category_id = category_id
+
     }
 }
 
@@ -74,6 +95,20 @@ struct PastRecipe: Identifiable, Decodable {
 //let dishesData: [Dishes] = [
 //    Dishes(Dis_ID: 1, Dis_Name: "t蕃茄炒蛋", D_Cook: "http://163.17.9.107/food/dishes/1.txt", D_image: "http://163.17.9.107/food/images/1.jpg", D_Video: "xxxxxxxxx"), Dishes(Dis_ID: 2, Dis_Name: "t荷包蛋", D_Cook: "http://163.17.9.107/food/dishes/2.txt", D_image: "http://163.17.9.107/food/images/2.jpg", D_Video: "xxxxxxxxx")
 //]
+
+struct T_Food: Identifiable, Decodable {
+    let id: Int
+    let name: String
+    let D_image: String // 確保此屬性在 JSON 中存在
+
+    private enum CodingKeys: String, CodingKey {
+        case id = "Dis_ID"
+        case name = "Dis_Name" // 如果您的 JSON 中是 Dis_Name
+        case D_image
+    }
+}
+
+
 
 // MARK: 食材結構
 struct Food: Codable

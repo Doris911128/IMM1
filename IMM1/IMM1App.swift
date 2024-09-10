@@ -9,7 +9,8 @@ import Foundation
 import UIKit
 
 @main
-struct IMM1App: App {
+struct IMM1App: App 
+{
     // 控制深浅模式
     @AppStorage("colorScheme") private var colorScheme: Bool = true
     

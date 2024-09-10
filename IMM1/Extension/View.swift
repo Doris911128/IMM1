@@ -181,8 +181,9 @@ extension View
     }
     
     // MARK: 根據收藏狀態切換ai按鈕顯示
-    func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAICol: Bool, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/UpdateAICol.php") 
+    func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAICol: Bool, completion: @escaping (Result<String, Error>) -> Void) 
+    {
+        guard let url = URL(string: "http://163.17.9.107/food/php/UpdateAICol.php")
         else
         {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
