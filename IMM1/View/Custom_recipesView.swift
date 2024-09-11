@@ -13,6 +13,7 @@ struct Recipe: Identifiable
     var name: String //菜名
     var ingredients: String //食材
     var method: String //煮法
+    var UTips: String //小技巧
 }
 
 struct Custom_recipesView: View
@@ -39,12 +40,10 @@ struct Custom_recipesView: View
                 {
                     LazyVGrid(columns: [GridItem(.flexible())]) // 使用 Flexible 來自動調整列寬
                     {
-                        ForEach(recipes)
-                        { recipe in
+                        ForEach(recipes) { recipe in
                             NavigationLink(
                                 destination: CRecipeDetailBlock(
-                                    recipe: $recipes[recipes.firstIndex(where: { $0.recipe_id == recipe.recipe_id })!], data: recipes,
-                                    U_ID: U_ID // 傳遞用戶ID
+                                    U_ID: U_ID, recipe: $recipes[recipes.firstIndex(where: { $0.recipe_id == recipe.recipe_id })!] // 傳遞用戶ID
                                 )
                             ) {
                                 CR_Block(recipeName: recipe.name) // 使用 CR_Block 顯示食譜名稱
@@ -66,6 +65,7 @@ struct Custom_recipesView: View
                         .padding(.horizontal)
                         .padding(.bottom, 5)
                         .padding()
+                        .shadow(radius: 4) // 新增陰影
                 }
             }
             .sheet(isPresented: $showingAddRecipeView)
@@ -87,20 +87,24 @@ struct AddRecipeView: View
     @State private var name = ""
     @State private var ingredients = ""
     @State private var method = ""
+    @State private var UTips = ""
     
     @State private var ingredientsList: [String] = [""] // 用於儲存動態新增的食材
     @State private var stepsList: [String] = [""] // 用於儲存動態新增的步驟
+    @State private var UTipsList: [String] = [""] // 用於儲存動態新增的小技巧
     
-    private func saveRecipe() {
+    private func saveRecipe() 
+    {
         // 獲取當前最大 recipe_id，然後加 1，確保唯一性
         let newRecipeID = (recipes.map { $0.recipe_id }.max() ?? 0) + 1
         
         // 將動態新增的食材和步驟組合成字串
         let ingredients = ingredientsList.joined(separator: "\n")
         let method = stepsList.joined(separator: "\n")
+        let UTips = UTipsList.joined(separator: "\n")
         
         // 創建新的 Recipe 並加入 recipes 陣列
-        let newRecipe = Recipe(recipe_id: newRecipeID, name: name, ingredients: ingredients, method: method)
+        let newRecipe = Recipe(recipe_id: newRecipeID, name: name, ingredients: ingredients, method: method, UTips: UTips)
         recipes.append(newRecipe)
         dismiss() // 關閉視圖
     }
@@ -115,16 +119,15 @@ struct AddRecipeView: View
                 Section(header:
                             Text("食譜名稱")
                     .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                ) {
+                    .frame(maxWidth: .infinity, alignment: .leading))
+                {
                     TextField("輸入食譜名稱", text: $name)
                 }
                 
                 Section(header:
                             Text("所需食材")
                     .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                )
+                    .frame(maxWidth: .infinity, alignment: .leading))
                 {
                     ForEach(ingredientsList.indices, id: \.self)
                     { index in
@@ -157,8 +160,7 @@ struct AddRecipeView: View
                 Section(header:
                             Text("製作方法")
                     .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                )
+                    .frame(maxWidth: .infinity, alignment: .leading))
                 {
                     ForEach(stepsList.indices, id: \.self)
                     { index in
@@ -179,6 +181,39 @@ struct AddRecipeView: View
                                     .font(.title)
                                     .foregroundColor(.orange)
                                 Text("新增步驟")
+                                    .font(.body)
+                                    .bold()
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        Spacer()
+                    }
+                }
+                
+                Section(header:
+                            Text("小技巧")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading))
+                {
+                    ForEach(UTipsList.indices, id: \.self)
+                    { index in
+                        TextField("輸入製作小技巧", text: $UTipsList[index])
+                            .frame(height: 40)
+                    }
+                    
+                    HStack
+                    {
+                        Spacer()
+                        Button(action: {
+                            UTipsList.append("") // 新增步驟
+                        })
+                        {
+                            HStack
+                            {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title)
+                                    .foregroundColor(.orange)
+                                Text("新增小技巧")
                                     .font(.body)
                                     .bold()
                                     .foregroundColor(.orange)
@@ -215,7 +250,6 @@ struct AddRecipeView: View
 }
 
 //MARK: 外部公模板 CR_Block
-// MARK: 外部公模板 CR_Block
 struct CR_Block: View
 {
     let recipeName: String // 接收食譜名稱

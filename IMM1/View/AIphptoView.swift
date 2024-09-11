@@ -1,88 +1,140 @@
-//  AIphptoView.swift
-//  IMM1
-//
-//  Created by 朝陽資管 on 2024/9/4.
-//
-
 import SwiftUI
 
-// 定義一個 TestView 結構，符合 View 協議
 struct AIphotoView: View {
-    @State private var image: UIImage? // 用於存儲選擇的圖片
-    @State private var showImagePicker = false // 控制圖片選擇器的顯示狀態
-    @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary // 預設來源為相簿
-    
+    @State private var image: UIImage?
+    @State private var showImagePicker = false
+    @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+    @State private var identifyResult: IdentifyResult? // 修改為 IdentifyResult 類型
+
     var body: some View {
         VStack {
-            // 如果有選擇的圖片，顯示圖片，否則顯示提示文字
             if let image = image {
-                Image(uiImage: image) // 使用選擇的圖片
-                    .resizable() // 使圖片可調整大小
-                    .scaledToFit() // 按比例縮放
-                    .frame(width: 300, height: 300) // 設定圖片框的大小
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 300, height: 300)
             } else {
-                Text("我是相框") // 提示用戶選擇圖片
-                    .padding() // 添加內邊距
+                Text("我是相框")
+                    .padding()
             }
-            
-            // 按鈕：選擇圖片
-            Button("我有圖片") {
-                sourceType = .photoLibrary // 設定來源為相簿
-                showImagePicker = true // 點擊後顯示圖片選擇器
-            }
-            .padding() // 添加內邊距
-            
-            // 按鈕：使用相機選擇圖片
-            Button("我想拍照") {
-                sourceType = .camera // 設定來源為相機
-                showImagePicker = true // 點擊後顯示圖片選擇器
-            }
-            .padding() // 添加內邊距
 
-            // 按鈕：上傳圖片
+            Button("我有圖片") {
+                sourceType = .photoLibrary
+                showImagePicker = true
+            }
+            .padding()
+
+            Button("我想拍照") {
+                sourceType = .camera
+                showImagePicker = true
+            }
+            .padding()
+
             Button("上傳啦～") {
                 if let image = image {
-                    uploadImage(image) // 如果有圖片，調用上傳函數
+                    uploadImage(image)
                 }
             }
-            .padding() // 添加內邊距
+            .padding()
+
+            // 按鈕：請求 Identify_echo.php 資料
+            Button("Fetch Identify_echo Data") {
+                fetchIdentifyEchoData() // 新增的請求函數
+            }
+            .padding()
         }
         .sheet(isPresented: $showImagePicker) {
-            ImagePicker(selectedImage: $image, sourceType: sourceType)  // 顯示圖片選擇器，並將選擇的圖片綁定到 image
+            ImagePicker(selectedImage: $image, sourceType: sourceType)
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("上傳成功"), message: Text(alertMessage), dismissButton: .default(Text("確定")))
+        }
+        .alert(item: $identifyResult) { result in // 使用 IdentifyResult 類型
+            Alert(title:Text(result.result) ,message: Text(alertMessage), dismissButton: .default(Text("確定")))
         }
     }
-    
-    // 上傳圖片的函數
+
     func uploadImage(_ image: UIImage) {
-        // 設定上傳的 URL
         guard let url = URL(string: "http://163.17.9.107/food/php/Identify.php") else { return }
-        var request = URLRequest(url: url) // 創建請求
-        request.httpMethod = "POST" // 設定 HTTP 方法為 POST
-        
-        // 將圖片轉換為 JPEG 數據
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
         guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
-        let base64String = imageData.base64EncodedString() // 將圖片數據轉換為 Base64 字符串
-        
-        // 構建請求的主體
+        let base64String = imageData.base64EncodedString()
+
         let body: [String: Any] = [
-            "image": base64String, // 包含圖片數據
-            "filename": "yourImage.jpg" // 設定文件名
+            "image": base64String,
+            "filename": "yourImage.jpg"
         ]
-        
-        // 將主體轉換為 JSON 數據
+
         request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .fragmentsAllowed)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type") // 設定請求頭為 JSON
-        
-        // 發送請求
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
         URLSession.shared.dataTask(with: request) { data, response, error in
-            // 處理上傳結果
-            if let error = error {
-                print("Upload error: \(error.localizedDescription)") // 打印錯誤信息
-            } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                print("Upload successful, response: \(responseString)") // 打印上傳成功的響應
-            } else {
-                print("Upload failed, unknown error.") // 打印未知錯誤
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("Upload error: \(error.localizedDescription)")
+                    alertMessage = "上傳失敗: \(error.localizedDescription)"
+                } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    print("Upload successful, response: \(responseString)")
+                    alertMessage = "資料已成功送出！"
+                } else {
+                    alertMessage = "上傳失敗，未知錯誤。"
+                }
+                showAlert = true
             }
-        }.resume() // 開始請求
+        }.resume()
     }
+
+    // 新增：從 Identify_echo.php 獲取資料的函數
+    func fetchIdentifyEchoData() {
+        guard let url = URL(string: "http://163.17.9.107/food/php/Identify_echo.php") else { return }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error fetching data: \(error.localizedDescription)")
+                return
+            }
+
+            if let data = data {
+                do {
+                    // 解碼 JSON 數據
+                    let decoder = JSONDecoder()
+                    let responseData = try decoder.decode(IdentifyEchoResponse.self, from: data)
+                    
+                    // 印出解碼後的數據
+                    print("Identify ID: \(responseData.identifyID)")
+                    print("Identify Result: \(responseData.identifyResult)")
+                    
+                    // 更新 identifyResult 狀態以顯示提示框
+                    DispatchQueue.main.async {
+                        identifyResult = IdentifyResult(id: responseData.identifyID, result: responseData.identifyResult)
+                    }
+                } catch {
+                    print("Failed to decode JSON: \(error.localizedDescription)")
+                }
+            } else {
+                print("Failed to fetch data.")
+            }
+        }.resume() // 啟動網路請求
+    }
+}
+
+// 定義數據結構以匹配 JSON 格式
+struct IdentifyEchoResponse: Codable {
+    let identifyID: String
+    let identifyResult: String
+
+    enum CodingKeys: String, CodingKey {
+        case identifyID = "Identify_ID"
+        case identifyResult = "Identify_Result"
+    }
+}
+
+// 新增的 Identifiable 結構
+struct IdentifyResult: Identifiable {
+    let id: String // 使用 identifyID 作為 id
+    let result: String
 }

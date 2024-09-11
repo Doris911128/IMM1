@@ -71,8 +71,8 @@ protocol CRecipeP: RecipeProtocol where DataType == Recipe
 {
     var recipe: Recipe { get set } // 修正為單一 Recipe 型別
     
-    // 顯示用戶自建的烹飪書視圖，包括所需食材和烹飪方法
-    func CCookbookView(safeArea: EdgeInsets) -> AnyView
+//    // 顯示用戶自建的烹飪書視圖，包括所需食材和烹飪方法
+//    func CCookbookView(safeArea: EdgeInsets) -> AnyView
 }
 
 // MARK: extension：RecipeProtocol
@@ -224,8 +224,6 @@ extension RecipeP
         }
         return url
     }
-    
-
     
     // MARK: loadCookingMethod
     //從給定的 URL 載入烹飪方法

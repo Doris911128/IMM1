@@ -1,4 +1,3 @@
-//
 //  AIRecipeBlock.swift
 //  IMM1
 //
@@ -690,26 +689,6 @@ struct AIRecipeBlock: View, AIRecipeP
                         .padding()
                 }
                 
-                // 固定的編輯按鈕
-                Button(action: {
-                    // 打開編輯彈出框
-                    self.editedFoodSteps = extractFoodSteps(from: record.output) ?? []
-                    self.editedCookingSteps = extractCookingSteps(from: record.output) ?? []
-                    isEditing = true
-                    
-                })
-                {
-                    Image(systemName: "paintbrush.pointed.fill")
-                        .font(.title2)
-                        .foregroundColor(.orange)
-                        .padding()
-                        .background(Color.white.opacity(0.9))  // 背景色和圓形
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-                .padding(.trailing, 20)
-                .offset(y: 600) // 這裡可以調整按鈕距離頂部的高度，根據你的需求調整
-                
                 if isEditing
                 {
                     Color.black.opacity(0.4)
@@ -722,26 +701,48 @@ struct AIRecipeBlock: View, AIRecipeP
             {
                 ToolbarItem(placement: .navigationBarTrailing)
                 {
-                    Button(action: {
-                        withAnimation(.easeInOut.speed(3))
+                    HStack
+                    {
+                        VStack
                         {
-                            toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol)
-                            { result in
-                                switch result
-                                {
-                                case .success(let message):
-                                    print("isAICol Action successful: \(message)")
-                                case .failure(let error):
-                                    print("Error toggling AICol: \(error.localizedDescription)")
-                                }
+                            // 固定的編輯按鈕
+                            Button(action: {
+                                // 打開編輯彈出框
+                                self.editedFoodSteps = extractFoodSteps(from: record.output) ?? []
+                                self.editedCookingSteps = extractCookingSteps(from: record.output) ?? []
+                                isEditing = true
+                                
+                            })
+                            {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 25))
+                                    .foregroundColor(.orange)
                             }
                         }
-                    }) {
-                        Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
-                            .font(.title2)
-                            .foregroundStyle(.orange)
+                        VStack
+                        {
+                            Button(action: {
+                                withAnimation(.easeInOut.speed(3))
+                                {
+                                    toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol)
+                                    { result in
+                                        switch result
+                                        {
+                                        case .success(let message):
+                                            print("isAICol Action successful: \(message)")
+                                        case .failure(let error):
+                                            print("Error toggling AICol: \(error.localizedDescription)")
+                                        }
+                                    }
+                                }
+                            }) {
+                                Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
+                                    .font(.title2)
+                                    .foregroundStyle(.orange)
+                            }
+                            .animation(.none)
+                        }
                     }
-                    .animation(.none)
                 }
             }
             .onAppear

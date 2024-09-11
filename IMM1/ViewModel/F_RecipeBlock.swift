@@ -8,7 +8,7 @@
 import SwiftUI
 import Foundation
 
-struct F_RecipeBlock: View 
+struct F_RecipeBlock: View
 {
     let D_image: String
     let Dis_Name: String
@@ -84,7 +84,7 @@ struct F_RecipeBlock: View
                         
                         Button(action: {
                             showAddToCategory = true
-                        }) 
+                        })
                         {
                             Image(systemName: "pencil.circle.fill")
                                 .font(.title)
@@ -209,55 +209,46 @@ struct F_RecipeBlock: View
                         .padding()
                         
                         Button("移除") {
-                            if let category = selectedCategory {
-                                // 找到 categories_id_1
-                                if let categoryId = categories.first(where: { $0.id == category.id })?.id {
-                                    let parameters = [
-                                        "U_ID": U_ID,
-                                        "Dis_ID": "\(Dis_ID)",
-                                        "category_id": "\(categoryId)",
-                                    
-                                    ]
-                                    
-                                    guard let url = URL(string: "http://163.17.9.107/food/php/RemoveFoodFromCategory.php") else {
-                                        print("Invalid URL")
+                            if let category = selectedCategory, let categoryId = categories.first(where: { $0.id == category.id })?.id {
+                                let parameters = [
+                                    "U_ID": U_ID,
+                                    "Dis_ID": "\(Dis_ID)",
+                                    "category_id": "\(categoryId)"
+                                ]
+                                
+                                // 發送請求到 RemoveFoodFromCategory22.php，處理更新 Favorite 和刪除 F_Categories 表中的資料
+                                guard let removeUrl = URL(string: "http://163.17.9.107/food/php/RemoveFoodFromCategory.php") else {
+                                    print("Invalid URL for RemoveFoodFromCategory22.php")
+                                    return
+                                }
+                                
+                                var removeRequest = URLRequest(url: removeUrl)
+                                removeRequest.httpMethod = "POST"
+                                removeRequest.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+                                
+                                let bodyString = parameters.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+                                removeRequest.httpBody = bodyString.data(using: .utf8)
+                                
+                                let removeTask = URLSession.shared.dataTask(with: removeRequest) { data, response, error in
+                                    if let error = error {
+                                        print("Request error: \(error.localizedDescription)")
                                         return
                                     }
                                     
-                                    var request = URLRequest(url: url)
-                                    request.httpMethod = "POST"
-                                    request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-                                    
-                                    let bodyString = parameters.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
-                                    request.httpBody = bodyString.data(using: .utf8)
-                                    
-                                    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                                        if let error = error {
-                                            print("Request error: \(error.localizedDescription)")
-                                            return
-                                        }
-                                        
-                                        guard let data = data else {
-                                            print("No data received")
-                                            return
-                                        }
-                                        
-                                        if let responseString = String(data: data, encoding: .utf8) {
-                                            print("Response: \(responseString)")
-                                        } else {
-                                            print("Unable to parse response data")
-                                        }
+                                    guard let data = data, let responseString = String(data: data, encoding: .utf8) else {
+                                        print("No data received")
+                                        return
                                     }
                                     
-                                    task.resume()
-                                    
-                                    showAddToCategory = false
+                                    print("Response from RemoveFoodFromCategory22: \(responseString)")
                                 }
+                                
+                                removeTask.resume()
+                                
+                                // 隱藏添加到分類的視圖
+                                showAddToCategory = false
                             }
                         }
-
-                        .padding()
-
 
                         .padding()
                     }

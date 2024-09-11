@@ -209,14 +209,12 @@ struct FavoriteView: View {
             if let error = error {
                 DispatchQueue.main.async {
                     print("Error: \(error.localizedDescription)")
-                    // 顯示錯誤訊息
                 }
                 return
             }
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 DispatchQueue.main.async {
                     print("Server error or invalid response")
-                    // 顯示錯誤訊息
                 }
                 return
             }
@@ -224,7 +222,6 @@ struct FavoriteView: View {
             guard let data = data else {
                 DispatchQueue.main.async {
                     print("No data received")
-                    // 顯示錯誤訊息
                 }
                 return
             }
@@ -237,17 +234,15 @@ struct FavoriteView: View {
                         self.categories.removeAll { $0.id == id }
                         if selectedCategory?.id == id {
                             selectedCategory = nil
-                            loadUFavData() // 加載所有食物
                         }
+                        loadUFavData() // 在此處呼叫，刪除後立即重新加載
                     } else if let error = result?["error"] {
                         print("Error from server: \(error)")
-                        // 顯示錯誤訊息
                     }
                 }
             } catch {
                 DispatchQueue.main.async {
                     print("JSON parsing error: \(error.localizedDescription)")
-                    // 顯示錯誤訊息
                 }
             }
         }.resume()
@@ -372,11 +367,11 @@ struct FavoriteView: View {
                   }
                   .padding(.horizontal, 20)
                   
-                  ScrollView(.horizontal, showsIndicators: false) 
+                  ScrollView(.horizontal, showsIndicators: false)
                   {
                       HStack
                       {
-                          ForEach(categories) 
+                          ForEach(categories)
                           { category in
                               ZStack(alignment: .topTrailing)
                               {
@@ -454,15 +449,40 @@ struct FavoriteView: View {
                       }
                       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                   } else if filteredDishes.isEmpty {
-                      VStack {
-                          Text(selectedCategory == nil ? "暫無最愛食譜" : "該分類為空")
-                              .font(.title)
-                              .foregroundColor(.gray)
-                              .padding()
-                          Spacer()
+                      GeometryReader
+                      { geometry in
+                          VStack
+                          {
+                              Image(selectedCategory == nil ? "最愛" : "烹飪")
+                                  .resizable()
+                                  .scaledToFit()
+                                  .frame(width: 180, height: 180)
+                              .position(x: geometry.size.width / 2, y: geometry.size.height / 3) // 向上移动图片
+                          }
+                          VStack
+                          {
+                              Spacer().frame(height: geometry.size.height / 2) // 向下移动文字
+                              VStack
+                              {
+                                  Text(selectedCategory == nil ? "暫無最愛食譜" : "該分類為空")
+                                      .font(.system(size: 18))
+                                      .foregroundColor(.gray)
+                                  NavigationLink(destination: PastRecipesView())
+                                  {
+                                      Text(selectedCategory == nil ? "前往“過往食譜”添加更多＋＋" : "")
+                                          .font(.system(size: 18))
+                                          .foregroundColor(.blue).underline()
+                                  }
+                                  Spacer().frame(height: 300)
+                              }
+                              VStack {
+                                  
+                                    
+                                  Spacer()
+                              }
+                              .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                          }
                       }
-                      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                      
                   } else {
                       ScrollView(showsIndicators: false) {
                           LazyVStack {
