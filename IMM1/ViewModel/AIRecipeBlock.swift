@@ -423,61 +423,59 @@ struct AIRecipeBlock: View, AIRecipeP
     }
     
     // MARK: 拆分[食材]
-    func extractFoodSteps(from output: String) -> [String]?
-    {
-        guard let foodStartRange = output.range(of: "食材：") ?? output.range(of: "材料：")
-        else
-        {
-            print("找不到 '食材' 或 '材料' 的標題")
+    func extractFoodSteps(from output: String) -> [String]? {
+        // 使用多個標題來查找食材的開始位置
+        guard let foodStartRange = output.range(of: "所需材料") ??
+                output.range(of: "原料") ??
+                output.range(of: "材料") else {
+            print("找不到 '所需材料' 或 '材料' 的標題")
             return nil
         }
         
-        // 找到 '作法：', '步驟：', '做法：' 或文末結束的位置
-        let end = output.range(of: "作法：")?.lowerBound ??
-        output.range(of: "步驟：")?.lowerBound ??
-        output.range(of: "做法：")?.lowerBound ??
-        output.endIndex
+        // 查找料理方法開始的標題
+        let end = output.range(of: "作法")?.lowerBound ??
+                  output.range(of: "指示")?.lowerBound ??
+                  output.range(of: "做法")?.lowerBound ??
+                  output.endIndex
         
         let foodContent = String(output[foodStartRange.upperBound..<end])
         
-        // 分割並清理每一行的內容
-        let steps = foodContent.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        // 將食材內容按行拆分並清理多餘空格
+        let steps = foodContent.split(separator: "\n")
+            .map { $0.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
         
-        // 調試打印
-        if steps.isEmpty
-        {
-            print("食材步驟拆分失敗，找不到任何有效的食材")
+        if steps.isEmpty {
+            print("食材拆分失敗，找不到有效的食材")
         }
         
         return steps.isEmpty ? nil : steps
     }
-    
+
     // MARK: 拆分[料理方法]
-    func extractCookingSteps(from output: String) -> [String]?
-    {
-        guard let methodStartRange = output.range(of: "作法：") ??
-                output.range(of: "步驟：") ??
-                output.range(of: "做法：")
-        else
-        {
-            print("找不到 '作法'、'步驟' 或 '做法' 的標題")
+    func extractCookingSteps(from output: String) -> [String]? {
+        // 查找料理方法的標題
+        guard let methodStartRange = output.range(of: "作法") ??
+                output.range(of: "指示") ??
+                output.range(of: "做法") else {
+            print("找不到 '作法'、'指示' 或 '做法' 的標題")
             return nil
         }
         
-        // 找到 '小技巧：', '小貼士：', 'isAICol' 或文末的結束位置
-        let end = output.range(of: "小技巧：")?.lowerBound ??
-        output.range(of: "小貼士：")?.lowerBound ??
-        output.range(of: "isAICol")?.lowerBound ??
-        output.endIndex
+        // 找到結束標題
+        let end = output.range(of: "小技巧")?.lowerBound ??
+                  output.range(of: "小貼士")?.lowerBound ??
+                  output.range(of: "isAICol")?.lowerBound ??
+                  output.endIndex
         
         let methodContent = String(output[methodStartRange.upperBound..<end])
         
-        let steps = methodContent.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        let steps = methodContent.split(separator: "\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
         
-        // 調試打印
-        if steps.isEmpty
-        {
-            print("料理步驟拆分失敗，找不到任何有效的步驟")
+        if steps.isEmpty {
+            print("料理方法拆分失敗，找不到有效的步驟")
         }
         
         return steps.isEmpty ? nil : steps

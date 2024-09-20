@@ -27,8 +27,14 @@ struct AIphotoView: View {
             .padding()
 
             Button("我想拍照") {
-                sourceType = .camera
-                showImagePicker = true
+                // 檢查設備是否支持相機
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    sourceType = .camera
+                    showImagePicker = true
+                } else {
+                    alertMessage = "此設備不支持相機。"
+                    showAlert = true
+                }
             }
             .padding()
 
@@ -49,10 +55,10 @@ struct AIphotoView: View {
             ImagePicker(selectedImage: $image, sourceType: sourceType)
         }
         .alert(isPresented: $showAlert) {
-            Alert(title: Text("上傳成功"), message: Text(alertMessage), dismissButton: .default(Text("確定")))
+            Alert(title: Text("提示"), message: Text(alertMessage), dismissButton: .default(Text("確定")))
         }
         .alert(item: $identifyResult) { result in // 使用 IdentifyResult 類型
-            Alert(title:Text(result.result) ,message: Text(alertMessage), dismissButton: .default(Text("確定")))
+            Alert(title: Text(result.result), message: Text(alertMessage), dismissButton: .default(Text("確定")))
         }
     }
 

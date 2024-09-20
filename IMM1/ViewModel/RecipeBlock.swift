@@ -40,6 +40,8 @@ struct RecipeBlock: View
                     } else
                     {
                         Color.gray
+                            .frame(width: UIScreen.main.bounds.width - 40, height: 250)
+                            .cornerRadius(10)
                     }
                 }
                 .padding(.top, 50)
