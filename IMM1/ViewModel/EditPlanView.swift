@@ -116,15 +116,16 @@ struct EditPlanView: View
     func updateFoodOptions8() {
         switch bmiValue {
         case ..<18.5:
-            foodOptions8 = foodDataFromServer.filter { ["4", "6", "7", "14", "16", "18", "19", "20", "23", "25"].contains(String($0.Dis_ID)) }
+            foodOptions8 = foodDataFromServer.filter { ["1", "4", "5", "6", "7", "8", "9", "12", "13", "14", "15", "16", "20", "21", "23"].contains(String($0.Dis_ID)) }.shuffled()
         case 18.5..<27:
-            foodOptions8 = foodDataFromServer.filter { ["1", "2", "3", "17", "19", "22", "26", "28"].contains(String($0.Dis_ID)) }
+            foodOptions8 = foodDataFromServer.filter { ["1", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "17", "19", "21", "22", "23", "24", "28", "29", "30", "31"].contains(String($0.Dis_ID)) }.shuffled()
         case 28...:
-            foodOptions8 = foodDataFromServer.filter { ["2", "3", "12", "13", "22", "24", "28"].contains(String($0.Dis_ID)) }
+            foodOptions8 = foodDataFromServer.filter { ["11", "15", "17", "22", "24", "28", "29", "30", "31"].contains(String($0.Dis_ID)) }.shuffled()
         default:
-            foodOptions8 = foodDataFromServer
+            foodOptions8 = foodDataFromServer.shuffled()
         }
     }
+
     
     // 选择食物的函数
     func selectFood(food: Dishes) {
@@ -171,11 +172,11 @@ struct EditPlanView: View
                 } else if let dishes = foodData {
                     print("Fetched food data: \(dishes)")
                     self.foodDataFromServer = dishes
-                    self.foodOptions1 = dishes.filter { ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "15", "21", "22", "24", "27", "28"].contains(String($0.Dis_ID)) }
-                    self.foodOptions2 = dishes.filter { ["2","3", "12","13", "22", "24", "28"].contains(String($0.Dis_ID)) }
-                    self.foodOptions3 = dishes.filter { ["1", "2", "3", "9", "10", "11", "13", "15", "17", "22", "23", "24", "26", "28"].contains(String($0.Dis_ID)) }
-                    self.foodOptions4 = dishes.filter { ["4", "6", "7" ,"14", "16", "18", "19", "20", "23", "25"].contains(String($0.Dis_ID)) }
-                    self.foodOptions5 = dishes.filter { ["1", "2", "3", "17", "19", "22", "26","28"].contains(String($0.Dis_ID)) }
+                    self.foodOptions1 = dishes.filter { ["1", "2", "3", "5", "8", "9", "10", "11", "12", "13", "15", "21", "22", "24", "27", "28"].contains(String($0.Dis_ID)) }.shuffled()
+                    self.foodOptions2 = dishes.filter { ["2","3", "12","13", "22", "24", "28"].contains(String($0.Dis_ID)) }.shuffled()
+                    self.foodOptions3 = dishes.filter { ["1", "2", "3", "9", "10", "11", "13", "15", "17", "22", "23", "24", "26", "28"].contains(String($0.Dis_ID)) }.shuffled()
+                    self.foodOptions4 = dishes.filter { ["4", "6", "7" ,"14", "16", "18", "19", "20", "23", "25"].contains(String($0.Dis_ID)) }.shuffled()
+                    self.foodOptions5 = dishes.filter { ["1", "2", "3", "17", "19", "22", "26","28"].contains(String($0.Dis_ID)) }.shuffled()
                     // 確保這裡的 Dis_ID 是正確的
                     print("Food Options6: \(self.foodOptions6)")
                     self.foodOptions6 = dishes
