@@ -168,7 +168,9 @@ struct BMIView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 20) {
-                            Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords : (displayMode == 1 ? bmiRecordViewModel.averagesEverySevenRecordsSorted() : bmiRecordViewModel.averagesEveryThirtyRecordsSorted())) { record in
+                            Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords.reversed() :
+                                    (displayMode == 1 ? bmiRecordViewModel.averagesEverySevenRecordsSorted().reversed() :
+                                    bmiRecordViewModel.averagesEveryThirtyRecordsSorted().reversed())) { record in
                                 LineMark(
                                     x: .value("Date", formattedDate(record.date)),
                                     y: .value("BMI", record.bmi)
@@ -294,7 +296,7 @@ struct BMIRecordsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(records) { record in
+                ForEach(records.reversed()) { record in
                     NavigationLink(destination: BMIRecordDetailView(record: record)) {
                         HStack {
                             bmiImage(for: record)

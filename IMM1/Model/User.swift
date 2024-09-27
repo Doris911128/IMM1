@@ -13,10 +13,7 @@ class User: ObservableObject, Decodable
     @Published var birthday: String
     @Published var height: String
     @Published var weight: String
-    @Published var acid: String
-    @Published var sweet: String
-    @Published var bitter: String
-    @Published var hot: String
+
     
     // MARK: 初始化
     init(id: String = "",
@@ -26,11 +23,7 @@ class User: ObservableObject, Decodable
          gender: String = "",
          birthday: String = "",
          height: String = "0.0",
-         weight: String = "0.0",
-         acid: String = "0.0",
-         sweet: String = "0.0",
-         bitter: String = "0.0",
-         hot: String = "0.0") {
+         weight: String = "0.0") {
         self.id = id
         self.account = account
         //self.password = password // MARK: 註解密碼部分2
@@ -39,10 +32,7 @@ class User: ObservableObject, Decodable
         self.birthday = birthday
         self.height = height
         self.weight = weight
-        self.acid = acid
-        self.sweet = sweet
-        self.bitter = bitter
-        self.hot = hot
+       
     }
     
     // MARK: 可失敗的初始化方法
@@ -57,10 +47,7 @@ class User: ObservableObject, Decodable
         self.birthday = try container.decode(String.self, forKey: .birthday)
         self.height = try container.decodeIfPresent(String.self, forKey: .height) ?? "" // 身高字段可為空
         self.weight = try container.decodeIfPresent(String.self, forKey: .weight) ?? "" // 體重字段可為空
-        self.acid = try container.decodeIfPresent(String.self, forKey: .acid) ?? "" // 酸度字段可為空
-        self.sweet = try container.decodeIfPresent(String.self, forKey: .sweet) ?? "" // 甜度字段可為空
-        self.bitter = try container.decodeIfPresent(String.self, forKey: .bitter) ?? "" // 苦度字段可為空
-        self.hot = try container.decodeIfPresent(String.self, forKey: .hot) ?? "" // 辣度字段可為空
+
     }
     
     // MARK: 枚舉定義編碼鍵
@@ -73,10 +60,7 @@ class User: ObservableObject, Decodable
         case birthday = "U_Bir"
         case height = "H"
         case weight = "W"
-        case acid = "acid"
-        case sweet = "sweet"
-        case bitter = "bitter"
-        case hot = "hot"
+
     }
     
     // 更新用戶信息的方法
@@ -87,10 +71,7 @@ class User: ObservableObject, Decodable
             self.birthday = userInfo.birthday
             self.height = userInfo.height
             self.weight = userInfo.weight
-            self.acid = userInfo.acid
-            self.sweet = userInfo.sweet
-            self.bitter = userInfo.bitter
-            self.hot = userInfo.hot
+
         }
     }
     

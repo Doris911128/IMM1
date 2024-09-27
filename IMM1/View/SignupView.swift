@@ -9,14 +9,14 @@ struct SignupView: View {
     @State private var method: String = "GET"
     @State private var date: Date = Date()
     @State private var result: (Bool, String) = (false, "")
-    @State private var information: (String, String, String, String, String, String, String, String, Double, Double, Double, Double) = ("", "", "", "", "", "", "", "", 0.0, 0.0, 0.0, 0.0)
-    private let title: [String] = ["請輸入您的帳號 密碼", "請輸入您的名稱", "請選擇您的性別", "請輸入您的生日", "請輸入您的身高(CM)體重(KG)", "請調整您的偏好  酸", "請調整您的偏好  甜", "請調整您的偏好  苦", "請調整您的偏好  辣", "個人資訊"]
+    @State private var information: (String, String, String, String, String, String, String, String) = ("", "", "", "", "", "", "", "")
+    private let title: [String] = ["請輸入您的帳號 密碼", "請輸入您的名稱", "請選擇您的性別", "請輸入您的生日", "請輸入您的身高(CM)體重(KG)", "個人資訊"]
     
     init(textselect: Binding<Int>) {
         self._textselect = textselect
         UIPageControl.appearance().currentPageIndicatorTintColor = UIColor.orange
         UIPageControl.appearance().pageIndicatorTintColor = UIColor.gray
-        _information = State(initialValue: ("", "", "", "", "", SignupView.formatDate(Date()), "", "", 0.0, 0.0, 0.0, 0.0))
+        _information = State(initialValue: ("", "", "", "", "", SignupView.formatDate(Date()), "", ""))
     }
     
     private func sendRequest() {
@@ -48,10 +48,6 @@ struct SignupView: View {
             "U_Bir": information.5,
             "H": Float(information.6),
             "W": Float(information.7),
-            "acid": String(information.8),
-            "sweet": String(information.9),
-            "bitter": String(information.10),
-            "hot": String(information.11)
         ]
         
         do {
@@ -73,7 +69,7 @@ struct SignupView: View {
                 print("网络请求响应: \(responseString)")
                 DispatchQueue.main.async {
                     if responseString.contains("success") {
-                        self.result = (true, "注册成功！")
+                        self.result = (true, "註册成功！")
                     } else {
                         self.result = (true, responseString)
                     }
@@ -97,10 +93,6 @@ struct SignupView: View {
         InformationLabel(image: "birthday.cake", label: "生日"),
         InformationLabel(image: "ruler", label: "身高"),
         InformationLabel(image: "dumbbell", label: "體重"),
-        InformationLabel(system: false, image: "acid", label: "酸"),
-        InformationLabel(system: false, image: "sweet", label: "甜"),
-        InformationLabel(system: false, image: "bitter", label: "苦"),
-        InformationLabel(system: false, image: "spicy", label: "辣")
     ]
     
     private func setInformation(index: Int) -> String {
@@ -113,10 +105,6 @@ struct SignupView: View {
         case 5: return self.information.5
         case 6: return String(self.information.6)
         case 7: return String(self.information.7)
-        case 8: return String(self.information.8)
-        case 9: return String(self.information.9)
-        case 10: return String(self.information.10)
-        case 11: return String(self.information.11)
         default: return ""
         }
     }
@@ -136,221 +124,166 @@ struct SignupView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .top) {
-            Text(self.title[self.selectedTab])
-                .bold()
-                .font(.title)
-                .foregroundColor(Color(red: 0.828, green: 0.249, blue: 0.115))
-                .contentTransition(.numericText())
-                .offset(y: 50)
-            
-            TabView(selection: self.$selectedTab) {
-                VStack(spacing: 60) {
+            ZStack(alignment: .top) {
+                Text(self.title[self.selectedTab])
+                    .bold()
+                    .font(.title)
+                    .foregroundColor(Color(red: 0.828, green: 0.249, blue: 0.115))
+                    .contentTransition(.numericText())
+                    .offset(y: 50)
+                
+                TabView(selection: self.$selectedTab) {
+                    VStack(spacing: 60) {
+                        VStack(spacing: 20) {
+                            TextField("輸入您的帳號", text: self.$information.0)
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .frame(width: 300, height: 50)
+                                .cornerRadius(100)
+                                .autocapitalization(.none)
+                            SecureField("輸入您的密碼", text: self.$information.1)
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .frame(width: 300, height: 50)
+                                .cornerRadius(100)
+                                .autocapitalization(.none)
+                            SecureField("再次輸入密碼", text: self.$information.2)
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .frame(width: 300, height: 50)
+                                .cornerRadius(100)
+                                .autocapitalization(.none)
+                        }
+                    }
+                    .tag(0)
+                    VStack(spacing: 60) {
+                        VStack {
+                            TextField("您的名稱", text: self.$information.3)
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .frame(width: 300, height: 50)
+                                .cornerRadius(100)
+                                .autocapitalization(.none)
+                        }
+                    }
+                    .tag(1)
                     VStack(spacing: 20) {
-                        TextField("輸入您的帳號", text: self.$information.0)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .frame(width: 300, height: 50)
-                            .cornerRadius(100)
-                            .autocapitalization(.none)
-                        SecureField("輸入您的密碼", text: self.$information.1)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .frame(width: 300, height: 50)
-                            .cornerRadius(100)
-                            .autocapitalization(.none)
-                        SecureField("再次輸入密碼", text: self.$information.2)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .frame(width: 300, height: 50)
-                            .cornerRadius(100)
-                            .autocapitalization(.none)
-                    }
-                }
-                .tag(0)
-                VStack(spacing: 60) {
-                    VStack {
-                        TextField("您的名稱", text: self.$information.3)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .frame(width: 300, height: 50)
-                            .cornerRadius(100)
-                            .autocapitalization(.none)
-                    }
-                }
-                .tag(1)
-                VStack(spacing: 20) {
-                    VStack {
-                        Picker("", selection: $information.4) {
-                            Text("").tag("")
-                            Text("男性").tag("男性")
-                            Text("女性").tag("女性")
-                            Text("隱私").tag("隱私")
+                        VStack {
+                            Picker("", selection: $information.4) {
+                                Text("").tag("")
+                                Text("男性").tag("男性")
+                                Text("女性").tag("女性")
+                                Text("隱私").tag("隱私")
+                            }
+                            .pickerStyle(.wheel)
+                            .frame(width: 330, height: 100)
                         }
-                        .pickerStyle(.wheel)
-                        .frame(width: 330, height: 100)
-                    }
-                    .padding(20)
-                }
-                .tag(2)
-                VStack(spacing: 60) {
-                    if(self.show) {
-                        Text(self.description)
-                            .bold()
-                            .font(.largeTitle)
-                            .onAppear {
-                                withAnimation(.easeInOut.delay(1)) {
-                                    self.show = false
-                                }
-                            }
-                    } else {
-                        VStack(spacing: 50) {
-                            DatePicker(selection: self.$date, displayedComponents: .date) {
-                                Text("選擇日期")
-                            }
-                            .onChange(of: self.date) { newDate in
-                                self.information.5 = SignupView.formatDate(newDate)
-                            }
-                        }
-                        .labelsHidden()
-                        .datePickerStyle(.wheel)
                         .padding(20)
                     }
-                }
-                .tag(3)
-                VStack(spacing: 60) {
-                    VStack {
-                        TextField("輸入您的身高", text: self.$information.6)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .frame(width: 300, height: 50)
-                            .cornerRadius(100)
-                    }
-                    VStack {
-                        TextField("輸入您的體重", text: self.$information.7)
-                            .padding()
-                            .background(Color.gray.opacity(0.1))
-                            .frame(width: 300, height: 50)
-                            .cornerRadius(100)
-                    }
-                    .padding()
-                }
-                .tag(4)
-                VStack(spacing: 60) {
-                    HStack {
-                        Text("0")
-                            .padding()
-                        Slider(value: $information.8, in: 0...5, step: 1)
-                            .padding()
-                            .accentColor(.blue)
-                        Text("5")
-                            .padding()
-                    }
-                    Text("酸: \(Int(information.8))")
-                        .padding(.leading, 15)
-                }
-                .tag(5)
-                VStack(spacing: 60) {
-                    HStack {
-                        Text("0")
-                            .padding()
-                        Slider(value: $information.9, in: 0...5, step: 1)
-                            .padding()
-                            .accentColor(.blue)
-                        Text("5")
-                            .padding()
-                    }
-                    Text("甜: \(Int(information.9))")
-                        .padding(.leading, 15)
-                }
-                .tag(6)
-                VStack(spacing: 60) {
-                    HStack {
-                        Text("0")
-                            .padding()
-                        Slider(value: $information.10, in: 0...5, step: 1)
-                            .padding()
-                            .accentColor(.blue)
-                        Text("5")
-                            .padding()
-                    }
-                    Text("苦: \(Int(information.10))")
-                        .padding(.leading, 15)
-                }
-                .tag(7)
-                VStack(spacing: 60) {
-                    HStack {
-                        Text("0")
-                            .padding()
-                        Slider(value: $information.11, in: 0...5, step: 1)
-                            .padding()
-                            .accentColor(.blue)
-                        Text("5")
-                            .padding()
-                    }
-                    Text("辣: \(Int(information.11))")
-                        .padding(.leading, 15)
-                }
-                .tag(8)
-                VStack {
-                    List {
-                        ForEach(0..<Mirror(reflecting: self.information).children.count, id: \.self) { index in
-                            if(!(index == 1 || index == 2)) {
-                                HStack {
-                                    if(index < self.label.count) {
-                                        self.label[index]
+                    .tag(2)
+                    VStack(spacing: 60) {
+                        if(self.show) {
+                            Text(self.description)
+                                .bold()
+                                .font(.largeTitle)
+                                .onAppear {
+                                    withAnimation(.easeInOut.delay(1)) {
+                                        self.show = false
                                     }
-                                    Text(self.setInformation(index: index))
+                                }
+                        } else {
+                            VStack(spacing: 50) {
+                                DatePicker(selection: self.$date, displayedComponents: .date) {
+                                    Text("選擇日期")
+                                }
+                                .onChange(of: self.date) { newDate in
+                                    self.information.5 = SignupView.formatDate(newDate)
+                                }
+                            }
+                            .labelsHidden()
+                            .datePickerStyle(.wheel)
+                            .padding(20)
+                        }
+                    }
+                    .tag(3)
+                    VStack(spacing: 60) {
+                        VStack {
+                            TextField("輸入您的身高", text: self.$information.6)
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .frame(width: 300, height: 50)
+                                .cornerRadius(100)
+                        }
+                        VStack {
+                            TextField("輸入您的體重", text: self.$information.7)
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .frame(width: 300, height: 50)
+                                .cornerRadius(100)
+                        }
+                        .padding()
+                    }
+                    .tag(4)
+                    VStack {
+                        List {
+                            ForEach(0..<Mirror(reflecting: self.information).children.count, id: \.self) { index in
+                                if(!(index == 1 || index == 2)) {
+                                    HStack {
+                                        if(index < self.label.count) {
+                                            self.label[index]
+                                        }
+                                        Text(self.setInformation(index: index))
+                                    }
                                 }
                             }
                         }
+                        .listStyle(.plain)
+                        .background(.clear)
+                        .listRowSeparator(.hidden)
                     }
-                    .listStyle(.plain)
-                    .background(.clear)
-                    .listRowSeparator(.hidden)
+                    .tag(5) // 這裡的tag會改成5，請依需要調整
+                    .offset(y: 100)
                 }
-                .tag(9)
-                .offset(y: 100)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.smooth, value: self.selectedTab)
-            .onTapGesture {
-                self.dismissKeyboard()
-            }
-            HStack(spacing: 100) {
-                if self.selectedTab > 0 {
-                    Button(action: {
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                .animation(.smooth, value: self.selectedTab)
+                .onTapGesture {
+                    self.dismissKeyboard()
+                }
+                HStack(spacing: 100) {
+                    if self.selectedTab > 0 {
+                        Button(action: {
+                            withAnimation(.easeInOut) {
+                                self.selectedTab -= 1
+                            }
+                        }) {
+                            Image(systemName: "arrow.left").foregroundColor(.gray)
+                        }
+                    }
+                    
+                    Button("", systemImage: self.selectedTab < self.title.count - 1 ? "arrow.right" : "checkmark") {
                         withAnimation(.easeInOut) {
-                            self.selectedTab -= 1
+                            if(self.selectedTab == self.title.count - 1) {
+                                self.dismiss()
+                                self.sendRequest()
+                            }
+                            self.selectedTab = self.selectedTab < self.title.count - 1 ? self.selectedTab + 1 : self.selectedTab
                         }
-                    }) {
-                        Image(systemName: "arrow.left").foregroundColor(.gray)
                     }
+                    .contentTransition(.symbolEffect(.replace))
                 }
-                
-                Button("", systemImage: self.selectedTab < self.title.count - 1 ? "arrow.right" : "checkmark") {
-                    withAnimation(.easeInOut) {
-                        if(self.selectedTab == self.title.count - 1) {
-                            self.dismiss()
-                            self.sendRequest()
+                .font(.largeTitle)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .alert(self.result.1, isPresented: self.$result.0) {
+                    Button("確認") {
+                        if(self.result.1.contains("註冊成功！！")) {
+                            self.dismissKeyboard()
                         }
-                        self.selectedTab = self.selectedTab < self.title.count - 1 ? self.selectedTab + 1 : self.selectedTab
-                    }
-                }
-                .contentTransition(.symbolEffect(.replace))
-            }
-            .font(.largeTitle)
-            .frame(maxHeight: .infinity, alignment: .bottom)
-            .alert(self.result.1, isPresented: self.$result.0) {
-                Button("確認") {
-                    if(self.result.1.contains("success")) {
-                        self.dismissKeyboard()
                     }
                 }
             }
         }
     }
-}
+
 
 struct SignupView_Previews: PreviewProvider {
     static var previews: some View {

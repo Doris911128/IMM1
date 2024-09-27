@@ -97,7 +97,7 @@ struct HyperlipidemiaView: View {
                 do {
                     let responseArray = try JSONDecoder().decode([HyperlipidemiaRecord].self, from: data)
                     DispatchQueue.main.async {
-                        self.chartData = responseArray
+                        self.chartData = responseArray.reversed()
                         print("成功解码并更新了 chartData，包含 \(responseArray.count) 条记录。")
                     }
                 } catch {
@@ -308,7 +308,7 @@ struct HyperlipidemiaRecordsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(records) { record in
+                ForEach(records.reversed()) { record in
                     NavigationLink(destination: HyperlipidemiaRecordDetailView(record: record)) {
                         HStack {
                             hyperlipidemiaImage(for: record)
