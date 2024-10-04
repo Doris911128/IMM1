@@ -234,7 +234,7 @@ struct AIView: View
                         .foregroundColor(.orange)
                         .offset(x: -10, y: 0)
                     Spacer()
-                    NavigationLink(destination: AIphotoView()) {
+                    NavigationLink(destination: AIphotoView(messageText: $messageText)) {
                         Image(systemName: "camera.fill")
                             .foregroundColor(.blue)
                             .imageScale(.large)

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct AIphotoView: View {
+    @Binding var messageText: String
+    
     @State private var image: UIImage?
     @State private var showImagePicker = false
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
@@ -18,6 +20,13 @@ struct AIphotoView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 300, height: 300)
+                    
+                    // 顯示辨識結果
+                    if let result = identifyResult {
+                        Text("食材辨識為：\(result.result)")
+                            .font(.headline)
+                            .padding(.top, 10)
+                    }
                 } else {
                     Text("請上傳圖片以辨識食材")
                     Image("食材辨識圖片")
@@ -102,8 +111,11 @@ struct AIphotoView: View {
         .alert(isPresented: $showAlert) {
             Alert(title: Text("提示"), message: Text(alertMessage), dismissButton: .default(Text("確定")))
         }
-        .alert(item: $identifyResult) { result in
-            Alert(title: Text(result.result), message: Text(alertMessage), dismissButton: .default(Text("確定")))
+        .onChange(of: identifyResult) { _ in
+            // 當辨識結果變更時，更新 messageText
+            if let result = identifyResult {
+                messageText = result.result
+            }
         }
     }
 
@@ -133,8 +145,9 @@ struct AIphotoView: View {
                     showAlert = true
                 } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
                     print("Upload successful, response: \(responseString)")
-                    alertMessage = "資料已成功送出！"
-                    showAlert = true
+                    // 移除這行以清除成功提示
+                    // alertMessage = "資料已成功送出！"
+                    // showAlert = true
                 } else {
                     alertMessage = "上傳失敗，未知錯誤。"
                     showAlert = true
@@ -148,6 +161,7 @@ struct AIphotoView: View {
             }
         }.resume()
     }
+
 
     // 獲取最新圖片
     func fetchLatestImage() {
@@ -203,6 +217,7 @@ struct AIphotoView: View {
                     showAlert = true
                 } else if let data = data, let loadedImage = UIImage(data: data) {
                     image = loadedImage
+                    fetchIdentifyEchoData() // 在獲取圖片後獲取辨識結果
                 } else {
                     alertMessage = "讀取圖片失敗，未知錯誤。"
                     showAlert = true
@@ -224,12 +239,22 @@ struct AIphotoView: View {
             }
 
             if let data = data {
+                // 打印原始 JSON 數據以進行調試
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("原始 JSON 回應: \(jsonString)")
+                }
+
                 do {
                     let decoder = JSONDecoder()
                     let responseData = try decoder.decode(IdentifyEchoResponse.self, from: data)
 
+                    // 打印辨識 ID 和辨識結果
+                    print("辨識 ID: \(responseData.Identify_ID), 食材辨識為：\(responseData.Identify_Result)")
+
                     DispatchQueue.main.async {
-                        identifyResult = IdentifyResult(id: responseData.identifyID, result: responseData.identifyResult)
+                        // 將辨識結果寫入 messageText
+                        messageText = responseData.Identify_Result
+                        identifyResult = IdentifyResult(id: responseData.Identify_ID, result: responseData.Identify_Result)
                     }
                 } catch {
                     print("Failed to decode JSON: \(error.localizedDescription)")
@@ -239,6 +264,7 @@ struct AIphotoView: View {
             }
         }.resume()
     }
+
 }
 
 // 用於解析圖片的結構
@@ -249,15 +275,16 @@ struct ImageFile: Codable {
 
 // 用於辨識結果的結構
 struct IdentifyEchoResponse: Codable {
-    let identifyID: String
-    let identifyResult: String
+    let Identify_ID: String // 注意大小寫
+    let Identify_Result: String // 注意大小寫
 }
 
 // 用於顯示辨識結果的結構
-struct IdentifyResult: Identifiable {
+struct IdentifyResult: Identifiable, Equatable {
     let id: String
     let result: String
 }
+
 
 // 用於選擇圖片的組件
 struct AImagePicker: UIViewControllerRepresentable {
@@ -297,4 +324,3 @@ struct AImagePicker: UIViewControllerRepresentable {
         }
     }
 }
-
