@@ -67,9 +67,9 @@ protocol AIRecipeP: RecipeProtocol where DataType == ChatRecord
 
 // MARK: 子協議：CRecipeP
 // 用於顯示用戶自建食譜的協議，繼承自RecipeProtocol 含載入AI資料、顯示數據內容方法
-protocol CRecipeP: RecipeProtocol where DataType == Recipe 
+protocol CRecipeP: RecipeProtocol where DataType == CRecipe
 {
-    var recipe: Recipe { get set } // 修正為單一 Recipe 型別
+    var Crecipe: CRecipe { get set } // 修正為單一 CRecipe 型別
     
 //    // 顯示用戶自建的烹飪書視圖，包括所需食材和烹飪方法
 //    func CCookbookView(safeArea: EdgeInsets) -> AnyView
@@ -80,23 +80,23 @@ extension RecipeProtocol
 {
     // MARK: 封面畫面
     // 適用於顯示頂部的封面圖片或背景
-    func CoverView(safeArea: EdgeInsets, size: CGSize) -> AnyView 
+    func CoverView(safeArea: EdgeInsets, size: CGSize) -> AnyView
     {
         let height: CGFloat = size.height * 0.5
 
         return AnyView(
-            GeometryReader 
+            GeometryReader
             { reader in
                 let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
                 let size: CGSize = reader.size
                 let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
 
                 // 判斷圖片URL是否存在，存在則使用AsyncImage，否則使用默認圖片
-                ZStack(alignment: .bottom) 
+                ZStack(alignment: .bottom)
                 {
                     if let imageUrl = itemImageURL()
                     {
-                        AsyncImage(url: imageUrl) 
+                        AsyncImage(url: imageUrl)
                         { phase in
                             switch phase
                             {
@@ -112,7 +112,7 @@ extension RecipeProtocol
                                 EmptyView()
                             }
                         }
-                    } else 
+                    } else
                     {
                         Image("自訂食材預設圖片")
                             .resizable()
@@ -122,7 +122,7 @@ extension RecipeProtocol
                     }
 
                     // 漸變背景和標題部分
-                    LinearGradient(colors: 
+                    LinearGradient(colors:
                     [
                         Color("menusheetbackgroundcolor").opacity(0 - progress),
                         Color("menusheetbackgroundcolor").opacity(0.2 - progress),
@@ -132,7 +132,7 @@ extension RecipeProtocol
                         Color("menusheetbackgroundcolor")
                     ], startPoint: .top, endPoint: .bottom)
 
-                    VStack(spacing: 0) 
+                    VStack(spacing: 0)
                     {
                         Text(itemName())
                             .bold()
@@ -148,7 +148,7 @@ extension RecipeProtocol
                     .offset(y: minY < 0 ? minY : 0)
                 }
                 .offset(y: -minY)
-                .onChange(of: progress) 
+                .onChange(of: progress)
                 {
                     print("CoverView的progress值: \(progress)")
                 }
@@ -195,7 +195,7 @@ extension RecipeProtocol
                 .background(Color("menusheetbackgroundcolor").opacity(progress > 6 ? 0 : 1))
                 .animation(.smooth.speed(2), value: progress < 6)
                 .offset(y: -minY)
-                .onChange(of: progress) 
+                .onChange(of: progress)
                 {
                     print("HeaderView的progress值: \(progress)")
                 }
@@ -411,7 +411,7 @@ extension CRecipeP
 {
     func itemName() -> String
     {
-        return recipe.name ?? "Unknown Recipe Name"
+        return Crecipe.f_name ?? "Unknown Recipe Name"
     }
     
     func itemImageURL() -> URL?

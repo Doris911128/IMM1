@@ -17,9 +17,13 @@ struct LoadingView: View {
                 Spacer()
 
                 GIFImageView(url: gifURL)
-                    .offset(x: -30, y: 0) // 往左移動
-//                    .position(x: geometry.size.width / 2, y: 140) // 設置位置
+                    .offset(x: -20, y: -20)
+
+//                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
             }
+            .background(Color("BackColor")) // Set background color
+            .edgesIgnoringSafeArea(.all) // Extend background color to safe area
+            .padding(.vertical, 50) // Set vertical padding to 50
         }
     }
 }

@@ -20,13 +20,20 @@ struct AIRecipeBlock: View, AIRecipeP
     @State private var currentUserID: String? = nil // 用於保存當前用戶 ID
     
     @State private var isEditing: Bool = false // 控制編輯彈出框顯示
+    
+    @State private var isImagePickerPresented: Bool = false // 控制圖片選擇器顯示
+    @State private var editedImages: [String] = [] // 用來存儲圖片 URL
+    @State private var selectedImage: UIImage? = nil // 本地選擇的圖片
+    
+    @State private var editedRecipeName: String = "" // 新增編輯後的食譜名稱
     @State private var editedFoodSteps: [String] = [] // 編輯後的食材
     @State private var editedCookingSteps: [String] = [] // 編輯後的步驟
     @State private var editedTips: [String] = [] // 編輯後的小技巧＆小貼士
     @State private var editedOtherCook: [String] = [] // 編輯後的例外狀況給智慧食譜編輯做改動
     
     // 宣告 focusedXXXXIndex 為 Int? 以追蹤當前的索引
-    @State private var focusedFoodIndex: Int? = nil// 新增變量來追蹤哪一個TextField被聚焦_食材
+    @State private var focusedNameIndex: Bool = false
+    @State private var focusedFoodIndex: Int? = nil// 食材
     @State private var focusedCookingIndex: Int? = nil// 步驟
     @State private var focusedOtherIndex: Int? = nil// 智慧食譜
     @State private var focusedFieldIndex: Int? = nil// 小技巧
@@ -41,6 +48,7 @@ struct AIRecipeBlock: View, AIRecipeP
     {
         VStack(spacing: 20)
         {
+            // 標題
             Text("食譜編輯區")
                 .font(.title2)
                 .bold()
@@ -51,327 +59,124 @@ struct AIRecipeBlock: View, AIRecipeP
                 VStack(spacing: 15)
                 {
                     
-                    if let foodSteps = extractFoodSteps(from: record.output),
-                       let cookingSteps = extractCookingSteps(from: record.output)
+                    // MARK: 更新圖片按鈕
+                    VStack
                     {
-                        // MARK: 食材編輯區塊
-                        VStack(alignment: .leading)
+                        Button(action: {
+                            isImagePickerPresented = true // 顯示圖片選擇器
+                        })
                         {
-                            Text("所需食材")
-                                .foregroundStyle(.orange)
-                                .font(.title2)
-                                .bold()
-                                .padding(.bottom, 5)
-                            
-                            ForEach(editedFoodSteps.indices, id: \.self)
-                            { index in
-                                VStack
-                                {
-                                    HStack(alignment: .top)
-                                    {
-                                        Text("食材 \(index + 1)")
-                                            .font(.system(size: 12))
-                                            .bold()
-                                            .foregroundColor(.gray)
-                                        Spacer()
-                                        
-                                        // 右上：先前食材 (僅當 TextField 被選中時顯示)
-                                        if focusedFoodIndex == index
-                                        {
-                                            if index < foodSteps.count
-                                            {
-                                                Text("Before：\(foodSteps[index])")
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(.gray)
-                                            } else
-                                            {
-                                                Text("無法提取先前食材")
-                                                    .font(.system(size: 12))
-                                            }
-                                        }
-                                    }
-                                    
-                                    // 顯示可編輯的 TextField，並綁定焦點
-                                    TextField("更新食材", text: $editedFoodSteps[index])
-                                        .padding()
-                                        .background(Color.gray.opacity(0.2))
-                                        .cornerRadius(8)
-                                        .onTapGesture
-                                    {
-                                        focusedFoodIndex = index
-                                    }
-                                    .onSubmit
-                                    {
-                                        focusedFoodIndex = nil
-                                    }
-                                }
-                                .padding(.horizontal, 15)
-                            }
-                            
-                            // 新增食材按鈕
                             HStack
                             {
-                                Spacer()
-                                Button(action: {
-                                    editedFoodSteps.append("")
-                                })
-                                {
-                                    HStack
-                                    {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.title)
-                                            .foregroundColor(.orange)
-                                        
-                                        Text("新增食材")
-                                            .font(.body)
-                                            .bold()
-                                            .foregroundColor(.orange)
-                                    }
-                                    .padding()
-                                    .background(
-                                        Color.white
-                                            .frame(width: 320, height: 50)
-                                            .cornerRadius(10)
-                                            .shadow(radius: 4)
-                                    )
-                                }
-                                Spacer()
+                                Image(systemName: "arrow.up.doc.fill")
+                                    .font(.title)
+                                    .foregroundColor(.orange)
+                                
+                                Text("更新圖片")
+                                    .font(.body)
+                                    .bold()
+                                    .foregroundColor(.orange)
                             }
+                            .padding()
+                            .background(
+                                Color.white
+                                    .frame(width: 320, height: 50)
+                                    .cornerRadius(10)
+                                    .shadow(radius: 4)
+                            )
                         }
-                        .padding(.horizontal, 15)
-                        
-                        
-                        // MARK: 料理方法編輯區塊
-                        VStack(alignment: .leading)
+                        .sheet(isPresented: $isImagePickerPresented)
                         {
-                            Text("料理方法")
-                                .foregroundStyle(.orange)
-                                .font(.title2)
-                                .bold()
-                                .padding(.bottom, 5)
+                            ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
+                        }
+                        
+                        // 如果有選擇圖片，顯示圖片預覽和上傳按鈕
+                        if let selectedImage = selectedImage
+                        {
+                            Image(uiImage: selectedImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 200)
                             
-                            ForEach(editedCookingSteps.indices, id: \.self)
-                            { index in
-                                VStack
-                                {
-                                    HStack(alignment: .top)
+                            // 上傳圖片按鈕
+                            Button(action: {
+                                uploadImage(selectedImage) { result in
+                                    switch result
                                     {
-                                        Text("步驟 \(index + 1)")
-                                            .font(.system(size: 12))
-                                            .bold()
-                                            .foregroundColor(.gray)
-                                        Spacer()
-                                        
-                                        if focusedCookingIndex == index
-                                        {
-                                            if index < cookingSteps.count
-                                            {
-                                                Text("Before：\(cookingSteps[index])")
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(.gray)
-                                            } else {
-                                                Text("無法提取先前步驟")
-                                                    .font(.system(size: 12))
-                                            }
-                                        }
-                                    }
-                                    TextField("更新烹飪步驟", text: $editedCookingSteps[index])
-                                        .padding()
-                                        .background(Color.gray.opacity(0.2))
-                                        .cornerRadius(8)
-                                        .onTapGesture
-                                    {
-                                        focusedCookingIndex = index
-                                    }
-                                    .onSubmit
-                                    {
-                                        focusedCookingIndex = nil
+                                    case .success(let imageUrl):
+                                        print("圖片已上傳，URL為: \(imageUrl)")
+                                    case .failure(let error):
+                                        print("圖片上傳失敗: \(error.localizedDescription)")
                                     }
                                 }
-                                .padding(.horizontal, 20)
-                            }
-                            
-                            // 新增步驟按鈕
-                            HStack
+                            })
                             {
-                                Spacer()
-                                Button(action: {
-                                    editedCookingSteps.append("")
-                                })
-                                {
-                                    HStack
-                                    {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.title)
-                                            .foregroundColor(.orange)
-                                        
-                                        Text("新增步驟")
-                                            .font(.body)
-                                            .bold()
-                                            .foregroundColor(.orange)
-                                    }
+                                Text("上傳圖片")
+                                    .font(.body)
+                                    .bold()
+                                    .foregroundColor(.white)
                                     .padding()
-                                    .background(
-                                        Color.white
-                                            .frame(width: 320, height: 50)
-                                            .cornerRadius(10)
-                                            .shadow(radius: 4)
-                                    )
-                                }
-                                Spacer()
+                                    .background(Color.orange)
+                                    .cornerRadius(8)
                             }
                         }
+                    }
+                    
+                    // MARK: 食譜名稱編輯區塊
+                    VStack(alignment: .leading)
+                    {
+                        Text("食譜名稱")
+                            .foregroundStyle(.orange)
+                            .font(.title2)
+                            .bold()
+                            .padding(.bottom, 5)
+                            .padding(.leading, 15)
+                        
+                        if focusedNameIndex {
+                            Text("Before: \(record.input)")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                                .padding(.leading, 15)
+                        }
+                        
+                        HStack(alignment: .top) {
+                            TextField("更新食譜名稱", text: $editedRecipeName)
+                                .padding()
+                                .background(Color.gray.opacity(0.2))
+                                .cornerRadius(8)
+                                .onTapGesture {
+                                    focusedNameIndex = true
+                                }
+                                .onSubmit {
+                                    focusedNameIndex = false
+                                }
+                        }
                         .padding(.horizontal, 15)
+                    }
+                    .padding(.vertical, 10)
+                    
+                    // MARK: 動態顯示區塊
+                    if let foodSteps = extractFoodSteps(from: record.output),
+                       let cookingSteps = extractCookingSteps(from: record.output) {
+                        
+                        // 顯示食材和烹飪步驟
+                        displayFoodAndCookingSteps(foodSteps: foodSteps, cookingSteps: cookingSteps)
+                        
+                    } else {
+                        // 顯示智慧食譜編輯區
+                        displaySmartRecipeSection()
                     }
                     
                     // MARK: 小技巧編輯區塊
-                    if let tips = extractTips(from: record.output)
-                    {
-                        VStack(alignment: .leading)
-                        {
-                            Text("小技巧")
-                                .foregroundStyle(.orange)
-                                .font(.title2)
-                                .bold()
-                                //.padding(.leading, 20)
-                                .padding(.bottom, 5)
-                            
-                            ForEach(editedTips.indices, id: \.self)
-                            { index in
-                                VStack
-                                {
-                                    HStack(alignment: .top)
-                                    {
-                                        Text("技巧 \(index + 1)")
-                                            .font(.system(size: 12))
-                                            .bold()
-                                            .foregroundColor(.gray)
-                                        Spacer()
-                                        
-                                        if focusedFieldIndex == index
-                                        {
-                                            Text("Before：\(tips[index])")
-                                                .font(.system(size: 12))
-                                                .foregroundColor(.gray)
-                                        }
-                                    }
-                                    TextField("更新小技巧", text: $editedTips[index])
-                                        .padding()
-                                        .background(Color.gray.opacity(0.2))
-                                        .cornerRadius(8)
-                                        .onTapGesture
-                                    {
-                                        focusedFieldIndex = index
-                                    }
-                                    .onSubmit
-                                    {
-                                        focusedFieldIndex = nil
-                                    }
-                                }
-                                .padding(.horizontal, 20)
-                            }
-                            
-                            // 新增小技巧按鈕
-                            HStack
-                            {
-                                Spacer()
-                                Button(action: {
-                                    editedTips.append("")
-                                })
-                                {
-                                    HStack
-                                    {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.title)
-                                            .foregroundColor(.orange)
-                                        
-                                        Text("新增小技巧")
-                                            .font(.body)
-                                            .bold()
-                                            .foregroundColor(.orange)
-                                    }
-                                    .padding()
-                                    .background(
-                                        Color.white
-                                            .frame(width: 320, height: 50)
-                                            .cornerRadius(10)
-                                            .shadow(radius: 4)
-                                    )
-                                }
-                                Spacer()
-                            }
-                        }
-                        .padding(.horizontal, 15)
-                    }
-                    
-                    // MARK: 智慧食譜編輯區塊
-                    else
-                    {
-                        // 如果無法拆分食材或料理方法，顯示完整的 output 並顯示“智慧食譜”
-                        VStack(alignment: .leading) 
-                        {
-                            Text("智慧食譜")
-                                .foregroundStyle(.orange)
-                                .font(.title2)
-                                .bold()
-                            
-                            // 使用 TextEditor 來編輯智慧食譜區塊
-                            TextEditor(text: Binding(
-                                get: 
-                                {
-                                    // 將 Array 轉換為單一的 String 來顯示
-                                    editedOtherCook.joined(separator: "\n")
-                                },
-                                set: 
-                                { newValue in
-                                    // 當編輯後的文本改變時，重新分割回 Array
-                                    editedOtherCook = newValue.split(separator: "\n").map(String.init)
-                                }
-                            ))
-                            .font(.body)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 10)
-                            .background(Color.gray.opacity(0.2)) // 灰底效果
-                            .cornerRadius(8)
-                            .frame(maxWidth: .infinity, minHeight: 400, alignment: .leading)
-                            .scrollContentBackground(.hidden)  // 背景
-                            // 當 TextEditor 點擊時，更新 focusedOtherIndex
-                            .onTapGesture
-                            {
-                                focusedOtherIndex = 999 // 假設 999 代表 TextEditor 的特定聚焦狀態
-                            }
-
-                            // 如果 TextEditor 被選中，顯示先前的智慧食譜內容
-                            if focusedOtherIndex == 999
-                            {
-                                Text("先前智慧食譜：")
-                                    .font(.body)
-                                    .bold()
-                                    .padding(.top, 10)
-                                    .padding(.bottom,10)
-                                
-                                // 顯示 record.output 的內容
-                                Text(record.output)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.gray)
-                                    .padding(.horizontal, 20)
-                                    .lineSpacing(5)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        .padding(.horizontal, 15)
-                    }
+                    displayTipsSection()
                 }
             }
             
-            
             // MARK: 確認和取消按鈕
-            HStack
-            {
+            HStack {
                 Button(action: {
                     isEditing = false // 關閉編輯
-                })
-                {
+                }) {
                     Text("取消")
                         .font(.title3)
                         .padding()
@@ -383,8 +188,7 @@ struct AIRecipeBlock: View, AIRecipeP
                 Button(action: {
                     applyEdits()
                     isEditing = false // 確認後關閉編輯
-                })
-                {
+                }) {
                     Text("確認")
                         .font(.title3)
                         .padding()
@@ -400,26 +204,290 @@ struct AIRecipeBlock: View, AIRecipeP
         .background(Color.white)
         .cornerRadius(20)
         .shadow(radius: 20)
-        .padding()//左右
-        
-        .onAppear
-        {
-            if editedTips.isEmpty, let tips = extractTips(from: record.output)
-            {
+        .padding()
+        .onAppear {
+            if editedTips.isEmpty, let tips = extractTips(from: record.output) {
                 editedTips = tips
             }
             editedOtherCook = record.output.split(separator: "\n").map(String.init) ?? []
         }
-        
     }
+
+    // MARK: 動態顯示食材和烹飪步驟區塊
+    @ViewBuilder
+    private func displayFoodAndCookingSteps(foodSteps: [String], cookingSteps: [String]) -> some View {
+        // 食材編輯區
+        VStack(alignment: .leading) {
+            Text("所需食材")
+                .foregroundStyle(.orange)
+                .font(.title2)
+                .bold()
+                .padding(.bottom, 5)
+            
+            ForEach(editedFoodSteps.indices, id: \.self) { index in
+                VStack {
+                    HStack(alignment: .top) {
+                        Text("食材 \(index + 1)")
+                            .font(.system(size: 12))
+                            .bold()
+                            .foregroundColor(.gray)
+                        Spacer()
+                        
+                        if focusedFoodIndex == index, index < foodSteps.count {
+                            Text("Before：\(foodSteps[index])")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    TextField("更新食材", text: $editedFoodSteps[index])
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                        .onTapGesture { focusedFoodIndex = index }
+                        .onSubmit { focusedFoodIndex = nil }
+                }
+                .padding(.horizontal, 15)
+            }
+            
+            addNewButton(label: "新增食材", action: { editedFoodSteps.append("") })
+        }
+        .padding(.horizontal, 15)
+        
+        // 料理方法編輯區
+        VStack(alignment: .leading) {
+            Text("料理方法")
+                .foregroundStyle(.orange)
+                .font(.title2)
+                .bold()
+                .padding(.bottom, 5)
+            
+            ForEach(editedCookingSteps.indices, id: \.self) { index in
+                VStack {
+                    HStack(alignment: .top) {
+                        Text("步驟 \(index + 1)")
+                            .font(.system(size: 12))
+                            .bold()
+                            .foregroundColor(.gray)
+                        Spacer()
+                        
+                        if focusedCookingIndex == index, index < cookingSteps.count {
+                            Text("Before：\(cookingSteps[index])")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    TextField("更新烹飪步驟", text: $editedCookingSteps[index])
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                        .onTapGesture { focusedCookingIndex = index }
+                        .onSubmit { focusedCookingIndex = nil }
+                }
+                .padding(.horizontal, 20)
+            }
+            
+            addNewButton(label: "新增步驟", action: { editedCookingSteps.append("") })
+        }
+        .padding(.horizontal, 15)
+    }
+
+    // MARK: 顯示智慧食譜區塊
+    @ViewBuilder
+    private func displaySmartRecipeSection() -> some View {
+        VStack(alignment: .leading) {
+            Text("智慧食譜")
+                .foregroundStyle(.orange)
+                .font(.title2)
+                .bold()
+            
+            TextEditor(text: Binding(
+                get: { editedOtherCook.joined(separator: "\n") },
+                set: { newValue in
+                    editedOtherCook = newValue.split(separator: "\n").map(String.init)
+                }
+            ))
+            .font(.body)
+            .padding()
+            .background(Color.gray.opacity(0.2))
+            .cornerRadius(8)
+            .frame(minHeight: 400)
+            .onTapGesture { focusedOtherIndex = 999 }
+            
+            if focusedOtherIndex == 999 {
+                Text("先前智慧食譜：")
+                    .font(.body)
+                    .bold()
+                    .padding(.top, 10)
+                
+                Text(record.output)
+                    .font(.system(size: 12))
+                    .foregroundColor(.gray)
+                    .padding()
+                    .lineSpacing(5)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(.horizontal, 15)
+    }
+
+    // MARK: 顯示小技巧編輯區
+    @ViewBuilder
+    private func displayTipsSection() -> some View {
+        VStack(alignment: .leading) {
+            Text("小技巧")
+                .foregroundStyle(.orange)
+                .font(.title2)
+                .bold()
+                .padding(.bottom, 5)
+            
+            ForEach(editedTips.indices, id: \.self) { index in
+                VStack {
+                    HStack(alignment: .top) {
+                        Text("技巧 \(index + 1)")
+                            .font(.system(size: 12))
+                            .bold()
+                            .foregroundColor(.gray)
+                        Spacer()
+                        
+                        if focusedFieldIndex == index {
+                            Text("Before：\(editedTips[index])")
+                                .font(.system(size: 12))
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    TextField("更新小技巧", text: $editedTips[index])
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                        .onTapGesture { focusedFieldIndex = index }
+                        .onSubmit { focusedFieldIndex = nil }
+                }
+                .padding(.horizontal, 20)
+            }
+            
+            addNewButton(label: "新增小技巧", action: { editedTips.append("") })
+        }
+        .padding(.horizontal, 15)
+    }
+
+    // MARK: 添加新食材或步驟按鈕
+    @ViewBuilder
+    private func addNewButton(label: String, action: @escaping () -> Void) -> some View {
+        HStack {
+            Spacer()
+            Button(action: action) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title)
+                        .foregroundColor(.orange)
+                    
+                    Text(label)
+                        .font(.body)
+                        .bold()
+                        .foregroundColor(.orange)
+                }
+                .padding()
+                .background(
+                    Color.white
+                        .frame(width: 320, height: 50)
+                        .cornerRadius(10)
+                        .shadow(radius: 4)
+                )
+            }
+            Spacer()
+        }
+    }
+
+    
+    var imagePickerSection: some View {
+        VStack {
+            Button(action: {
+                isImagePickerPresented = true // 按下按鈕後顯示圖片選擇器
+            }) {
+                HStack {
+                    Image(systemName: "arrow.up.doc.fill")
+                        .font(.title)
+                        .foregroundColor(.orange)
+
+                    Text("更新圖片")
+                        .font(.body)
+                        .bold()
+                        .foregroundColor(.orange)
+                }
+                .padding()
+                .background(
+                    Color.white
+                        .frame(width: 320, height: 50)
+                        .cornerRadius(10)
+                        .shadow(radius: 4)
+                )
+            }
+            .sheet(isPresented: $isImagePickerPresented) {
+                ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
+            }
+
+            // 顯示圖片預覽
+            if let selectedImage = selectedImage {
+                Image(uiImage: selectedImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 200)
+
+                // 上傳圖片按鈕
+                Button(action: {
+                    uploadImage(selectedImage) { result in
+                        switch result {
+                        case .success(let imageUrl):
+                            print("圖片已上傳，URL為: \(imageUrl)")
+                        case .failure(let error):
+                            print("圖片上傳失敗: \(error.localizedDescription)")
+                        }
+                    }
+                }) {
+                    Text("上傳圖片")
+                        .font(.body)
+                        .bold()
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.orange)
+                        .cornerRadius(8)
+                }
+            }
+        }
+    }
+
     
     // MARK: - 更新數據模型
     private func applyEdits()
     {
         // 將編輯後的內容應用到數據模型中
+        print("Edited recipe name: \(editedRecipeName)")
         print("Edited food steps: \(editedFoodSteps)")
         print("Edited cooking steps: \(editedCookingSteps)")
         print("Edited tips: \(editedTips)")
+    }
+    
+    func saveImageURLToDatabase(imageUrl: String, recipeID: Int, completion: @escaping (Bool) -> Void) {
+        let parameters: [String: Any] = [
+            "recipe_id": recipeID,
+            "ai_image_url": imageUrl
+        ]
+        
+        updateRecipeData(parameters: parameters) { success in
+            completion(success)
+        }
+    }
+    
+    
+    // MARK: 拆分[食譜名稱]
+    func extractRecipeName(from input: String) -> String? {
+        // 假設input是以逗號分隔的多個名稱，我們取第一個作為食譜名稱
+        let recipeNames = input.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        
+        if let firstRecipeName = recipeNames.first, !firstRecipeName.isEmpty {
+            return firstRecipeName
+        }
+        return nil
     }
     
     // MARK: 拆分[食材]
@@ -434,9 +502,9 @@ struct AIRecipeBlock: View, AIRecipeP
         
         // 查找料理方法開始的標題
         let end = output.range(of: "作法")?.lowerBound ??
-                  output.range(of: "指示")?.lowerBound ??
-                  output.range(of: "做法")?.lowerBound ??
-                  output.endIndex
+        output.range(of: "指示")?.lowerBound ??
+        output.range(of: "做法")?.lowerBound ??
+        output.endIndex
         
         let foodContent = String(output[foodStartRange.upperBound..<end])
         
@@ -451,7 +519,7 @@ struct AIRecipeBlock: View, AIRecipeP
         
         return steps.isEmpty ? nil : steps
     }
-
+    
     // MARK: 拆分[料理方法]
     func extractCookingSteps(from output: String) -> [String]? {
         // 查找料理方法的標題
@@ -464,9 +532,9 @@ struct AIRecipeBlock: View, AIRecipeP
         
         // 找到結束標題
         let end = output.range(of: "小技巧")?.lowerBound ??
-                  output.range(of: "小貼士")?.lowerBound ??
-                  output.range(of: "isAICol")?.lowerBound ??
-                  output.endIndex
+        output.range(of: "小貼士")?.lowerBound ??
+        output.range(of: "isAICol")?.lowerBound ??
+        output.endIndex
         
         let methodContent = String(output[methodStartRange.upperBound..<end])
         
@@ -508,7 +576,15 @@ struct AIRecipeBlock: View, AIRecipeP
     // MARK: - AIRecipeP 協議要求的實作方法
     func itemName() -> String
     {
-        return record.input ?? "Unknown AI Recipe"
+        // 如果名稱已編輯，返回編輯後的名稱
+        if !editedRecipeName.isEmpty
+        {
+            return editedRecipeName
+        }
+        else
+        {
+            return record.input ?? "Unknown AI Recipe"
+        }
     }
     
     func itemImageURL() -> URL?
@@ -745,7 +821,7 @@ struct AIRecipeBlock: View, AIRecipeP
             }
             .onAppear
             {
-                fetchUserID 
+                fetchUserID
                 { userID in
                     guard let userID = userID
                     else
@@ -761,5 +837,3 @@ struct AIRecipeBlock: View, AIRecipeP
     }
     
 }
-
-

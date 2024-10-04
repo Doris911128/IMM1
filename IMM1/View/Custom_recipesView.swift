@@ -6,23 +6,24 @@
 
 import SwiftUI
 
-struct Recipe: Identifiable
+struct CRecipe: Identifiable
 {
     let id = UUID()
-    let recipe_id : Int
-    var name: String //菜名
+    let CR_ID : Int
+    var f_name: String //菜名
     var ingredients: String //食材
     var method: String //煮法
     var UTips: String //小技巧
+    var c_image_url: String? // 新增圖片 URL 欄位
 }
 
 struct Custom_recipesView: View
 {
     let U_ID: String // 用於添加收藏
     
-    @State private var recipes: [Recipe] = []
+    @State private var Crecipes: [CRecipe] = []
     @State private var showingAddRecipeView = false
-    @State private var selectedRecipe: Recipe? = nil
+    @State private var selectedRecipe: CRecipe? = nil
     
     var body: some View
     {
@@ -40,13 +41,13 @@ struct Custom_recipesView: View
                 {
                     LazyVGrid(columns: [GridItem(.flexible())]) // 使用 Flexible 來自動調整列寬
                     {
-                        ForEach(recipes) { recipe in
+                        ForEach(Crecipes) { recipe in
                             NavigationLink(
                                 destination: CRecipeDetailBlock(
-                                    U_ID: U_ID, recipe: $recipes[recipes.firstIndex(where: { $0.recipe_id == recipe.recipe_id })!] // 傳遞用戶ID
+                                    U_ID: U_ID, Crecipe: $Crecipes[Crecipes.firstIndex(where: { $0.CR_ID == recipe.CR_ID })!] // 傳遞用戶ID
                                 )
                             ) {
-                                CR_Block(recipeName: recipe.name) // 使用 CR_Block 顯示食譜名稱
+                                CR_Block(recipeName: recipe.f_name) // 使用 CR_Block 顯示食譜名稱
                             }
                         }
                     }
@@ -70,45 +71,47 @@ struct Custom_recipesView: View
             }
             .sheet(isPresented: $showingAddRecipeView)
             {
-                AddRecipeView(recipes: $recipes)
+                AddRecipeView(Crecipes: $Crecipes)
             }
         }
     }
 }
 
-
-
 //MARK: 新增用戶自訂食譜視圖
 struct AddRecipeView: View
 {
     @Environment(\.dismiss) var dismiss
-    @Binding var recipes: [Recipe] //讓新增的食譜可以同步到主視圖中
+    @Binding var Crecipes: [CRecipe] //讓新增的食譜可以同步到主視圖中
     
-    @State private var name = ""
+    @State private var f_name = ""
     @State private var ingredients = ""
     @State private var method = ""
     @State private var UTips = ""
+    @State private var c_image_url = ""
     
     @State private var ingredientsList: [String] = [""] // 用於儲存動態新增的食材
     @State private var stepsList: [String] = [""] // 用於儲存動態新增的步驟
     @State private var UTipsList: [String] = [""] // 用於儲存動態新增的小技巧
     
-    private func saveRecipe() 
-    {
-        // 獲取當前最大 recipe_id，然後加 1，確保唯一性
-        let newRecipeID = (recipes.map { $0.recipe_id }.max() ?? 0) + 1
+    // 圖片相關狀態
+    @State private var isImagePickerPresented = false
+    @State private var selectedImage: UIImage? = nil
+    @State private var imageURL: String? = nil
+    
+    private func saveRecipe() {
+        // 確保唯一的食譜 ID
+        let newRecipeID = (Crecipes.map { $0.CR_ID }.max() ?? 0) + 1
         
-        // 將動態新增的食材和步驟組合成字串
+        // 將食材、步驟、小技巧組合成字串
         let ingredients = ingredientsList.joined(separator: "\n")
         let method = stepsList.joined(separator: "\n")
         let UTips = UTipsList.joined(separator: "\n")
         
-        // 創建新的 Recipe 並加入 recipes 陣列
-        let newRecipe = Recipe(recipe_id: newRecipeID, name: name, ingredients: ingredients, method: method, UTips: UTips)
-        recipes.append(newRecipe)
-        dismiss() // 關閉視圖
+        // 創建新的食譜並將圖片 URL 加入
+        let newRecipe = CRecipe(CR_ID: newRecipeID, f_name: f_name, ingredients: ingredients, method: method, UTips: UTips, c_image_url: c_image_url)
+        Crecipes.append(newRecipe)
+        dismiss()
     }
-    
     
     var body: some View
     {
@@ -121,7 +124,58 @@ struct AddRecipeView: View
                     .font(.headline)
                     .frame(maxWidth: .infinity, alignment: .leading))
                 {
-                    TextField("輸入食譜名稱", text: $name)
+                    TextField("輸入食譜名稱", text: $f_name)
+                }
+                
+                // 新增圖片的功能
+                Section {
+                    VStack {
+                        Button(action: {
+                            isImagePickerPresented = true // 顯示圖片選擇器
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.up.doc.fill")
+                                    .font(.title)
+                                    .foregroundColor(.orange)
+                                
+                                Text("更新圖片")
+                                    .font(.body)
+                                    .bold()
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .sheet(isPresented: $isImagePickerPresented) {
+                            ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
+                        }
+                        
+                        // 如果有選擇圖片，顯示圖片預覽和上傳按鈕
+                        if let selectedImage = selectedImage {
+                            Image(uiImage: selectedImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 200)
+                            
+                            // 上傳圖片按鈕
+                            Button(action: {
+                                uploadImage(selectedImage) { result in
+                                    switch result {
+                                    case .success(let imageUrl):
+                                        imageURL = imageUrl // 保存上傳成功的圖片 URL
+                                    case .failure(let error):
+                                        print("圖片上傳失敗: \(error.localizedDescription)")
+                                    }
+                                }
+                            }) {
+                                Text("上傳圖片")
+                                    .font(.body)
+                                    .bold()
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .background(Color.orange)
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }
                 }
                 
                 Section(header:
@@ -276,40 +330,6 @@ struct CR_Block: View
         .padding(.horizontal)
     }
 }
-
-
-//MARK: 自建食譜的單篇詳細視圖
-//struct RecipeDetailView: View
-//{
-//    let recipe: Recipe
-//
-//    var body: some View
-//    {
-//        VStack(alignment: .leading)
-//        {
-//            Text(recipe.name)
-//                .font(.largeTitle)
-//                .bold()
-//                .padding(.bottom, 10)
-//
-//            Text("所需食材")
-//                .font(.headline)
-//            Text(recipe.ingredients)
-//                .padding(.bottom, 10)
-//
-//            Text("製作方法")
-//                .font(.headline)
-//            Text(recipe.method)
-//                .padding(.bottom, 10)
-//
-//            Spacer()
-//        }
-//        .padding()
-//        .navigationTitle("食譜內容")
-//    }
-//}
-
-
 
 #Preview
 {

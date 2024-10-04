@@ -10,42 +10,57 @@ struct AIphotoView: View {
     @State private var alertMessage = ""
     @State private var identifyResult: IdentifyResult?
     @State private var isLoading: Bool = false
+    @State private var isUploading: Bool = false
 
     var body: some View {
         ZStack {
-            VStack {
-                // 顯示圖片或提示信息
-                if let image = image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 300, height: 300)
-                    
-                    // 顯示辨識結果
-                    if let result = identifyResult {
-                        Text("食材辨識為：\(result.result)")
-                            .font(.headline)
-                            .padding(.top, 10)
-                    }
-                } else {
-                    Text("請上傳圖片以辨識食材")
-                    Image("食材辨識圖片")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 300, height: 300)
-                }
-
-                // 上傳圖片按鈕
-                if image != nil {
-                    Button("上傳圖片") {
-                        if let image = image {
-                            uploadImage(image)
+            ScrollView(showsIndicators: false) {
+                VStack {
+                    // 顯示圖片或提示信息
+                    if let image = image, !isUploading {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 300, height: 300)
+                            .padding(.top, 120)
+                        
+                        // 顯示辨識結果
+                        if let result = identifyResult {
+                            Text("食材辨識為：")
+                                .font(.headline)
+                                .padding(.top, 10)
+                            
+                            // 將辨識結果按行顯示
+                            let ingredients = result.result.split(separator: " ")
+                            ForEach(ingredients, id: \.self) { ingredient in
+                                Text(String(ingredient))
+                                    .padding(.top, 2)
+                            }
                         }
+                    } else if !isUploading {
+                        Text("請上傳圖片以辨識食材")
+                            .padding(.top, 100)
+                        Image("食材辨識圖片")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 300, height: 300)
+                            .padding(.top, 80)
                     }
-                    .padding()
+                    
+                    // 上傳圖片按鈕
+                    if image != nil && !isLoading {
+                        Button("上傳圖片") {
+                            if let image = image {
+                                isUploading = true
+                                uploadImage(image)
+                            }
+                        }
+                        .padding()
+                    }
                 }
+                .padding()
             }
-
+            
             // 加載動畫
             if isLoading {
                 VStack {
@@ -57,7 +72,7 @@ struct AIphotoView: View {
                     Text("正在辨識中，請稍候")
                 }
             }
-
+            
             // 相簿按鈕
             VStack {
                 Spacer()
@@ -78,7 +93,7 @@ struct AIphotoView: View {
                     Spacer()
                 }
             }
-
+            
             // 相機按鈕
             VStack {
                 Spacer()
@@ -87,7 +102,7 @@ struct AIphotoView: View {
                     Button(action: {
                         if UIImagePickerController.isSourceTypeAvailable(.camera) {
                             sourceType = .camera
-                            showImagePicker = true
+                            showImagePicker = true // 開啟圖片選擇器
                         } else {
                             alertMessage = "此設備不支持相機。"
                             showAlert = true
@@ -118,25 +133,25 @@ struct AIphotoView: View {
             }
         }
     }
-
+    
     // 上傳圖片
     func uploadImage(_ image: UIImage) {
         isLoading = true // 開始加載
         guard let url = URL(string: "http://163.17.9.107/food/php/Identify.php") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-
+        
         guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
         let base64String = imageData.base64EncodedString()
-
+        
         let body: [String: Any] = [
             "image": base64String,
             "filename": "yourImage.jpg"
         ]
-
+        
         request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: .fragmentsAllowed)
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
@@ -152,23 +167,23 @@ struct AIphotoView: View {
                     alertMessage = "上傳失敗，未知錯誤。"
                     showAlert = true
                 }
-
+                
                 // 停止加載，並獲取最新圖片
                 DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
-                    isLoading = false // 停止加載
-                    fetchLatestImage() // 獲取最新圖片
+                    isLoading = false
+                    isUploading = false // Reset uploading state
+                    fetchLatestImage() // Fetch the latest image
                 }
             }
         }.resume()
     }
-
-
+    
     // 獲取最新圖片
     func fetchLatestImage() {
         guard let listUrl = URL(string: "http://163.17.9.107/food/php/get_latest_image.php") else { return }
-
+        
         isLoading = true // 開始加載
-
+        
         URLSession.shared.dataTask(with: listUrl) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
@@ -178,19 +193,19 @@ struct AIphotoView: View {
                     isLoading = false // 停止加載
                     return
                 }
-
+                
                 guard let data = data else {
                     alertMessage = "讀取圖片列表失敗，未知錯誤。"
                     showAlert = true
                     isLoading = false // 停止加載
                     return
                 }
-
+                
                 // 打印原始 JSON 數據以進行調試
                 if let jsonString = String(data: data, encoding: .utf8) {
                     print("原始 JSON 回應: \(jsonString)")
                 }
-
+                
                 do {
                     // 解碼 JSON 回應
                     let imageFile = try JSONDecoder().decode(ImageFile.self, from: data)
@@ -204,11 +219,11 @@ struct AIphotoView: View {
             }
         }.resume()
     }
-
+    
     // 根據檔名獲取圖片
     func fetchImage(named filename: String) {
         guard let url = URL(string: "http://163.17.9.107/food/test/\(filename)") else { return }
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
@@ -222,35 +237,35 @@ struct AIphotoView: View {
                     alertMessage = "讀取圖片失敗，未知錯誤。"
                     showAlert = true
                 }
-
+                
                 isLoading = false // 停止加載
             }
         }.resume()
     }
-
+    
     // 獲取辨識結果
     func fetchIdentifyEchoData() {
         guard let url = URL(string: "http://163.17.9.107/food/php/Identify_echo.php") else { return }
-
+        
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("Error fetching data: \(error.localizedDescription)")
                 return
             }
-
+            
             if let data = data {
                 // 打印原始 JSON 數據以進行調試
                 if let jsonString = String(data: data, encoding: .utf8) {
                     print("原始 JSON 回應: \(jsonString)")
                 }
-
+                
                 do {
                     let decoder = JSONDecoder()
                     let responseData = try decoder.decode(IdentifyEchoResponse.self, from: data)
-
+                    
                     // 打印辨識 ID 和辨識結果
                     print("辨識 ID: \(responseData.Identify_ID), 食材辨識為：\(responseData.Identify_Result)")
-
+                    
                     DispatchQueue.main.async {
                         // 將辨識結果寫入 messageText
                         messageText = responseData.Identify_Result
@@ -264,7 +279,6 @@ struct AIphotoView: View {
             }
         }.resume()
     }
-
 }
 
 // 用於解析圖片的結構
@@ -285,40 +299,39 @@ struct IdentifyResult: Identifiable, Equatable {
     let result: String
 }
 
-
 // 用於選擇圖片的組件
 struct AImagePicker: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
     var sourceType: UIImagePickerController.SourceType
-
+    
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-
+    
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.delegate = context.coordinator
-        picker.sourceType = sourceType
+        picker.sourceType = sourceType // 使用傳入的 sourceType
         return picker
     }
-
+    
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {
     }
-
+    
     class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         var parent: AImagePicker
-
+        
         init(_ parent: AImagePicker) {
             self.parent = parent
         }
-
+        
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
             if let uiImage = info[.originalImage] as? UIImage {
                 parent.selectedImage = uiImage
             }
             picker.dismiss(animated: true)
         }
-
+        
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             picker.dismiss(animated: true)
         }

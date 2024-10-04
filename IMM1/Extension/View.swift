@@ -11,6 +11,7 @@
 
 import SwiftUI
 
+
 extension View
 {
     func sendBMIData(height: Double, weight: Double, php: String)
@@ -150,7 +151,7 @@ extension View
             return
         }
         
-        URLSession.shared.dataTask(with: url) 
+        URLSession.shared.dataTask(with: url)
         { data, response, error in
             if let error = error
             {
@@ -181,7 +182,7 @@ extension View
     }
     
     // MARK: 根據收藏狀態切換ai按鈕顯示
-    func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAICol: Bool, completion: @escaping (Result<String, Error>) -> Void) 
+    func toggleAIColmark(U_ID: String, Recipe_ID: Int, isAICol: Bool, completion: @escaping (Result<String, Error>) -> Void)
     {
         guard let url = URL(string: "http://163.17.9.107/food/php/UpdateAICol.php")
         else
@@ -196,15 +197,15 @@ extension View
         request.httpBody = bodyData.data(using: .utf8)
         request.addValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        URLSession.shared.dataTask(with: request) 
+        URLSession.shared.dataTask(with: request)
         { data, response, error in
-            if let error = error 
+            if let error = error
             {
                 completion(.failure(error))
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse 
+            guard let httpResponse = response as? HTTPURLResponse
             else
             {
                 let statusError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])
@@ -212,32 +213,32 @@ extension View
                 return
             }
             
-            if httpResponse.statusCode == 200 
+            if httpResponse.statusCode == 200
             {
-                if let data = data 
+                if let data = data
                 {
                     do {
                         if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                           let message = jsonResponse["message"] as? String 
+                           let message = jsonResponse["message"] as? String
                         {
                             completion(.success(message))
-                        } else 
+                        } else
                         {
                             let parseError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid JSON structure"])
                             completion(.failure(parseError))
                         }
-                    } catch 
+                    } catch
                     {
                         completion(.failure(error))
                     }
-                } else 
+                } else
                 {
                     let dataError = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "No data received"])
                     completion(.failure(dataError))
                 }
-            } else 
+            } else
             {
-                if let data = data, let responseString = String(data: data, encoding: .utf8) 
+                if let data = data, let responseString = String(data: data, encoding: .utf8)
                 {
                     print("Server error response: \(responseString)")
                 }
@@ -250,7 +251,7 @@ extension View
     // MARK: 檢查ai收藏狀態
     func checkAIColed(U_ID: String, Recipe_ID: Int, completion: @escaping (Result<Bool, Error>) -> Void)
     {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)") 
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(U_ID)&Recipe_ID=\(Recipe_ID)")
         else
         {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -260,7 +261,7 @@ extension View
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
-        URLSession.shared.dataTask(with: request) 
+        URLSession.shared.dataTask(with: request)
         { data, response, error in
             if let error = error
             {
@@ -357,6 +358,101 @@ extension View
             }
         }.resume()
     }
+    
+    // MARK: 更新ai和自訂食譜數據
+    // 假設是用 URLSession 發送 API 請求來更新資料
+    func updateRecipeData(parameters: [String: Any], completion: @escaping (Bool) -> Void) {
+        // 在此編寫你與後端互動的邏輯，像是 API 請求的實現
+        // 例如：
+        guard let url = URL(string: "https://example.com/api/recipe/update") else {
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: parameters, options: [])
+            request.httpBody = jsonData
+        } catch {
+            print("Failed to encode JSON")
+            completion(false)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Request error: \(error)")
+                completion(false)
+                return
+            }
+            
+            // 檢查回應的狀態碼，這裡假設成功的狀態碼是 200
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }.resume()
+    }
+    // MARK: - 上傳圖片功能
+    func uploadImage(_ image: UIImage, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let url = URL(string: "https://example.com/upload_image") else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid server URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        let boundary = UUID().uuidString
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Image data error"])))
+            return
+        }
+        
+        var body = Data()
+        body.append("--\(boundary)\r\n")
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n")
+        body.append("Content-Type: image/jpeg\r\n\r\n")
+        body.append(imageData)
+        body.append("\r\n--\(boundary)--\r\n")
+        
+        request.httpBody = body
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data, let response = try? JSONDecoder().decode(UploadResponse.self, from: data) else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response from server"])))
+                return
+            }
+            
+            completion(.success(response.imageUrl))
+        }.resume()
+    }
+    
+    
+}
+
+// 追加Data的擴展
+extension Data {
+    mutating func append(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            append(data)
+        }
+    }
+}
+
+struct UploadResponse: Codable {
+    let imageUrl: String
 }
 
 struct TextLimit: ViewModifier

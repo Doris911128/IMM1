@@ -57,7 +57,7 @@
 		1C0081722BF07CD000720927 /* PastRecipesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0081712BF07CD000720927 /* PastRecipesView.swift */; };
 		1C14F56B2C8806E900F2F1ED /* AIRecipeBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C14F56A2C8806E900F2F1ED /* AIRecipeBlock.swift */; };
 		1C14F56D2C88073800F2F1ED /* MRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C14F56C2C88073800F2F1ED /* MRecipeView.swift */; };
-		1C14F56F2C8846C200F2F1ED /* AIphptoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C14F56E2C8846C200F2F1ED /* AIphptoView.swift */; };
+		1C14F56F2C8846C200F2F1ED /* AIphotoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C14F56E2C8846C200F2F1ED /* AIphotoView.swift */; };
 		1C923BF22C61C3540015D6AE /* RecipeProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C923BF12C61C3540015D6AE /* RecipeProtocol.swift */; };
 		1C923BFA2C621AFC0015D6AE /* RedPanda.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C923BF92C621AFC0015D6AE /* RedPanda.xcassets */; };
 		1C9A27482C009DFA006CE811 /* other.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1C9A27472C009DFA006CE811 /* other.xcassets */; };
@@ -128,7 +128,7 @@
 		1C0081712BF07CD000720927 /* PastRecipesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastRecipesView.swift; sourceTree = "<group>"; };
 		1C14F56A2C8806E900F2F1ED /* AIRecipeBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRecipeBlock.swift; sourceTree = "<group>"; };
 		1C14F56C2C88073800F2F1ED /* MRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MRecipeView.swift; sourceTree = "<group>"; };
-		1C14F56E2C8846C200F2F1ED /* AIphptoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIphptoView.swift; sourceTree = "<group>"; };
+		1C14F56E2C8846C200F2F1ED /* AIphotoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIphotoView.swift; sourceTree = "<group>"; };
 		1C923BF12C61C3540015D6AE /* RecipeProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeProtocol.swift; sourceTree = "<group>"; };
 		1C923BF92C621AFC0015D6AE /* RedPanda.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = RedPanda.xcassets; sourceTree = "<group>"; };
 		1C9A27472C009DFA006CE811 /* other.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = other.xcassets; sourceTree = "<group>"; };
@@ -243,7 +243,7 @@
 			isa = PBXGroup;
 			children = (
 				04CE65892C58C929001B45C9 /* AIView.swift */,
-				1C14F56E2C8846C200F2F1ED /* AIphptoView.swift */,
+				1C14F56E2C8846C200F2F1ED /* AIphotoView.swift */,
 				0447AFAD2B872C980080D222 /* AdjustedView.swift */,
 				1C9E4EE92C6C5BB90021B5C3 /* AIRecipeView.swift */,
 				0447AFB32B872C980080D222 /* BMIView.swift */,
@@ -396,7 +396,7 @@
 				0447AFBD2B872C980080D222 /* PlanView.swift in Sources */,
 				1C9A274A2C009E29006CE811 /* CookingAiView.swift in Sources */,
 				04CE659A2C5A055F001B45C9 /* CameraView.swift in Sources */,
-				1C14F56F2C8846C200F2F1ED /* AIphptoView.swift in Sources */,
+				1C14F56F2C8846C200F2F1ED /* AIphotoView.swift in Sources */,
 				0447AFBF2B872C980080D222 /* CookView.swift in Sources */,
 				0447AFC62B872C980080D222 /* HyperglycemiaView.swift in Sources */,
 				0447AF852B872BE40080D222 /* Recipe.swift in Sources */,
@@ -570,7 +570,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"IMM1/Preview Content\"";
-				DEVELOPMENT_TEAM = WPR9PZZJ8R;
+				DEVELOPMENT_TEAM = 5368N29Z5Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IMM1/Info.plist;
@@ -587,7 +587,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = qwertyu;
+				PRODUCT_BUNDLE_IDENTIFIER = sdsdsd;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -603,7 +603,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"IMM1/Preview Content\"";
-				DEVELOPMENT_TEAM = WPR9PZZJ8R;
+				DEVELOPMENT_TEAM = 5368N29Z5Z;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = IMM1/Info.plist;
@@ -620,7 +620,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = qwertyu;
+				PRODUCT_BUNDLE_IDENTIFIER = sdsdsd;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

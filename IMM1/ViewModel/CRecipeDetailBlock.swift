@@ -11,24 +11,31 @@ import SwiftUI
 struct CRecipeDetailBlock: View, CRecipeP
 {
     let U_ID: String // 假設需要用戶ID?
-    @Binding var recipe: Recipe // 綁定 Recipe 物件 允許修改 recipe
+    @Binding var Crecipe: CRecipe // 綁定 Recipe 物件 允許修改 Crecipe
     
     @State private var isLoading: Bool = true // 載入狀態
     @State private var loadingError: String? = nil // 加載錯誤訊息
     
     @State private var isEditing: Bool = false // 控制編輯彈出框顯示
+    
+    @State private var editedRecipeName: String = ""
     @State private var editedUFoodSteps: [String] = [] // 編輯後的食材
     @State private var editedUCookingSteps: [String] = [] // 編輯後的步驟
     @State private var editedUTips: [String] = [] // 編輯後的小技巧＆小貼士
+    
+    // 圖片相關狀態
+        @State private var isImagePickerPresented = false
+        @State private var selectedImage: UIImage? = nil
+        @State private var imageURL: String? = nil
     
     // 宣告 focusedXXXXIndex 為 Int? 以追蹤當前的索引
     @State private var focusedUFoodIndex: Int? = nil// 新增變量來追蹤哪一個TextField被聚焦_食材
     @State private var focusedUCookingIndex: Int? = nil// 步驟
     @State private var focusedUFieldIndex: Int? = nil// 小技巧
     
-    var data: [Recipe]
+    var data: [CRecipe]
     {
-        [recipe]
+        [Crecipe]
     }// 全部的食譜數據
     
     // MARK: 彈出編輯視圖
@@ -350,7 +357,7 @@ struct CRecipeDetailBlock: View, CRecipeP
     // MARK: - 須實現的 CRecipeP 協議方法
     func itemName() -> String
     {
-        return recipe.name
+        return Crecipe.f_name
     }
     
     func itemImageURL() -> URL?
@@ -375,7 +382,7 @@ struct CRecipeDetailBlock: View, CRecipeP
         AnyView(
             VStack(spacing: 18) {
                 // 食材顯示區塊
-                if !recipe.ingredients.isEmpty {
+                if !Crecipe.ingredients.isEmpty {
                     VStack(alignment: .leading) {
                         Text("所需食材")
                             .foregroundStyle(.orange)
@@ -383,7 +390,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                             .bold()
                             .padding(.leading, 20)
                         
-                        ForEach(recipe.ingredients.split(separator: "\n").map { String($0) }, id: \.self) { ingredient in
+                        ForEach(Crecipe.ingredients.split(separator: "\n").map { String($0) }, id: \.self) { ingredient in
                             HStack(spacing: 25) {
                                 Text("•")
                                     .font(.title)
@@ -398,7 +405,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                 }
                 
                 // 料理方法顯示區塊
-                if !recipe.method.isEmpty {
+                if !Crecipe.method.isEmpty {
                     VStack(alignment: .leading) {
                         Text("料理方法")
                             .foregroundStyle(.orange)
@@ -406,7 +413,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                             .bold()
                             .padding(.leading, 20)
                         
-                        ForEach(Array(recipe.method.split(separator: "\n").enumerated()), id: \.offset) { index, step in
+                        ForEach(Array(Crecipe.method.split(separator: "\n").enumerated()), id: \.offset) { index, step in
                             HStack(alignment: .top) {
                                 let stepNumber = "\(index + 1)."
                                 let stepDescription = step.trimmingCharacters(in: .whitespaces)
@@ -428,7 +435,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                 }
                 
                 // 小技巧顯示區塊（僅當小技巧不為空時顯示）
-                if !recipe.UTips.isEmpty
+                if !Crecipe.UTips.isEmpty
                 {
                     VStack(alignment: .leading)
                     {
@@ -438,7 +445,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                             .bold()
                             .padding(.leading, 20)
                         
-                        ForEach(Array(recipe.UTips.split(separator: "\n").enumerated()), id: \.offset) { index, tip in
+                        ForEach(Array(Crecipe.UTips.split(separator: "\n").enumerated()), id: \.offset) { index, tip in
                             HStack(alignment: .top) {
                                 let tipNumber = "\(index + 1)."
                                 let tipDescription = tip.trimmingCharacters(in: .whitespaces)
@@ -465,12 +472,12 @@ struct CRecipeDetailBlock: View, CRecipeP
     // MARK: CRecipeDetailBlock body
     var body: some View
     {
-        GeometryReader 
+        GeometryReader
         { geometry in
             let safeArea = geometry.safeAreaInsets
             let size = geometry.size
 
-            ZStack(alignment: .topTrailing) 
+            ZStack(alignment: .topTrailing)
             {
                 ScrollView(.vertical, showsIndicators: false)
                 {
@@ -489,7 +496,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                 
 
                 // 顯示編輯視圖，當 isEditing 為 true 時
-                if isEditing 
+                if isEditing
                 {
                     Color.black.opacity(0.4)
                         .edgesIgnoringSafeArea(.all)
@@ -507,9 +514,9 @@ struct CRecipeDetailBlock: View, CRecipeP
                         Button(action: {
                             isEditing = true
                             // 初始化編輯資料
-                            editedUFoodSteps = recipe.ingredients.split(separator: "\n").map { String($0) }
-                            editedUCookingSteps = recipe.method.split(separator: "\n").map { String($0) }
-                            editedUTips = recipe.UTips.split(separator: "\n").map { String($0) }
+                            editedUFoodSteps = Crecipe.ingredients.split(separator: "\n").map { String($0) }
+                            editedUCookingSteps = Crecipe.method.split(separator: "\n").map { String($0) }
+                            editedUTips = Crecipe.UTips.split(separator: "\n").map { String($0) }
                         })
                         {
                             Image(systemName: "pencil.circle.fill")
@@ -524,4 +531,3 @@ struct CRecipeDetailBlock: View, CRecipeP
         .navigationBarTitleDisplayMode(.inline)
     }
 }
-

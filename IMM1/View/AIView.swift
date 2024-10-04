@@ -32,17 +32,18 @@ struct ChatRecord: Identifiable, Codable
     var id: Int { Recipe_ID }
     let Recipe_ID: Int
     let U_ID: String
-    let input: String
+    var input: String
     let output: String
     var isAICol: Bool
+    var ai_image_url: String? // 新增圖片 URL 欄位
     
     // 自定义解码方法，将 Int 转换为 Bool
     enum CodingKeys: String, CodingKey
     {
-        case Recipe_ID, U_ID, input, output, isAICol = "isAICol"
+        case Recipe_ID, U_ID, input, output, isAICol = "isAICol", ai_image_url
     }
     
-    init(from decoder: Decoder) throws 
+    init(from decoder: Decoder) throws
     {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         Recipe_ID = try container.decode(Int.self, forKey: .Recipe_ID)
@@ -51,9 +52,9 @@ struct ChatRecord: Identifiable, Codable
         output = try container.decode(String.self, forKey: .output)
         let isAIColInt = try container.decode(Int.self, forKey: .isAICol)
         isAICol = isAIColInt == 1
+        ai_image_url = try container.decodeIfPresent(String.self, forKey: .ai_image_url) // 解碼圖片 URL
     }
 }
-
 
 //MARK: 用於顯示歷史對話紀錄的視圖
 struct ChatHistoryView: View
