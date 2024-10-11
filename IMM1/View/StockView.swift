@@ -293,14 +293,10 @@ struct StockView: View
                                     ZStack(alignment: .topLeading)
                                     {
                                         // MARK: 顯示圖片
-                                        VStack
-                                        {
-                                            if let imageUrl = ingredients[index].Food_imge, let url = URL(string: imageUrl)
-                                            {
-                                                AsyncImage(url: url)
-                                                { phase in
-                                                    switch phase
-                                                    {
+                                        VStack {
+                                            if let imageUrl = ingredients[index].Food_imge, let url = URL(string: imageUrl) {
+                                                AsyncImage(url: url) { phase in
+                                                    switch phase {
                                                     case .empty:
                                                         ProgressView()
                                                     case .success(let image):
@@ -308,26 +304,25 @@ struct StockView: View
                                                             .resizable()
                                                             .aspectRatio(contentMode: .fill)
                                                             .frame(width: 150, height: 150)
-                                                            .clipShape(Circle())
+                                                            .clipShape(RoundedRectangle(cornerRadius: 20)) // 使用圆角矩形
                                                     case .failure:
                                                         Image(systemName: "photo")
                                                             .resizable()
                                                             .aspectRatio(contentMode: .fill)
                                                             .frame(width: 150, height: 150)
-                                                            .clipShape(Circle())
+                                                            .clipShape(RoundedRectangle(cornerRadius: 20)) // 使用圆角矩形
                                                     @unknown default:
                                                         EmptyView()
                                                     }
                                                 }
-                                                .padding(.bottom, 8) // 調整圖片與文字之間的距離
-                                            } else
-                                            {
+                                                .padding(.bottom, 8) // 调整图片与文字之间的距离
+                                            } else {
                                                 Image(systemName: "photo")
                                                     .resizable()
                                                     .aspectRatio(contentMode: .fill)
                                                     .frame(width: 150, height: 150)
-                                                    .clipShape(Circle())
-                                                    .padding(.bottom, 8) // 調整圖片與文字之間的距離
+                                                    .clipShape(RoundedRectangle(cornerRadius: 20)) // 使用圆角矩形
+                                                    .padding(.bottom, 8) // 调整图片与文字之间的距离
                                             }
                                             
                                             HStack

@@ -95,6 +95,10 @@ struct BMIView: View {
     @State private var isShowingDetailSheet: Bool = false
     @State private var isLoading: Bool = true // Add a loading state
     
+    // 控制 Alert 的顯示
+    @State private var showAlert: Bool = false
+    @State private var alertMessage: String = ""
+    
     func postBMI(height: Double, weight: Double, name: String) {
         guard let url = URL(string: "http://163.17.9.107/food/php/\(name).php") else { return }
         var request = URLRequest(url: url)
@@ -170,7 +174,7 @@ struct BMIView: View {
                         HStack(spacing: 20) {
                             Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords.reversed() :
                                     (displayMode == 1 ? bmiRecordViewModel.averagesEverySevenRecordsSorted().reversed() :
-                                    bmiRecordViewModel.averagesEveryThirtyRecordsSorted().reversed())) { record in
+                                        bmiRecordViewModel.averagesEveryThirtyRecordsSorted().reversed())) { record in
                                 LineMark(
                                     x: .value("Date", formattedDate(record.date)),
                                     y: .value("BMI", record.bmi)
@@ -190,13 +194,14 @@ struct BMIView: View {
                                 }
                             }
                             .chartForegroundStyleScale(["BMI值": .orange])
-                            .frame(width: displayMode == 0 ? CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)) : (displayMode == 1 ? CGFloat(max(300, bmiRecordViewModel.averagesEverySevenRecordsSorted().count * 100)) : CGFloat(max(300, bmiRecordViewModel.averagesEveryThirtyRecordsSorted().count * 100))), height: 200)
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // Add border
-                            .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5) // Add shadow
+                            .frame(width: CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)), height: 200)
                         }
                         .padding()
                     }
+                    .frame(width: 350, height: 250)  // 固定外框大小
+                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加外框
+                    .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5) // 添加陰影
+
                     
                     VStack {
                         HStack {
@@ -220,8 +225,13 @@ struct BMIView: View {
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .keyboardType(.numberPad)
                                 .frame(width: 330)
-                                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in
-                                    height = height.filter { "0123456789.".contains($0) }
+                                .onChange(of: height) { newValue in
+                                    height = newValue.filter { "0123456789.".contains($0) }
+                                    if let heightValue = Double(height), !(0...300).contains(heightValue) {
+                                        height = ""
+                                        alertMessage = "身高超出範圍（0-300公分）！"
+                                        showAlert = true
+                                    }
                                 }
                             
                             TextField("請輸入體重（公斤）", text: $weight)
@@ -229,10 +239,16 @@ struct BMIView: View {
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .keyboardType(.numberPad)
                                 .frame(width: 330)
-                                .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in
-                                    weight = weight.filter { "0123456789.".contains($0) }
+                                .onChange(of: weight) { newValue in
+                                    weight = newValue.filter { "0123456789.".contains($0) }
+                                    if let weightValue = Double(weight), !(0...600).contains(weightValue) {
+                                        weight = ""
+                                        alertMessage = "體重超出範圍（0-600公斤）！"
+                                        showAlert = true
+                                    }
                                 }
                         }
+                        
                         
                         Button(action: {
                             if let heightValue = Double(height), let weightValue = Double(weight) {
@@ -278,8 +294,11 @@ struct BMIView: View {
             .onTapGesture {
                 dismissKeyboard()
             }
+            .alert(isPresented: $showAlert) {
+                Alert(title: Text("輸入錯誤"), message: Text(alertMessage), dismissButton: .default(Text("確定")))
+            }
             .padding(.bottom, 25)
-            .offset(y: 23)
+            .offset(y: 0)
         }
     }
 }

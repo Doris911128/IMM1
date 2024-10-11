@@ -195,33 +195,36 @@ struct HyperglycemiaView: View {
                     }
                     .offset(x: 10)
                 }
-                ScrollView(.horizontal) {
-                    Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
-                        LineMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Value", record.hyperglycemia)
-                        )
-                        .lineStyle(.init(lineWidth: 3))
-                        .foregroundStyle(Color.orange)
-                        PointMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Value", record.hyperglycemia)
-                        )
-                        .foregroundStyle(Color.orange)
-                        .annotation(position: .top) {
-                            Text("\(record.hyperglycemia, specifier: "%.2f")")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color.black)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                            LineMark(
+                                x: .value("Date", formattedDate(record.date)),
+                                y: .value("Value", record.hyperglycemia)
+                            )
+                            .lineStyle(.init(lineWidth: 3))  // 保持线宽为 3
+                            .foregroundStyle(Color.orange)
+                            
+                            PointMark(
+                                x: .value("Date", formattedDate(record.date)),
+                                y: .value("Value", record.hyperglycemia)
+                            )
+                            .foregroundStyle(Color.orange)
+                            .annotation(position: .top) {
+                                Text("\(record.hyperglycemia, specifier: "%.2f")")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color.black)
+                            }
                         }
+                        .chartForegroundStyleScale(["血糖值": .orange])  // 修改图表前景样式
+                        .frame(width: CGFloat(max(300, chartData.count * 65)), height: 200)  // 使用与新代码一致的框架大小设置
                     }
-                    .chartForegroundStyleScale(["血糖值": .orange])
-                    .frame(width: max(350, Double(chartData.count) * 65), height: 200)
-                    .padding(.top, 20)
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
-                    .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5)
                 }
-                .padding()
+                .frame(width: 350, height: 250)  // 修改外框大小
+                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))  // 添加外框样式
+                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5)  // 添加阴影效果
+
                 
                 VStack {
                     HStack {
@@ -291,10 +294,11 @@ struct HyperglycemiaView: View {
             .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text("警告"),
-                    message: Text("輸入的血糖值最高為300，請重新輸入。"),
+                    message: Text("輸入的血糖值需在 0 到 300 之間，請重新輸入。"),
                     dismissButton: .default(Text("確定"))
                 )
             }
+            .offset(y: -34)
         }
     }
 }

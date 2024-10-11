@@ -364,7 +364,7 @@ extension View
     func updateRecipeData(parameters: [String: Any], completion: @escaping (Bool) -> Void) {
         // 在此編寫你與後端互動的邏輯，像是 API 請求的實現
         // 例如：
-        guard let url = URL(string: "https://example.com/api/recipe/update") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/update") else {
             completion(false)
             return
         }
@@ -399,7 +399,7 @@ extension View
     }
     // MARK: - 上傳圖片功能
     func uploadImage(_ image: UIImage, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let url = URL(string: "https://example.com/upload_image") else {
+        guard let url = URL(string: "http://你的後端伺服器/upload_recipe_image.php") else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid server URL"])))
             return
         }
@@ -430,16 +430,97 @@ extension View
                 return
             }
             
-            guard let data = data, let response = try? JSONDecoder().decode(UploadResponse.self, from: data) else {
-                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid response from server"])))
+            if let data = data, let response = try? JSONDecoder().decode([String: String].self, from: data), let imageUrl = response["imageUrl"] {
+                completion(.success(imageUrl))
+            } else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無效的伺服器響應"])))
+            }
+        }.resume()
+    }
+
+    
+    //MARK: loadUARecipes:從後端 API 獲取用戶的自訂和 AI 生成食譜
+    func loadUARecipes(U_ID: String, completion: @escaping (Result<RecipeResponse, Error>) -> Void) {
+        guard let url = URL(string: "http://你的後端伺服器/get_recipes.php") else {
+            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無效的URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        let postString = "U_ID=\(U_ID)"
+        request.httpBody = postString.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
                 return
             }
             
-            completion(.success(response.imageUrl))
+            guard let data = data else {
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無資料返回"])))
+                return
+            }
+            
+            do {
+                let decodedData = try JSONDecoder().decode(RecipeResponse.self, from: data)
+                completion(.success(decodedData))
+            } catch {
+                completion(.failure(error))
+            }
         }.resume()
     }
-    
-    
+
+    //MARK: editRecipe: 編輯自訂或 AI 生成食譜
+    func editRecipe(recipe: CRecipe, U_ID: String, isAIRecipe: Bool, completion: @escaping (Bool) -> Void) {
+        let apiEndpoint = isAIRecipe ? "update_ai_recipe.php" : "update_custom_recipe.php"
+        
+        guard let url = URL(string: "http://你的後端伺服器/\(apiEndpoint)") else {
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let recipeData: [String: Any] = [
+            "U_ID": U_ID, // 從外部傳入 U_ID
+            "f_name": recipe.f_name,
+            "ingredients": recipe.ingredients,
+            "method": recipe.method,
+            "UTips": recipe.UTips,
+            "c_image_url": recipe.c_image_url ?? "",
+            "CR_ID": recipe.CR_ID // 自訂食譜ID或AI食譜ID
+        ]
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: recipeData, options: [])
+            request.httpBody = jsonData
+        } catch {
+            completion(false)
+            return
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("更新食譜失敗: \(error)")
+                completion(false)
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }.resume()
+    }
+
+
+
 }
 
 // 追加Data的擴展

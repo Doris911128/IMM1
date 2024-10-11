@@ -188,7 +188,8 @@ struct PlanView: View {
     @State private var showSingleDayView: Bool = false // 新增狀態變數
     @State private var dishes: [String: String] = [:] // 新增變數來儲存 Dis_Name 和 D_image 的映射
     @State private var dishServings: [String: String] = [:] // 新增變數來儲存 Dis_Name 和 Dis_serving 的映射
-    
+    @State private var hasCreatedNewPlan: Bool = false
+    @State private var shakeAnimation: Bool = false
     // DateFormatter for displaying dates in MM/DD format 用於顯示日期的 DateFormatter
     private var displayDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -336,36 +337,33 @@ struct PlanView: View {
                     .padding(.horizontal)
                 }.scrollIndicators(.hidden)
                 
-                List
-                {
-                    ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
-                        if !showSingleDayView || selectedDate == day
-                        {
-                            Section(header:
-                                        
-                                        
-                                        HStack
-                                    {
-                                Text(self.displayDateFormatters.string(from: dateFormatter.date(from: day)!)).font(.title)
-                                Text(getDayLabelText(for: day))
-                                Spacer()
-                                Button(action: {
-                                    plans[day]?.append(Plan(P_ID: UUID().uuidString, U_ID: "", Dis_ID: 0, P_DT: day, P_Bought: "", Dis_name: "新計畫"))
-                                })
-                                {
-                                    Image(systemName: "plus.circle")
-                                        .imageScale(.large)
-                                        .foregroundColor(Color("BottonColor"))
-                                }
-                            }
-                            ) {
+                List {
+                                    ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
+                                        if !showSingleDayView || selectedDate == day {
+                                            Section(header: HStack {
+                                                Text(self.displayDateFormatters.string(from: dateFormatter.date(from: day)!)).font(.title)
+                                                Text(getDayLabelText(for: day))
+                                                Spacer()
+                                                
+                                                // 按鈕仍然存在，但根據hasCreatedNewPlan狀態來禁用
+                                                Button(action: {
+                                                    plans[day]?.append(Plan(P_ID: UUID().uuidString, U_ID: "", Dis_ID: 0, P_DT: day, P_Bought: "", Dis_name: "新計畫"))
+                                                    hasCreatedNewPlan = true // 設置為true，防止再次添加
+                                                    shakeAnimation.toggle() // 啟動抖動動畫
+                                                }) {
+                                                    Image(systemName: "plus.circle")
+                                                        .imageScale(.large)
+                                                        .foregroundColor(hasCreatedNewPlan ? Color.gray : Color("BottonColor")) // 改變顏色
+                                                }
+                                                .disabled(hasCreatedNewPlan) // 禁用按鈕
+                                            }) {
                                 if let dayPlans = plans[day]
                                 {
                                     // 修改 body 中 NavigationLink 的 .disabled 條件
                                     ForEach(dayPlans.indices, id: \.self) { index in
                                         let plan = dayPlans[index]
                                         let isEditable = isNewPlan(plan) // 檢查是否是新計畫
-                                        let dishImageURL = URL(string: dishes[plan.Dis_name] ?? "") // 添加這行
+                                        let dishImageURL = URL(string: dishes[plan.Dis_name] ?? "")// 添加這行
                                         
                                         HStack
                                         {
@@ -460,7 +458,10 @@ struct PlanView: View {
                     }
                 }
                 .scrollIndicators(.hidden)
-                
+                .onDisappear {
+                            // 當用戶完成計畫時，重置狀態變數
+                            hasCreatedNewPlan = false // 這可以根據實際情況進行調整
+                        }
             }
         }
         .onAppear {

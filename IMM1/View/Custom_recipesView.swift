@@ -6,6 +6,51 @@
 
 import SwiftUI
 
+//MARK: addCRecipe: 新增自訂食譜
+func addCRecipe(recipe: CRecipe, U_ID: String, completion: @escaping (Bool) -> Void) {
+    guard let url = URL(string: "http://你的後端伺服器/add_custom_recipe.php") else {
+        completion(false)
+        return
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+    let recipeData: [String: Any] = [
+        "U_ID": U_ID,
+        "f_name": recipe.f_name,
+        "ingredients": recipe.ingredients,
+        "method": recipe.method,
+        "UTips": recipe.UTips,
+        "c_image_url": recipe.c_image_url ?? ""
+    ]
+
+    do {
+        let jsonData = try JSONSerialization.data(withJSONObject: recipeData, options: [])
+        request.httpBody = jsonData
+    } catch {
+        completion(false)
+        return
+    }
+
+    URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+            print("新增自訂食譜失敗: \(error)")
+            completion(false)
+            return
+        }
+
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+            completion(true)
+        } else {
+            completion(false)
+        }
+    }.resume()
+}
+
+
+
 struct CRecipe: Identifiable
 {
     let id = UUID()
@@ -138,7 +183,7 @@ struct AddRecipeView: View
                                     .font(.title)
                                     .foregroundColor(.orange)
                                 
-                                Text("更新圖片")
+                                Text("上傳圖片")
                                     .font(.body)
                                     .bold()
                                     .foregroundColor(.orange)
@@ -166,7 +211,7 @@ struct AddRecipeView: View
                                     }
                                 }
                             }) {
-                                Text("上傳圖片")
+                                Text("確認上傳")
                                     .font(.body)
                                     .bold()
                                     .foregroundColor(.white)

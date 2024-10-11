@@ -274,28 +274,36 @@ struct AIView: View
             }
             
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 3) {
+                HStack(spacing: 2) { // 進一步縮短按鈕之間的間距
                     OptionButton(title: "減脂增肌", action: { self.selectedOption = IdentifiableOption(title: "減脂增肌") })
                     OptionButton(title: "穩定血脂", action: { self.selectedOption = IdentifiableOption(title: "穩定血脂") })
                     OptionButton(title: "穩定血壓", action: { self.selectedOption = IdentifiableOption(title: "穩定血壓") })
                     OptionButton(title: "穩定血糖", action: { self.selectedOption = IdentifiableOption(title: "穩定血糖") })
                 }
                 .padding(.horizontal)
+                
             }
-            HStack {
+
+            HStack(spacing: 12) { // 增加 TextField 和按鈕之間的間距
                 TextField("請輸入食材，將幫您生成食譜", text: $messageText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .frame(minHeight: CGFloat(30))
-                
+
+                    .padding(.top, -20) // 向上移動 TextField
                 Button(action: sendMessage) {
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(.blue)
                         .imageScale(.large)
+                     
+                        .padding(.top,-20) // 向上移動 TextField
                 }
-                .padding()
+                .padding() // 增加按鈕與文字框的左邊距離
             }
-            .padding()
+            .padding() // 縮短 HStack 之間的上邊距
+
         }
+        
+        
         .sheet(item: $selectedOption) { option in
             OptionSheet(option: option.title, selectedItems: $selectedItems) {
                 // Update the messageText with selected items

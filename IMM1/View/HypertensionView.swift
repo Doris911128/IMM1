@@ -192,33 +192,36 @@ struct HypertensionView: View {
                     }
                     .offset(x: 10)
                 }
-                ScrollView(.horizontal) {
-                    Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
-                        LineMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Value", record.hypertension)
-                        )
-                        .lineStyle(.init(lineWidth: 3))
-                        .foregroundStyle(Color.orange)
-                        PointMark(
-                            x: .value("Date", formattedDate(record.date)),
-                            y: .value("Value", record.hypertension)
-                        )
-                        .foregroundStyle(Color.orange)
-                        .annotation(position: .top) {
-                            Text("\(record.hypertension, specifier: "%.2f")")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color.black)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 20) {
+                        Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                            LineMark(
+                                x: .value("Date", formattedDate(record.date)),
+                                y: .value("Value", record.hypertension)
+                            )
+                            .lineStyle(.init(lineWidth: 3)) // 保持线宽为 3
+                            .foregroundStyle(Color.orange)
+                            
+                            PointMark(
+                                x: .value("Date", formattedDate(record.date)),
+                                y: .value("Value", record.hypertension)
+                            )
+                            .foregroundStyle(Color.orange)
+                            .annotation(position: .top) {
+                                Text("\(record.hypertension, specifier: "%.2f")")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(Color.black)
+                            }
                         }
+                        .chartForegroundStyleScale(["血壓值": .orange])
+                        .frame(width: CGFloat(max(300, chartData.count * 65)), height: 200) // 保持现有的框架大小设置
                     }
-                    .chartForegroundStyleScale(["血壓值": .orange])
-                    .frame(width: max(350, Double(chartData.count) * 100), height: 200) // 将宽度调整为每个数据点有更多空间
-                    .padding(.top, 20)
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
-                    .shadow(color: Color.gray.opacity(10), radius: 10, x: 0, y: 5)
                 }
-                .padding()
+                .frame(width: 350, height: 250)  // 保持外框大小
+                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加外框
+                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5) // 添加阴影
+                
                 
                 VStack {
                     HStack {
@@ -241,17 +244,16 @@ struct HypertensionView: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .keyboardType(.numberPad)
                             .frame(width: 330)
-                            .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { _ in }
                             .onChange(of: hypertension) { newValue in
-                                if let newValue = Double(newValue), newValue > upperLimit {
+                                if let newValue = Double(newValue), newValue > upperLimit || newValue < 0 {
                                     showAlert = true
-                                    hypertension = String(upperLimit)
+                                    hypertension = newValue > upperLimit ? String(upperLimit) : "0"
                                 }
                             }
                         
                         Button(action: {
-                            if let hypertensionValue = Double(hypertension) {
-                                self.sendBPData(name: "BP", bp: hypertensionValue, action:"insert")
+                            if let hypertensionValue = Double(hypertension), hypertensionValue >= 0 && hypertensionValue <= 400 {
+                                self.sendBPData(name: "BP", bp: hypertensionValue, action: "insert")
                                 self.connect(name: "BP", action: "fetch")
                                 if let index = chartData.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: Date()) }) {
                                     chartData[index].hypertension = hypertensionValue
@@ -288,10 +290,11 @@ struct HypertensionView: View {
             .alert(isPresented: $showAlert) {
                 Alert(
                     title: Text("警告"),
-                    message: Text("輸入的血壓值最高為400，請重新輸入。"),
+                    message: Text("輸入的血壓值需在 0 到 400 之間，請重新輸入。"),
                     dismissButton: .default(Text("確定"))
                 )
             }
+            .offset(y: -34)
         }
     }
 }

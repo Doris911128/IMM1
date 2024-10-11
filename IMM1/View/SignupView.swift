@@ -20,63 +20,79 @@ struct SignupView: View {
     }
     
     private func sendRequest() {
-        guard let url = URL(string: "http://163.17.9.107/food/php/Signin.php") else {
-            print("錯誤: 無效的URL")
-            return
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let gender: Int
-        switch information.4 {
-        case "男性":
-            gender = 0
-        case "女性":
-            gender = 1
-        case "隱私":
-            gender = 2
-        default:
-            gender = 2
-        }
-        
-        let parameters: [String: Any] = [
-            "U_Acc": information.0,
-            "U_Pas": information.1,
-            "U_Name": information.3,
-            "U_Gen": gender,
-            "U_Bir": information.5,
-            "H": Float(information.6),
-            "W": Float(information.7),
-        ]
-        
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: parameters, options: [])
-            request.httpBody = jsonData
-            print("發送的JSON數據: \(String(data: jsonData, encoding: .utf8) ?? "無法將數據轉化為字符串")")
-        } catch {
-            print("錯誤: 無法從參數創建JSON")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            if let error = error {
-                print("网络请求错误: \(error.localizedDescription)")
-                DispatchQueue.main.async {
-                    self.result = (true, "错误: \(error.localizedDescription)")
-                }
-            } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                print("网络请求响应: \(responseString)")
-                DispatchQueue.main.async {
-                    if responseString.contains("success") {
-                        self.result = (true, "註冊成功！")
-                    } else {
-                        self.result = (true, responseString)
+            // 檢查所有必填欄位是否為空
+            if information.0.isEmpty || information.1.isEmpty || information.2.isEmpty || information.3.isEmpty || information.4.isEmpty || information.6.isEmpty || information.7.isEmpty {
+                // 顯示錯誤訊息
+                self.result = (true, "註冊失敗：所有欄位均為必填，請檢查輸入")
+                return
+            }
+
+            // 檢查密碼是否一致
+            if !passcheck() {
+                self.result = (true, "註冊失敗：兩次密碼輸入不一致")
+                return
+            }
+
+            guard let url = URL(string: "http://163.17.9.107/food/php/Signin.php") else {
+                print("錯誤: 無效的URL")
+                self.result = (true, "註冊失敗：無效的註冊URL")
+                return
+            }
+            
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            
+            let gender: Int
+            switch information.4 {
+            case "男性":
+                gender = 0
+            case "女性":
+                gender = 1
+            case "隱私":
+                gender = 2
+            default:
+                gender = 2
+            }
+            
+            let parameters: [String: Any] = [
+                "U_Acc": information.0,
+                "U_Pas": information.1,
+                "U_Name": information.3,
+                "U_Gen": gender,
+                "U_Bir": information.5,
+                "H": Float(information.6) ?? 0.0,
+                "W": Float(information.7) ?? 0.0,
+            ]
+            
+            do {
+                let jsonData = try JSONSerialization.data(withJSONObject: parameters, options: [])
+                request.httpBody = jsonData
+                print("發送的JSON數據: \(String(data: jsonData, encoding: .utf8) ?? "無法將數據轉化為字符串")")
+            } catch {
+                print("錯誤: 無法從參數創建JSON")
+                self.result = (true, "註冊失敗：無法生成註冊JSON數據")
+                return
+            }
+            
+            URLSession.shared.dataTask(with: request) { (data, response, error) in
+                if let error = error {
+                    print("网络请求错误: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        self.result = (true, "註冊失敗：\(error.localizedDescription)")
+                    }
+                } else if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    print("网络请求响应: \(responseString)")
+                    DispatchQueue.main.async {
+                        if responseString.contains("success") {
+                            self.result = (true, "註冊成功！")
+                        } else {
+                            self.result = (true, "註冊失敗：\(responseString)")
+                        }
                     }
                 }
-            }
-        }.resume()
-    }
+            }.resume()
+        }
     
     private static func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -280,6 +296,7 @@ struct SignupView: View {
                         }
                     }
                 }
+                
             }
         }
     }

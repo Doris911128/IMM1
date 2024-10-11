@@ -1,4 +1,3 @@
-//
 //  DynamicView.swift
 //  GP110IM
 //
@@ -14,47 +13,45 @@ struct DynamicView: View {
     }
     
     @State private var selectedRecord: DynamicRecordType = .BMI
-    @State public var DynamicTitle: [String] = ["BMI", "血壓", "血糖", "血脂"]
     
     func recordButton(_ type: DynamicRecordType, title: String) -> some View {
-        Button(action: {
-            withAnimation {
-                selectedRecord = type
+        Text(title)
+            .font(.headline)
+            .frame(maxWidth: .infinity) // 讓每個按鈕填滿可用空間
+            .padding(.vertical, 8)
+            .background(selectedRecord == type ? Color.orange : Color.clear)
+            .foregroundColor(selectedRecord == type ? .white : .black)
+            .onTapGesture {
+                withAnimation {
+                    selectedRecord = type
+                }
             }
-        }) {
-            Text(title)
-                .foregroundColor(.primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(selectedRecord == type ? Color.orange : Color.clear, lineWidth: 2)
-                )
-        }
     }
     
     var body: some View {
         VStack {
-            HStack {
-                Spacer()
+            HStack(spacing: 0) { // 設定按鈕之間的間隔為 0，確保完全填滿
                 recordButton(.BMI, title: "BMI")
                 recordButton(.hypertension, title: "血壓")
                 recordButton(.hyperglycemia, title: "血糖")
                 recordButton(.hyperlipidemia, title: "血脂")
-                Spacer()
             }
-            .frame(height: 50) // Adjust the height as needed
-            
-            Spacer() // This spacer will push the content to the top
+            .frame(maxWidth: .infinity, maxHeight: 50) // 讓 HStack 完全填滿可用空間
+            .background(Color.white) // 確保 HStack 背景顏色與外框分離
+            .overlay( // 使用 overlay 將邊框套在 HStack 上
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.orange, lineWidth: 2)
+            )
+            .padding(.horizontal, 15) // 控制左右間距，讓邊框緊貼視圖邊緣
+
+            Spacer()
             
             displaySelectedRecordView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
-                .background(Color.white) // Optional background color
+                .background(Color.white)
         }
-        //.edgesIgnoringSafeArea(.bottom) // Optional: If you want to ensure content extends to the bottom edge
+        .background(Color.white) // 確保整個背景一致
     }
     
     @ViewBuilder
@@ -72,7 +69,6 @@ struct DynamicView: View {
     }
 }
 
-// MARK: Preview
 struct DynamicView_Previews: PreviewProvider {
     static var previews: some View {
         DynamicView()

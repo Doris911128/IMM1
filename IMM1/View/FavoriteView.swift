@@ -28,8 +28,6 @@ struct FavoriteView: View {
         editingCategory = category
         isEditing = true
     }
-    
-  
 
     struct Category: Identifiable, Decodable, Hashable {
         let id: Int // 對應 "category_id"
@@ -119,8 +117,6 @@ struct FavoriteView: View {
         }.resume()
     }
 
-
-
     func loadCategories() {
         guard let url = URL(string: "http://163.17.9.107/food/php/get_categories.php") else {
             print("Invalid URL")
@@ -175,8 +171,6 @@ struct FavoriteView: View {
         }
     }
 
-
-
     // 更新的 filteredDishes 計算屬性
     // 基於 Dis_ID 進行去重
     var filteredDishes: [Dishes] {
@@ -190,9 +184,6 @@ struct FavoriteView: View {
             return uniqueDishes
         }
     }
-
-
-
 
     func deleteCategory(id: Int) {
         guard let url = URL(string: "http://163.17.9.107/food/php/categoriesdelete.php") else {
@@ -308,7 +299,6 @@ struct FavoriteView: View {
         }.resume()
     }
 
-
     func updateCategoryName(for category: Category, with newName: String) {
         if let index = categories.firstIndex(where: { $0.id == category.id }) {
             var updatedCategory = categories[index]
@@ -348,8 +338,6 @@ struct FavoriteView: View {
         }.resume()
     }
 
-
-
     var body: some View {
           NavigationStack {
               VStack(alignment: .leading) {
@@ -366,15 +354,12 @@ struct FavoriteView: View {
                       }
                   }
                   .padding(.horizontal, 20)
+                  .padding(.bottom,-10)
                   
-                  ScrollView(.horizontal, showsIndicators: false)
-                  {
-                      HStack
-                      {
-                          ForEach(categories)
-                          { category in
-                              ZStack(alignment: .topTrailing)
-                              {
+                  ScrollView(.horizontal, showsIndicators: false) {
+                      HStack(spacing: 8) {
+                          ForEach(categories) { category in
+                              ZStack(alignment: .topTrailing) {
                                   Button(action: {
                                       if !isLongPressing {
                                           if selectedCategory?.id == category.id {
@@ -382,20 +367,19 @@ struct FavoriteView: View {
                                               loadUFavData() // 加載所有食物
                                           } else {
                                               selectedCategory = category
-                                            
-                                              
                                           }
                                       }
                                       isLongPressing = false
                                   }) {
                                       Text(category.name)
-                                          .padding()
+                                          .padding(.vertical, 10)
+                                          .padding(.horizontal, 16)
                                           .background(selectedCategory?.id == category.id ? Color.blue.opacity(0.4) : Color.blue.opacity(0.2))
                                           .cornerRadius(15)
                                           .lineLimit(1)
                                           .truncationMode(.tail)
                                   }
-                                  .simultaneousGesture(
+                                  .gesture(
                                       LongPressGesture(minimumDuration: 0.5)
                                           .onEnded { _ in
                                               if let index = categories.firstIndex(where: { $0.id == category.id }) {
@@ -431,9 +415,10 @@ struct FavoriteView: View {
                               }
                           }
                       }
+                      .padding(.top, 10)
                       .padding(.horizontal, 20)
                   }
-                  .frame(height: 50)
+                  .frame(minHeight: 50) // 設置最小高度
 
                   if isLoading {
                       VStack {
@@ -505,7 +490,6 @@ struct FavoriteView: View {
                   loadCategories() // 加載分類
                   loadUFavData() // 加載特定分類的食物
               }
-             
               
               if isEditing {
                   VStack {
@@ -568,7 +552,6 @@ struct FavoriteView: View {
           }
       }
   }
-
 
 struct FavoriteView_Previews: PreviewProvider {
     static var previews: some View {
