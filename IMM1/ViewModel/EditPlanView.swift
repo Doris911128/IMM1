@@ -125,7 +125,7 @@ struct EditPlanView: View
             foodOptions8 = foodDataFromServer.shuffled()
         }
     }
-
+    
     
     // 选择食物的函数
     func selectFood(food: Dishes) {
@@ -533,6 +533,11 @@ struct EditPlanView: View
         NavigationView {
             ScrollView {
                 VStack(spacing: 5) {
+                    
+                    // 将 CustomToggle 放在搜索框上方
+                    CustomToggle(isOn: $isSearchingByIngredient)
+                        .padding(.top, 10)
+                    
                     HStack(spacing: -20) {
                         TextField("搜尋食譜.....", text: $searchText, onCommit: {
                             performSearch()
@@ -546,8 +551,6 @@ struct EditPlanView: View
                             Image(systemName: "magnifyingglass")
                                 .padding()
                         }
-                        CustomToggle(isOn: $isSearchingByIngredient)
-                            .padding()
                     }
                     .padding(.top, 10)
                     .onAppear {
@@ -667,25 +670,40 @@ struct EmptyStateView: View
     }
 }
 
-struct CustomToggle: View
-{
+struct CustomToggle: View {
     @Binding var isOn: Bool
     
-    var body: some View
-    {
-        Button(action: {
-            self.isOn.toggle()
-        }) 
-        {
-            VStack
-            {
-                Image(systemName: isOn ? "checkmark.square.fill" : "square")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                Text(isOn ? "以食材搜尋" : "以菜名搜尋")
-                    .font(.footnote)
-            }
-            .foregroundColor(isOn ? .orange : .gray)
+    var body: some View {
+        HStack(spacing: 0) {
+            // 左半：以菜名搜尋
+            Text("以菜名搜尋")
+                .font(.headline) // 字體更大
+                .frame(maxWidth: .infinity) // 設置寬度
+                .padding() // 確保内部内容不限制高度
+                .frame(height: 30) // 設置高度
+                .background(isOn ? Color.white.opacity(0.2) : Color.orange)
+                .foregroundColor(isOn ? .black : .white)
+                .onTapGesture {
+                    self.isOn = false
+                }
+            
+            // 右半：以食材搜尋
+            Text("以食材搜尋")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .frame(height: 30)
+                .background(isOn ? Color.orange : Color.white.opacity(0.2))
+                .foregroundColor(isOn ? .white : .black)
+                .onTapGesture {
+                    self.isOn = true
+                }
         }
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.orange, lineWidth: 2)
+        )
+        .padding(.horizontal, 15) // 控制左右内缩的间距
     }
 }

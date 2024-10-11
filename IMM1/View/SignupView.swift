@@ -69,7 +69,7 @@ struct SignupView: View {
                 print("网络请求响应: \(responseString)")
                 DispatchQueue.main.async {
                     if responseString.contains("success") {
-                        self.result = (true, "註册成功！")
+                        self.result = (true, "註冊成功！")
                     } else {
                         self.result = (true, responseString)
                     }

@@ -399,21 +399,18 @@ struct StockView: View
                 Spacer()
                 HStack
                 {
-                    if isEditing
+                    Button("新增食材")
                     {
-                        Button("新增食材")
-                        {
-                            isAddSheetPresented.toggle()
-                        }
-                        .padding()
+                        isAddSheetPresented.toggle()
                     }
+                    .padding()
                 }
                 .padding()
             }
             .sheet(isPresented: $isAddSheetPresented)
             {
-                AddIngredients(onAdd: 
-                { newIngredient in
+                AddIngredients(onAdd:
+                                { newIngredient in
                     ingredients.append(newIngredient)
                     triggerRefresh.toggle()
                 }, isSheetPresented: $isAddSheetPresented, isEditing: $isEditing)
@@ -422,60 +419,50 @@ struct StockView: View
             {
                 fetchData()
             }
-            .toolbar
-            {
-                ToolbarItem(placement: .navigationBarTrailing)
-                {
-                    HStack
-                    {
-                        if !isEditing
-                        {
-                            Button("編輯")
-                            {
-                                isEditing.toggle()
-                            }
-                        } else
-                        {
-                            Button(action: {
-                                if ingredients.contains { $0.isSelectedForDeletion }
-                                {
-                                    showAlert.toggle()
-                                } else
-                                {
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if !ingredients.isEmpty {
+                        HStack {
+                            if !isEditing {
+                                Button("編輯") {
                                     isEditing.toggle()
                                 }
-                            })
-                            {
-                                Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "確定")
-                            }
-                            .padding()
-                            
-                            .alert(isPresented: $showAlert)
-                            {
-                                Alert(
-                                    title: Text("確認刪除"),
-                                    message: Text("您確定要刪除所選的食材嗎？"),
-                                    primaryButton: .default(Text("確定"))
-                                    {
-                                        let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
-                                        selectedIngredients.forEach { ingredient in
-                                            print("Deleting Ingredient: F_ID=\(ingredient.F_ID), U_ID=\(ingredient.U_ID)")
-                                            sendIngredientData(F_ID: ingredient.F_ID, U_ID: ingredient.U_ID)
+                            } else {
+                                Button(action: {
+                                    if ingredients.contains { $0.isSelectedForDeletion } {
+                                        showAlert.toggle()
+                                    } else {
+                                        isEditing.toggle()
+                                    }
+                                }) {
+                                    Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "確定")
+                                }
+                                .padding()
+                                .alert(isPresented: $showAlert) {
+                                    Alert(
+                                        title: Text("確認刪除"),
+                                        message: Text("您確定要刪除所選的食材嗎？"),
+                                        primaryButton: .default(Text("確定")) {
+                                            let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
+                                            selectedIngredients.forEach { ingredient in
+                                                print("Deleting Ingredient: F_ID=\(ingredient.F_ID), U_ID=\(ingredient.U_ID)")
+                                                sendIngredientData(F_ID: ingredient.F_ID, U_ID: ingredient.U_ID)
+                                            }
+                                            
+                                            let indexSet = IndexSet(ingredients.indices.filter { ingredients[$0].isSelectedForDeletion })
+                                            ingredients.remove(atOffsets: indexSet)
+                                            
+                                            fetchData()
+                                            isEditing = false
+                                        },
+                                        secondaryButton: .cancel(Text("取消")) {
+                                            ingredients.indices.forEach { index in
+                                                ingredients[index].isSelectedForDeletion = false
+                                            }
+                                            isEditing = false
                                         }
-                                        
-                                        let indexSet = IndexSet(ingredients.indices.filter { ingredients[$0].isSelectedForDeletion })
-                                        ingredients.remove(atOffsets: indexSet)
-                                        
-                                        fetchData()
-                                        isEditing = false
-                                    }, secondaryButton: .cancel(Text("取消"))
-                                    {
-                                        ingredients.indices.forEach
-                                        { index in
-                                            ingredients[index].isSelectedForDeletion = false
-                                        }
-                                        isEditing = false
-                                    })
+                                    )
+                                }
                             }
                         }
                     }
@@ -568,7 +555,7 @@ struct AddIngredients: View
             }
         }
     }
-
+    
     // MARK: [func] sendDataToServer
     // 將新增加的食材資料以 JSON 格式發送到伺服器
     private func sendDataToServer(json: String?)
@@ -738,7 +725,7 @@ struct AddIngredients: View
             fetchIngredientNames()
         }
     }
-
+    
 }
 
 struct StockView_Previews: PreviewProvider

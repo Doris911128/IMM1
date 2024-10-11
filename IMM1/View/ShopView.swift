@@ -283,9 +283,20 @@ struct RecipeView: View
                                             self.quantityInputs[wrapper.sqlResult.id] ?? (wrapper.planAmount ?? "")
                                         },
                                         set: { newValue in
-                                            self.quantityInputs[wrapper.sqlResult.id] = newValue
+                                            // 过滤掉非数字字符
+                                            let filtered = newValue.filter { "0123456789".contains($0) }
+                                            // 更新 quantityInputs 只有在 filtered 不是负数且不为空的情况下才设置
+                                            if !filtered.isEmpty {
+                                                self.quantityInputs[wrapper.sqlResult.id] = filtered
+                                            } else {
+                                                self.quantityInputs[wrapper.sqlResult.id] = ""
+                                            }
                                         }
                                     ))
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 80)
+                                    .keyboardType(.numberPad)
+
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .frame(width: 80)
                                     .keyboardType(.numberPad)

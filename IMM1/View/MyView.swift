@@ -71,18 +71,18 @@ struct MyView: View
     // MARK: 登出操作 - logout
     func logout()
     {
-        guard var urlComponents = URLComponents(string: "http://163.17.9.107/food/php/Login.php") else 
+        guard var urlComponents = URLComponents(string: "http://163.17.9.107/food/php/Login.php") else
         {
             print("Invalid URL")
             return
         }
         // 添加参数以指示登出操作
-        urlComponents.queryItems = 
+        urlComponents.queryItems =
         [
             URLQueryItem(name: "logout", value: "true")
         ]
         
-        guard let url = urlComponents.url 
+        guard let url = urlComponents.url
         else
         {
             print("Failed to construct URL")
@@ -92,9 +92,9 @@ struct MyView: View
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
-        URLSession.shared.dataTask(with: request) 
+        URLSession.shared.dataTask(with: request)
         { data, response, error in
-            guard let _ = data, error == nil 
+            guard let _ = data, error == nil
             else
             {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
@@ -115,14 +115,14 @@ struct MyView: View
     // MARK: 設定顯示性別資訊
     private func setInformation(index: Int) -> String
     {
-        switch(index) 
+        switch(index)
         {
         case 0:
             return self.user.name
         case 1:
-            if let genderInt = Int(self.user.gender) 
+            if let genderInt = Int(self.user.gender)
             {
-                switch genderInt 
+                switch genderInt
                 {
                 case 0:
                     return "男性"
@@ -131,7 +131,7 @@ struct MyView: View
                 default:
                     return "隱私"
                 }
-            } else 
+            } else
             {
                 return "" // 如果无法转换为整数，则返回隐私
             }
@@ -172,21 +172,21 @@ struct MyView: View
                                         .clipShape(Circle())
                                 }
                         }
-                        .actionSheet(isPresented: $showingActionSheet) 
+                        .actionSheet(isPresented: $showingActionSheet)
                         {
                             ActionSheet(title: Text("選擇圖片"), buttons: [
-                                .default(Text("從相簿選取")) 
+                                .default(Text("從相簿選取"))
                                 {
                                     self.showingImagePicker = true
                                 },
-                                .default(Text("使用系統預設圖片")) 
+                                .default(Text("使用系統預設圖片"))
                                 {
                                     self.showPresetImages = true
                                 },
                                 .cancel()
                             ])
                         }
-                    } else 
+                    } else
                         {
                         Button(action: {
                             self.showingActionSheet = true
@@ -202,7 +202,7 @@ struct MyView: View
                                         .clipShape(Circle())
                                 }
                         }
-                        .actionSheet(isPresented: $showingActionSheet) 
+                        .actionSheet(isPresented: $showingActionSheet)
                         {
                             ActionSheet(title: Text("選擇圖片"), buttons: [
                                 .default(Text("從相簿選取")) {
@@ -219,13 +219,13 @@ struct MyView: View
                     .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
                     .onChange(of: pickImage) { newItem in
                         Task {
-                            if let data = try? await newItem?.loadTransferable(type: Data.self) 
+                            if let data = try? await newItem?.loadTransferable(type: Data.self)
                             {
                                 self.userImage = data
                             }
                         }
                     }
-                    .sheet(isPresented: $showPresetImages) 
+                    .sheet(isPresented: $showPresetImages)
                     {
                         PresetImageSelectionView(userImage: $userImage)
                     }
@@ -313,7 +313,7 @@ struct MyView: View
                             // MARK: 健康 連結
                             HStack
                             {
-                                NavigationLink(destination: DynamicView()) 
+                                NavigationLink(destination: DynamicView())
                                 {
                                     InformationLabel(image: "chart.xyaxis.line", label: "健康")
                                 }
@@ -321,7 +321,7 @@ struct MyView: View
                             // MARK: 過往食譜 連結
                             HStack
                             {
-                                NavigationLink(destination: PastRecipesView()) 
+                                NavigationLink(destination: PastRecipesView())
                                 {
                                     InformationLabel(image: "clock.arrow.circlepath", label: "過往食譜")
                                 }
@@ -329,7 +329,7 @@ struct MyView: View
                             // MARK: 食材紀錄 連結
                             HStack
                             {
-                                NavigationLink(destination: StockView()) 
+                                NavigationLink(destination: StockView())
                                 {
                                     InformationLabel(image: "doc.on.clipboard", label: "檢視庫存")
                                 }
@@ -337,7 +337,7 @@ struct MyView: View
                             // MARK: 飲食偏好->暫時食譜顯示 連結
                             HStack
                             {
-                                NavigationLink(destination: Custom_recipesView(U_ID: " ")) 
+                                NavigationLink(destination: Custom_recipesView(U_ID: " "))
                                 {
                                     InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
                                 }
@@ -345,7 +345,7 @@ struct MyView: View
                             // MARK: 我的最愛 連結
                             HStack
                             {
-                                NavigationLink(destination: Rec_Col_View()) 
+                                NavigationLink(destination: Rec_Col_View())
                                 {
                                     InformationLabel(image: "tray.2.fill", label: "食譜收藏庫")
                                 }
@@ -413,7 +413,7 @@ struct MyView: View
             }
         }
         .preferredColorScheme(self.colorScheme ? .light:.dark) //控制深淺模式切換
-        .onAppear 
+        .onAppear
         {
             fetchUserInfo()
         }
@@ -479,9 +479,8 @@ struct PresetImageSelectionView: View
     @Environment(\.presentationMode) var presentationMode
     
     @State private var selectedImageName: String?
-    @State private var showConfirmationAlert = false
     @Binding var userImage: Data?
-    let presetImages = ["我的最愛", "已採購", "公開食譜","分類未新增最愛","自訂食材預設圖片","空庫存","空AI食譜","省錢分類","庫存菜單","庫存頭腳","素食分類","健康推薦","採購","烹飪","最愛","減肥分類","過往食譜","懶人分類","AI食譜"] // 將這裡的名稱替換為你的預設圖片名稱
+    let presetImages = ["我的最愛", "已採購", "公開食譜", "分類未新增最愛", "自訂食材預設圖片", "空庫存", "空AI食譜", "省錢分類", "庫存菜單", "庫存頭腳", "素食分類", "健康推薦", "採購", "烹飪", "最愛", "減肥分類", "過往食譜", "懶人分類", "AI食譜"] // 替換為你的預設圖片名稱
     
     var body: some View
     {
@@ -493,7 +492,10 @@ struct PresetImageSelectionView: View
                 { imageName in
                     Button(action: {
                         self.selectedImageName = imageName
-                        self.showConfirmationAlert = true
+                        if let imageName = self.selectedImageName {
+                            self.userImage = UIImage(named: imageName)?.pngData()
+                            self.presentationMode.wrappedValue.dismiss() // 返回到原本的畫面
+                        }
                     }) {
                         Image(imageName)
                             .resizable()
@@ -506,23 +508,9 @@ struct PresetImageSelectionView: View
             }
             .padding()
         }
-        .alert(isPresented: $showConfirmationAlert)
-        {
-            Alert(
-                title: Text("確認選擇"),
-                message: Text("確定要使用這張圖片嗎？"),
-                primaryButton: .default(Text("確認"))
-                {
-                    if let imageName = self.selectedImageName {
-                        self.userImage = UIImage(named: imageName)?.pngData()
-                        self.presentationMode.wrappedValue.dismiss() // 返回到原本的畫面
-                    }
-                },
-                secondaryButton: .cancel(Text("取消"))
-            )
-        }
     }
 }
+
 
 struct MyView_Previews: PreviewProvider
 {
