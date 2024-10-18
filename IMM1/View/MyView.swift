@@ -166,11 +166,11 @@ struct MyView: View
                                 .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)  // 添加陰影
                                 .overlay
                             {
-                                    Image(uiImage: image)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .clipShape(Circle())
-                                }
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .clipShape(Circle())
+                            }
                         }
                         .actionSheet(isPresented: $showingActionSheet)
                         {

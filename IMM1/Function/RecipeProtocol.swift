@@ -71,8 +71,8 @@ protocol CRecipeP: RecipeProtocol where DataType == CRecipe
 {
     var Crecipe: CRecipe { get set } // 修正為單一 CRecipe 型別
     
-//    // 顯示用戶自建的烹飪書視圖，包括所需食材和烹飪方法
-//    func CCookbookView(safeArea: EdgeInsets) -> AnyView
+    //    // 顯示用戶自建的烹飪書視圖，包括所需食材和烹飪方法
+    //    func CCookbookView(safeArea: EdgeInsets) -> AnyView
 }
 
 // MARK: extension：RecipeProtocol
@@ -83,14 +83,14 @@ extension RecipeProtocol
     func CoverView(safeArea: EdgeInsets, size: CGSize) -> AnyView
     {
         let height: CGFloat = size.height * 0.5
-
+        
         return AnyView(
             GeometryReader
             { reader in
                 let minY: CGFloat = reader.frame(in: .named("SCROLL")).minY
                 let size: CGSize = reader.size
                 let progress: CGFloat = minY / (height * (minY > 0 ? 0.5 : 0.8))
-
+                
                 // 判斷圖片URL是否存在，存在則使用AsyncImage，否則使用默認圖片
                 ZStack(alignment: .bottom)
                 {
@@ -120,18 +120,18 @@ extension RecipeProtocol
                             .frame(width: size.width, height: size.height + (minY > 0 ? minY : 0))
                             .clipped() // 防止圖片溢出框架
                     }
-
+                    
                     // 漸變背景和標題部分
                     LinearGradient(colors:
-                    [
-                        Color("menusheetbackgroundcolor").opacity(0 - progress),
-                        Color("menusheetbackgroundcolor").opacity(0.2 - progress),
-                        Color("menusheetbackgroundcolor").opacity(0.4 - progress),
-                        Color("menusheetbackgroundcolor").opacity(0.6 - progress),
-                        Color("menusheetbackgroundcolor").opacity(0.8 - progress),
-                        Color("menusheetbackgroundcolor")
-                    ], startPoint: .top, endPoint: .bottom)
-
+                                    [
+                                        Color("menusheetbackgroundcolor").opacity(0 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.2 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.4 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.6 - progress),
+                                        Color("menusheetbackgroundcolor").opacity(0.8 - progress),
+                                        Color("menusheetbackgroundcolor")
+                                    ], startPoint: .top, endPoint: .bottom)
+                    
                     VStack(spacing: 0)
                     {
                         Text(itemName())
@@ -153,10 +153,10 @@ extension RecipeProtocol
                     print("CoverView的progress值: \(progress)")
                 }
             }
-            .frame(height: height + safeArea.top)
+                .frame(height: height + safeArea.top)
         )
     }
-
+    
     
     // MARK: 標題畫面
     // 標題視圖，根據滾動狀態顯示標題或其他信息

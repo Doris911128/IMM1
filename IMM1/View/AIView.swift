@@ -61,12 +61,12 @@ struct ChatHistoryView: View
 {
     @State private var chatRecords: [ChatRecord] = []
     @State private var currentUserID: String? = nil
-
+    
     
     //MARK: 根據用戶的 ID 從伺服器獲取該用戶的聊天記錄
     func fetchChatRecords(for userID: String)
     {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe1.php?U_ID=\(userID)")
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe_History.php?U_ID=\(userID)")
         else
         {
             print("Invalid URL")
@@ -248,7 +248,7 @@ struct AIView: View
                     .frame(height: 4)
             }
             .frame(maxWidth: .infinity)
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 
                 ForEach(messages.indices, id: \.self) { index in
                     HStack {
@@ -283,31 +283,31 @@ struct AIView: View
                 .padding(.horizontal)
                 
             }
-
+            
             HStack(spacing: 12) { // 增加 TextField 和按鈕之間的間距
                 TextField("請輸入食材，將幫您生成食譜", text: $messageText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .frame(minHeight: CGFloat(30))
-
+                
                     .padding(.top, -20) // 向上移動 TextField
                 Button(action: sendMessage) {
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(.blue)
                         .imageScale(.large)
-                     
+                    
                         .padding(.top,-20) // 向上移動 TextField
                 }
                 .padding() // 增加按鈕與文字框的左邊距離
             }
             .padding() // 縮短 HStack 之間的上邊距
-
+            
         }
         
         
         .sheet(item: $selectedOption) { option in
             OptionSheet(option: option.title, selectedItems: $selectedItems) {
                 // Update the messageText with selected items
-                let selectedItemsString = selectedItems.joined(separator: ", ")
+                let selectedItemsString = selectedItems.joined(separator: " ")
                 messageText = selectedItemsString
                 // Dismiss the sheet
                 self.selectedOption = nil

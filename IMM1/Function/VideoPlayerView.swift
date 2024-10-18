@@ -31,7 +31,7 @@ struct WebView: UIViewRepresentable {
 
 struct VideoPlayerView: View {
     let videoURL: URL
-
+    
     var body: some View {
         WebView(url: videoURL)
             .frame(width: 350, height: 200)  // 设置 WebView 的大小

@@ -212,7 +212,7 @@ struct AIRecipeBlock: View, AIRecipeP
             editedOtherCook = record.output.split(separator: "\n").map(String.init) ?? []
         }
     }
-
+    
     // MARK: 動態顯示食材和烹飪步驟區塊
     @ViewBuilder
     private func displayFoodAndCookingSteps(foodSteps: [String], cookingSteps: [String]) -> some View {
@@ -290,7 +290,7 @@ struct AIRecipeBlock: View, AIRecipeP
         }
         .padding(.horizontal, 15)
     }
-
+    
     // MARK: 顯示智慧食譜區塊
     @ViewBuilder
     private func displaySmartRecipeSection() -> some View {
@@ -329,7 +329,7 @@ struct AIRecipeBlock: View, AIRecipeP
         }
         .padding(.horizontal, 15)
     }
-
+    
     // MARK: 顯示小技巧編輯區
     @ViewBuilder
     private func displayTipsSection() -> some View {
@@ -369,7 +369,7 @@ struct AIRecipeBlock: View, AIRecipeP
         }
         .padding(.horizontal, 15)
     }
-
+    
     // MARK: 添加新食材或步驟按鈕
     @ViewBuilder
     private func addNewButton(label: String, action: @escaping () -> Void) -> some View {
@@ -397,7 +397,7 @@ struct AIRecipeBlock: View, AIRecipeP
             Spacer()
         }
     }
-
+    
     
     var imagePickerSection: some View {
         VStack {
@@ -408,7 +408,7 @@ struct AIRecipeBlock: View, AIRecipeP
                     Image(systemName: "arrow.up.doc.fill")
                         .font(.title)
                         .foregroundColor(.orange)
-
+                    
                     Text("更新圖片")
                         .font(.body)
                         .bold()
@@ -425,14 +425,14 @@ struct AIRecipeBlock: View, AIRecipeP
             .sheet(isPresented: $isImagePickerPresented) {
                 ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
             }
-
+            
             // 顯示圖片預覽
             if let selectedImage = selectedImage {
                 Image(uiImage: selectedImage)
                     .resizable()
                     .scaledToFit()
                     .frame(height: 200)
-
+                
                 // 上傳圖片按鈕
                 Button(action: {
                     uploadImage(selectedImage) { result in
@@ -455,7 +455,7 @@ struct AIRecipeBlock: View, AIRecipeP
             }
         }
     }
-
+    
     
     // MARK: - 更新數據模型
     private func applyEdits()

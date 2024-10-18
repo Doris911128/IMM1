@@ -334,7 +334,7 @@ struct MRecipeView: View, RecipeP
                                             .frame(width: 30, height: 30)
                                     }
                                     
-                                    Text("AI Cooking")
+                                    Text("輔助烹飪模式")
                                 }
                                 .foregroundColor(.white)
                                 .padding(.vertical, 10)
@@ -350,19 +350,19 @@ struct MRecipeView: View, RecipeP
             )
         }
         .toolbarBackground(Color("menusheetbackgroundcolor"), for: .navigationBar)
-        .toolbar 
+        .toolbar
         {
             // 愛心收藏按鈕
             ToolbarItem(placement: .navigationBarTrailing)
             {
                 Button(action: {
-                    withAnimation(.easeInOut.speed(3)) 
+                    withAnimation(.easeInOut.speed(3))
                     {
-                        if let isFavorited = isFavorited 
+                        if let isFavorited = isFavorited
                         {
                             self.isFavorited = !isFavorited
                             toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: self.isFavorited!) { result in
-                                switch result 
+                                switch result
                                 {
                                 case .success(let responseString):
                                     print("Success: \(responseString)")
@@ -372,7 +372,7 @@ struct MRecipeView: View, RecipeP
                             }
                         }
                     }
-                }) 
+                })
                 {
                     Image(systemName: (isFavorited ?? false) ? "heart.fill" : "heart")
                         .font(.title2)
@@ -380,7 +380,7 @@ struct MRecipeView: View, RecipeP
                 }
             }
         }
-        .onAppear 
+        .onAppear
         {
             print("顯示的 Dis_ID: \(Dis_ID)")
             loadMenuData()

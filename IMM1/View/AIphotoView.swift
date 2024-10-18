@@ -11,7 +11,7 @@ struct AIphotoView: View {
     @State private var identifyResult: IdentifyResult?
     @State private var isLoading: Bool = false
     @State private var isUploading: Bool = false
-
+    
     var body: some View {
         ZStack {
             ScrollView(showsIndicators: false) {

@@ -24,9 +24,9 @@ struct CRecipeDetailBlock: View, CRecipeP
     @State private var editedUTips: [String] = [] // 編輯後的小技巧＆小貼士
     
     // 圖片相關狀態
-        @State private var isImagePickerPresented = false
-        @State private var selectedImage: UIImage? = nil
-        @State private var imageURL: String? = nil
+    @State private var isImagePickerPresented = false
+    @State private var selectedImage: UIImage? = nil
+    @State private var imageURL: String? = nil
     
     // 宣告 focusedXXXXIndex 為 Int? 以追蹤當前的索引
     @State private var focusedUFoodIndex: Int? = nil// 新增變量來追蹤哪一個TextField被聚焦_食材
@@ -46,10 +46,10 @@ struct CRecipeDetailBlock: View, CRecipeP
                 .font(.title2)
                 .bold()
                 .padding()
-
+            
             ScrollView {
                 VStack(spacing: 15) {
-
+                    
                     // MARK: 更新圖片按鈕
                     VStack {
                         Button(action: {
@@ -75,14 +75,14 @@ struct CRecipeDetailBlock: View, CRecipeP
                         .sheet(isPresented: $isImagePickerPresented) {
                             ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
                         }
-
+                        
                         // 顯示圖片預覽和上傳按鈕
                         if let selectedImage = selectedImage {
                             Image(uiImage: selectedImage)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(height: 200)
-
+                            
                             // 上傳圖片按鈕
                             Button(action: {
                                 uploadImage(selectedImage) { result in
@@ -118,9 +118,9 @@ struct CRecipeDetailBlock: View, CRecipeP
                             .cornerRadius(8)
                     }
                     .padding(.horizontal, 15)
-
                     
-
+                    
+                    
                     // MARK: 食材編輯區塊
                     VStack(alignment: .leading) {
                         Text("所需食材")
@@ -128,14 +128,14 @@ struct CRecipeDetailBlock: View, CRecipeP
                             .font(.title2)
                             .bold()
                             .padding(.bottom, 5)
-
+                        
                         ForEach(editedUFoodSteps.indices, id: \.self) { index in
                             TextField("更新食材", text: $editedUFoodSteps[index])
                                 .padding()
                                 .background(Color.gray.opacity(0.2))
                                 .cornerRadius(8)
                         }
-
+                        
                         HStack {
                             Spacer()
                             Button(action: {
@@ -162,7 +162,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                         }
                     }
                     .padding(.horizontal, 15)
-
+                    
                     // MARK: 料理方法編輯區塊
                     VStack(alignment: .leading) {
                         Text("料理方法")
@@ -170,14 +170,14 @@ struct CRecipeDetailBlock: View, CRecipeP
                             .font(.title2)
                             .bold()
                             .padding(.bottom, 5)
-
+                        
                         ForEach(editedUCookingSteps.indices, id: \.self) { index in
                             TextField("更新烹飪步驟", text: $editedUCookingSteps[index])
                                 .padding()
                                 .background(Color.gray.opacity(0.2))
                                 .cornerRadius(8)
                         }
-
+                        
                         HStack {
                             Spacer()
                             Button(action: {
@@ -204,7 +204,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                         }
                     }
                     .padding(.horizontal, 15)
-
+                    
                     // MARK: 小技巧編輯區塊
                     VStack(alignment: .leading) {
                         Text("小技巧")
@@ -212,14 +212,14 @@ struct CRecipeDetailBlock: View, CRecipeP
                             .font(.title2)
                             .bold()
                             .padding(.bottom, 5)
-
+                        
                         ForEach(editedUTips.indices, id: \.self) { index in
                             TextField("更新小技巧", text: $editedUTips[index])
                                 .padding()
                                 .background(Color.gray.opacity(0.2))
                                 .cornerRadius(8)
                         }
-
+                        
                         HStack {
                             Spacer()
                             Button(action: {
@@ -248,7 +248,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                     .padding(.horizontal, 15)
                 }
             }
-
+            
             // MARK: 確認和取消按鈕
             HStack {
                 Button(action: {
@@ -261,7 +261,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                         .background(Color.gray.opacity(0.2))
                         .cornerRadius(8)
                 }
-
+                
                 Button(action: {
                     applyUEdits()
                     isEditing = false // 確認後關閉編輯
@@ -290,21 +290,21 @@ struct CRecipeDetailBlock: View, CRecipeP
             editedUTips = Crecipe.UTips.split(separator: "\n").map { String($0) }
         }
     }
-
+    
     
     // MARK: - 更新數據模型
-       private func applyUEdits() {
-           // 更新食譜的各個部分
-           Crecipe.f_name = editedRecipeName
-           Crecipe.ingredients = editedUFoodSteps.joined(separator: "\n")
-           Crecipe.method = editedUCookingSteps.joined(separator: "\n")
-           Crecipe.UTips = editedUTips.joined(separator: "\n")
-
-           // 如果有圖片，則更新圖片 URL
-           if let imageURL = imageURL {
-               Crecipe.c_image_url = imageURL
-           }
-       }
+    private func applyUEdits() {
+        // 更新食譜的各個部分
+        Crecipe.f_name = editedRecipeName
+        Crecipe.ingredients = editedUFoodSteps.joined(separator: "\n")
+        Crecipe.method = editedUCookingSteps.joined(separator: "\n")
+        Crecipe.UTips = editedUTips.joined(separator: "\n")
+        
+        // 如果有圖片，則更新圖片 URL
+        if let imageURL = imageURL {
+            Crecipe.c_image_url = imageURL
+        }
+    }
     
     // MARK: - 須實現的 CRecipeP 協議方法
     func itemName() -> String
@@ -428,7 +428,7 @@ struct CRecipeDetailBlock: View, CRecipeP
         { geometry in
             let safeArea = geometry.safeAreaInsets
             let size = geometry.size
-
+            
             ZStack(alignment: .topTrailing)
             {
                 ScrollView(.vertical, showsIndicators: false)
@@ -437,7 +437,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                     {
                         // 顯示封面
                         CoverView(safeArea: safeArea, size: size)
-
+                        
                         // 烹飪書視圖
                         CCookbookView(safeArea: safeArea)
                             .padding(.top)
@@ -446,7 +446,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                 .coordinateSpace(name: "SCROLL")
                 
                 
-
+                
                 // 顯示編輯視圖，當 isEditing 為 true 時
                 if isEditing
                 {
@@ -476,7 +476,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                                 .foregroundColor(.orange)
                         }
                     }
-
+                    
                 }
             }
         }

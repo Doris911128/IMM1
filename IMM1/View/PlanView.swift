@@ -338,25 +338,25 @@ struct PlanView: View {
                 }.scrollIndicators(.hidden)
                 
                 List {
-                                    ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
-                                        if !showSingleDayView || selectedDate == day {
-                                            Section(header: HStack {
-                                                Text(self.displayDateFormatters.string(from: dateFormatter.date(from: day)!)).font(.title)
-                                                Text(getDayLabelText(for: day))
-                                                Spacer()
-                                                
-                                                // 按鈕仍然存在，但根據hasCreatedNewPlan狀態來禁用
-                                                Button(action: {
-                                                    plans[day]?.append(Plan(P_ID: UUID().uuidString, U_ID: "", Dis_ID: 0, P_DT: day, P_Bought: "", Dis_name: "新計畫"))
-                                                    hasCreatedNewPlan = true // 設置為true，防止再次添加
-                                                    shakeAnimation.toggle() // 啟動抖動動畫
-                                                }) {
-                                                    Image(systemName: "plus.circle")
-                                                        .imageScale(.large)
-                                                        .foregroundColor(hasCreatedNewPlan ? Color.gray : Color("BottonColor")) // 改變顏色
-                                                }
-                                                .disabled(hasCreatedNewPlan) // 禁用按鈕
-                                            }) {
+                    ForEach(Array(plans.keys.sorted(by: <)), id: \.self) { day in
+                        if !showSingleDayView || selectedDate == day {
+                            Section(header: HStack {
+                                Text(self.displayDateFormatters.string(from: dateFormatter.date(from: day)!)).font(.title)
+                                Text(getDayLabelText(for: day))
+                                Spacer()
+                                
+                                // 按鈕仍然存在，但根據hasCreatedNewPlan狀態來禁用
+                                Button(action: {
+                                    plans[day]?.append(Plan(P_ID: UUID().uuidString, U_ID: "", Dis_ID: 0, P_DT: day, P_Bought: "", Dis_name: "新計畫"))
+                                    hasCreatedNewPlan = true // 設置為true，防止再次添加
+                                    shakeAnimation.toggle() // 啟動抖動動畫
+                                }) {
+                                    Image(systemName: "plus.circle")
+                                        .imageScale(.large)
+                                        .foregroundColor(hasCreatedNewPlan ? Color.gray : Color("BottonColor")) // 改變顏色
+                                }
+                                .disabled(hasCreatedNewPlan) // 禁用按鈕
+                            }) {
                                 if let dayPlans = plans[day]
                                 {
                                     // 修改 body 中 NavigationLink 的 .disabled 條件
@@ -459,9 +459,9 @@ struct PlanView: View {
                 }
                 .scrollIndicators(.hidden)
                 .onDisappear {
-                            // 當用戶完成計畫時，重置狀態變數
-                            hasCreatedNewPlan = false // 這可以根據實際情況進行調整
-                        }
+                    // 當用戶完成計畫時，重置狀態變數
+                    hasCreatedNewPlan = false // 這可以根據實際情況進行調整
+                }
             }
         }
         .onAppear {

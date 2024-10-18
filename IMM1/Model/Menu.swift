@@ -23,7 +23,7 @@ struct Dishes: Codable, Identifiable {
     var amounts: [Amount]?
     var favorites: [Favorite]?
     var category_id: Int? // 確保這是 Int 而不是 Int?
-
+    
     enum CodingKeys: String, CodingKey {
         case Dis_ID
         case Dis_Name
@@ -37,7 +37,7 @@ struct Dishes: Codable, Identifiable {
         case favorites
         case category_id
     }
-
+    
     
     
     // 添加初始化方法，接受传递的 Dis_ID
@@ -53,9 +53,9 @@ struct Dishes: Codable, Identifiable {
         amounts: [Amount] = [],
         favorites: [Favorite] = [],
         category_id: Int = 0
-
-    )
         
+    )
+    
     {
         self.Dis_ID = Dis_ID
         self.Dis_Name = Dis_Name
@@ -68,7 +68,7 @@ struct Dishes: Codable, Identifiable {
         self.amounts = amounts
         self.favorites = favorites
         self.category_id = category_id
-
+        
     }
 }
 
@@ -100,7 +100,7 @@ struct T_Food: Identifiable, Decodable {
     let id: Int
     let name: String
     let D_image: String // 確保此屬性在 JSON 中存在
-
+    
     private enum CodingKeys: String, CodingKey {
         case id = "Dis_ID"
         case name = "Dis_Name" // 如果您的 JSON 中是 Dis_Name

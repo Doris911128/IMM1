@@ -51,7 +51,7 @@ struct CookingAiView: View
                             CardView(dish: selectedDish, stepsCount: $stepsCount) // 传递步驟數量
                                 .frame(maxWidth: .infinity, alignment: .center) // 卡片水平居中
                                 .offset(x: scrollOffset) // 应用滑动偏移
-
+                            
                         }
                     }
                     .padding(.horizontal)
@@ -73,10 +73,10 @@ struct CookingAiView: View
                 )
                 .padding()
                 
-//                // 显示步骤数量
-//                Text("当前食谱步骤数: \(stepsCount)")
-//                    .font(.title2)
-//                    .padding()
+                //                // 显示步骤数量
+                //                Text("当前食谱步骤数: \(stepsCount)")
+                //                    .font(.title2)
+                //                    .padding()
             }
             .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
         }
@@ -87,36 +87,36 @@ struct CookingAiView: View
     }
     
     func updateScrollOffset() {
-            let screenWidth = UIScreen.main.bounds.width
-            let cardWidth = screenWidth * 0.85
-            let stepCard = stepsCount
-            
-            switch gesture {
-            case "👎":
-                if currentIndex < stepCard - 1 {
-                    currentIndex += 1
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        scrollOffset -= cardWidth
-                    }
-                    print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
-
-                }
-            case "👍":
-                if currentIndex > 0 {
-                    currentIndex -= 1
-                    withAnimation(.easeInOut(duration: 0.5)) {
-                        scrollOffset += cardWidth
-                    }
-                    print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
-                }
-            case "✋":
-                break
-            default:
-                break
-            }
-        }
-
+        let screenWidth = UIScreen.main.bounds.width
+        let cardWidth = screenWidth * 0.85
+        let stepCard = stepsCount
         
+        switch gesture {
+        case "👎":
+            if currentIndex < stepCard - 1 {
+                currentIndex += 1
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    scrollOffset -= cardWidth
+                }
+                print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
+                
+            }
+        case "👍":
+            if currentIndex > 0 {
+                currentIndex -= 1
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    scrollOffset += cardWidth
+                }
+                print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
+            }
+        case "✋":
+            break
+        default:
+            break
+        }
+    }
+    
+    
     // 從後端載入菜譜數據的方法
     func loadDishesData()
     {
@@ -187,7 +187,7 @@ struct CardView: View
                     stepsCount = steps.count // 更新步驟數量
                     print("此道料理有 \(steps.count) 步驟")
                     
-
+                    
                 }
             }
             else

@@ -9,13 +9,13 @@ import UIKit
 import AVFoundation
 
 class CameraView: UIView {
-
+    
     private var overlayThumbLayer = CAShapeLayer()
-
+    
     var previewLayer: AVCaptureVideoPreviewLayer {
         return layer as! AVCaptureVideoPreviewLayer
     }
-
+    
     override class var layerClass: AnyClass {
         return AVCaptureVideoPreviewLayer.self
     }
@@ -36,7 +36,7 @@ class CameraView: UIView {
             overlayThumbLayer.frame = layer.bounds
         }
     }
-
+    
     private func setupOverlay() {
         previewLayer.addSublayer(overlayThumbLayer)
     }

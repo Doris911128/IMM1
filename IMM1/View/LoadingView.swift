@@ -1,4 +1,3 @@
-//
 //  LoadingView.swift
 //  IMM1
 //
@@ -10,16 +9,16 @@ struct LoadingView: View {
     private var gifURL: URL {
         URL(string: "http://163.17.9.107/food/gif/redpanda_walk.gif")!
     }
-
+    
     var body: some View {
         GeometryReader { geometry in
             VStack {
                 Spacer()
-
+                
                 GIFImageView(url: gifURL)
-                    .offset(x: -20, y: -20)
-
-//                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    .offset(x: -20, y: -100)
+                
+                //                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
             }
             .background(Color("BackColor")) // Set background color
             .edgesIgnoringSafeArea(.all) // Extend background color to safe area

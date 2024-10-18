@@ -305,10 +305,10 @@ struct HypertensionRecordsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(records.reversed()) { record in
-                    NavigationLink(destination: HypertensionRecordDetailView(record: record)) {
+                ForEach(records.indices, id: \.self) { index in
+                    NavigationLink(destination: HypertensionRecordDetailViewPager(records: records, selectedIndex: index)) {
                         HStack {
-                            hypertensionImage(for: record)
+                            hypertensionImage(for: records[index])
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 30, height: 30)
@@ -320,10 +320,10 @@ struct HypertensionRecordsListView: View {
                                         .stroke(Color.orange, lineWidth: 1)
                                 )
                                 .padding(.trailing, 8)
-                                .foregroundColor(categoryColor(for: record))
+                                .foregroundColor(categoryColor(for: records[index]))
                             VStack(alignment: .leading) {
-                                Text(record.category)
-                                Text("\(formattedDate(record.date)): \(record.hypertension, specifier: "%.2f")")
+                                Text(records[index].category)
+                                Text("\(formattedDate(records[index].date)): \(records[index].hypertension, specifier: "%.2f")")
                                     .foregroundColor(.gray)
                                     .font(.system(size: 14))
                             }
@@ -362,20 +362,33 @@ struct HypertensionRecordsListView: View {
     
     private func categoryColor(for record: HypertensionRecord) -> Color {
         switch record.category {
-        case "過低":
-            return Color.blue
-        case "正常":
-            return Color.green
-        case "偏高":
-            return Color.yellow
-        case "過高":
-            return Color.red
-        default:
-            return Color.gray
+        case "過低": return Color.blue
+        case "正常": return Color.green
+        case "偏高": return Color.yellow
+        case "過高": return Color.red
+        default: return Color.gray
         }
     }
 }
 
+// MARK: 可滑動的血壓紀錄詳細視圖
+struct HypertensionRecordDetailViewPager: View {
+    let records: [HypertensionRecord]
+    @State var selectedIndex: Int
+    
+    var body: some View {
+        TabView(selection: $selectedIndex) {
+            ForEach(records.indices, id: \.self) { index in
+                HypertensionRecordDetailView(record: records[index])
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+        .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+    }
+}
+
+// MARK: 血壓紀錄詳細資訊視圖
 struct HypertensionRecordDetailView: View {
     var record: HypertensionRecord
     
@@ -397,18 +410,19 @@ struct HypertensionRecordDetailView: View {
                                 lineWidth: 4)
                 )
                 .padding()
-            //.offset(y: -50) // 向上移動圖片
             
-            // Color Strip
             colorLegend
                 .frame(height: 20)
-                .padding(.bottom, 60)
+                .padding(.bottom, 40)
+            Text("日期：\(formattedDate(record.date))")
+                .font(.title2)
+                .padding(.bottom, 10)
             Text("血壓：\(String(format: "%.2f", record.hypertension))")
-                .font(.title)
+                .font(.title2)
                 .padding(.bottom, 5)
             Text("分類：\(record.category)")
                 .foregroundColor(Color("BottonColor"))
-                .font(.title)
+                .font(.title2)
                 .padding(.bottom, 5)
         }
         .navigationTitle("血壓 詳細資訊")
@@ -423,7 +437,7 @@ struct HypertensionRecordDetailView: View {
         case "偏高":
             return Image(systemName: "waveform.path.ecg.rectangle")
         case "過高":
-            return Image(systemName: "waveform.path.ecg.rectanglee")
+            return Image(systemName: "waveform.path.ecg.rectangle")
         default:
             return Image(systemName: "waveform.path.ecg.rectangle")
         }
@@ -431,18 +445,14 @@ struct HypertensionRecordDetailView: View {
     
     private func categoryColor(for record: HypertensionRecord) -> Color {
         switch record.category {
-        case "過低":
-            return Color.blue
-        case "正常":
-            return Color.green
-        case "偏高":
-            return Color.yellow
-        case "過高":
-            return Color.red
-        default:
-            return Color.red
+        case "過低": return Color.blue
+        case "正常": return Color.green
+        case "偏高": return Color.yellow
+        case "過高": return Color.red
+        default: return Color.red
         }
     }
+    
     private var colorLegend: some View {
         HStack(spacing: 0) {
             ColorBox(color: .blue, label: "偏低")
@@ -466,7 +476,7 @@ struct HypertensionRecordDetailView: View {
                     .font(.caption)
                     .padding(.top, 2)
             }
-            .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
+            .frame(maxWidth: .infinity)
         }
     }
 }

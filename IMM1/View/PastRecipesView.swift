@@ -123,7 +123,7 @@ struct PastRecipesView: View
                 .padding(.horizontal, 20)
                 .autocapitalization(.none)
                 .focused($isTextFieldFocused)
-               
+                
                 if pastRecipesData.isEmpty
                 {
                     VStack

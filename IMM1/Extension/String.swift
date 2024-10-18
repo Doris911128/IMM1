@@ -8,25 +8,25 @@
 import Foundation
 
 // MARK: 擴充String區間擷取功能
-extension String 
+extension String
 {
-    subscript(_ range: CountableRange<Int>) -> String 
+    subscript(_ range: CountableRange<Int>) -> String
     {
         let start=index(startIndex, offsetBy: max(0, range.lowerBound))
         let end=index(start, offsetBy: min(self.count - range.lowerBound, range.upperBound-range.lowerBound))
         return String(self[start..<end])
     }
     
-    subscript(_ range: CountablePartialRangeFrom<Int>) -> String 
+    subscript(_ range: CountablePartialRangeFrom<Int>) -> String
     {
         let start=index(startIndex, offsetBy: max(0, range.lowerBound))
         return String(self[start...])
     }
 }
 
-extension String 
+extension String
 {
-    subscript (index: Int) -> Character 
+    subscript (index: Int) -> Character
     {
         let charIndex = self.index(self.startIndex, offsetBy: index)
         return self[charIndex]

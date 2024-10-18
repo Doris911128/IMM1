@@ -7,16 +7,16 @@ class CookViewModel: ObservableObject
 {
     @Published var plans: [CookPlan] = []
     
-    func fetchCookPlans() 
+    func fetchCookPlans()
     {
         fetchCookPlansFromServer { [weak self] fetchedPlans, error in
-            if let fetchedPlans = fetchedPlans 
+            if let fetchedPlans = fetchedPlans
             {
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     self?.plans = fetchedPlans
                 }
-            } else if let error = error 
+            } else if let error = error
             {
                 print("Failed to fetch plans: \(error)")
             }
@@ -161,7 +161,7 @@ struct CookView: View
                 //                }
                 
                 // 其他內容
-                ScrollViewReader 
+                ScrollViewReader
                 { scrollView in
                     if viewModel.plans.isEmpty
                     {

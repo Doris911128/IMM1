@@ -397,9 +397,10 @@ extension View
             }
         }.resume()
     }
+    
     // MARK: - 上傳圖片功能
     func uploadImage(_ image: UIImage, completion: @escaping (Result<String, Error>) -> Void) {
-        guard let url = URL(string: "http://你的後端伺服器/upload_recipe_image.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/upload_recipe_image.php") else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid server URL"])))
             return
         }
@@ -437,47 +438,42 @@ extension View
             }
         }.resume()
     }
-
     
-    //MARK: loadUARecipes:從後端 API 獲取用戶的自訂和 AI 生成食譜
-    func loadUARecipes(U_ID: String, completion: @escaping (Result<RecipeResponse, Error>) -> Void) {
-        guard let url = URL(string: "http://你的後端伺服器/get_recipes.php") else {
-            completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無效的URL"])))
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        
-        let postString = "U_ID=\(U_ID)"
-        request.httpBody = postString.data(using: .utf8)
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            
-            guard let data = data else {
-                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無資料返回"])))
-                return
-            }
-            
-            do {
-                let decodedData = try JSONDecoder().decode(RecipeResponse.self, from: data)
-                completion(.success(decodedData))
-            } catch {
-                completion(.failure(error))
-            }
-        }.resume()
-    }
-
+    //MARK: loadCA_Recipes:從後端 API 獲取用戶的自訂和 AI 生成食譜
+    //    func loadCA_Recipes(for userID: String) {
+    //        guard let url = URL(string: "http://163.17.9.107/food/php/loadCA_Recipes.php") else { return }
+    //
+    //        var request = URLRequest(url: url)
+    //        request.httpMethod = "POST"
+    //        let postString = "U_ID=\(userID)" // 傳入的 userID
+    //        request.httpBody = postString.data(using: .utf8)
+    //
+    //        URLSession.shared.dataTask(with: request) { data, response, error in
+    //            if let error = error {
+    //                print("載入失敗: \(error)")
+    //                return
+    //            }
+    //
+    //            if let data = data {
+    //                do {
+    //                    let decodedData = try JSONDecoder().decode(CA_Recipes_S.self, from: data)
+    //                    DispatchQueue.main.async {
+    //                        self.customRecipes = decodedData.customRecipes // 更新自訂食譜
+    //                        self.aiRecipes = decodedData.aiRecipes        // 更新 AI 食譜
+    //                    }
+    //                } catch {
+    //                    print("JSON 解析失敗: \(error)")
+    //                }
+    //            }
+    //        }.resume()
+    //    }
+    
+    
     //MARK: editRecipe: 編輯自訂或 AI 生成食譜
     func editRecipe(recipe: CRecipe, U_ID: String, isAIRecipe: Bool, completion: @escaping (Bool) -> Void) {
-        let apiEndpoint = isAIRecipe ? "update_ai_recipe.php" : "update_custom_recipe.php"
+        let apiEndpoint = isAIRecipe ? "update_ARecipes.php" : "update_CRecipes.php"
         
-        guard let url = URL(string: "http://你的後端伺服器/\(apiEndpoint)") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php\(apiEndpoint)") else {
             completion(false)
             return
         }
@@ -518,21 +514,22 @@ extension View
             }
         }.resume()
     }
-
-
-
+    
 }
 
 // 追加Data的擴展
 extension Data {
-    mutating func append(_ string: String) {
-        if let data = string.data(using: .utf8) {
+    mutating func append(_ string: String)
+    {
+        if let data = string.data(using: .utf8)
+        {
             append(data)
         }
     }
 }
 
-struct UploadResponse: Codable {
+struct UploadResponse: Codable
+{
     let imageUrl: String
 }
 

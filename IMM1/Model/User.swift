@@ -2,7 +2,7 @@
 
 import Foundation
 
-class User: ObservableObject, Decodable 
+class User: ObservableObject, Decodable
 {
     @Published var id: String
     @Published var account: String
@@ -13,7 +13,7 @@ class User: ObservableObject, Decodable
     @Published var birthday: String
     @Published var height: String
     @Published var weight: String
-
+    
     
     // MARK: 初始化
     init(id: String = "",
@@ -32,7 +32,7 @@ class User: ObservableObject, Decodable
         self.birthday = birthday
         self.height = height
         self.weight = weight
-       
+        
     }
     
     // MARK: 可失敗的初始化方法
@@ -47,7 +47,7 @@ class User: ObservableObject, Decodable
         self.birthday = try container.decode(String.self, forKey: .birthday)
         self.height = try container.decodeIfPresent(String.self, forKey: .height) ?? "" // 身高字段可為空
         self.weight = try container.decodeIfPresent(String.self, forKey: .weight) ?? "" // 體重字段可為空
-
+        
     }
     
     // MARK: 枚舉定義編碼鍵
@@ -60,7 +60,7 @@ class User: ObservableObject, Decodable
         case birthday = "U_Bir"
         case height = "H"
         case weight = "W"
-
+        
     }
     
     // 更新用戶信息的方法
@@ -71,7 +71,7 @@ class User: ObservableObject, Decodable
             self.birthday = userInfo.birthday
             self.height = userInfo.height
             self.weight = userInfo.weight
-
+            
         }
     }
     

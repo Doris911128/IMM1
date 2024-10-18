@@ -20,7 +20,7 @@ struct F_RecipeBlock: View
     @State private var showDeleteConfirmation: Bool = false
     @State private var deleteCategory: FavoriteView.Category?
     @Binding var categories: [FavoriteView.Category]
-
+    
     init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0, categories: Binding<[FavoriteView.Category]>) {
         self.D_image = imageName
         self.Dis_Name = title
@@ -28,7 +28,7 @@ struct F_RecipeBlock: View
         self.Dis_ID = Dis_ID
         self._categories = categories
     }
-
+    
     var body: some View {
         NavigationLink(destination: MRecipeView(U_ID: U_ID, Dis_ID: Dis_ID))
         {
@@ -249,7 +249,7 @@ struct F_RecipeBlock: View
                                 showAddToCategory = false
                             }
                         }
-
+                        
                         .padding()
                     }
                 }

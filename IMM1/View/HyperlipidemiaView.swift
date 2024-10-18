@@ -166,7 +166,7 @@ struct HyperlipidemiaView: View {
                             )
                             .lineStyle(.init(lineWidth: 2))
                             .foregroundStyle(Color.orange)
-
+                            
                             PointMark(
                                 x: .value("Date", formattedDate(record.date)),
                                 y: .value("Value", record.hyperlipidemia)
@@ -186,7 +186,7 @@ struct HyperlipidemiaView: View {
                 .frame(width: 350, height: 250)  // 固定外框大小
                 .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加外框
                 .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5) // 添加陰影
-
+                
                 
                 VStack {
                     HStack {
@@ -317,10 +317,10 @@ struct HyperlipidemiaRecordsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(records.reversed()) { record in
-                    NavigationLink(destination: HyperlipidemiaRecordDetailView(record: record)) {
+                ForEach(records.indices, id: \.self) { index in
+                    NavigationLink(destination: HyperlipidemiaRecordDetailViewPager(records: records, selectedIndex: index)) {
                         HStack {
-                            hyperlipidemiaImage(for: record)
+                            hyperlipidemiaImage(for: records[index])
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 30, height: 30)
@@ -332,10 +332,10 @@ struct HyperlipidemiaRecordsListView: View {
                                         .stroke(Color.orange, lineWidth: 1)
                                 )
                                 .padding(.trailing, 8)
-                                .foregroundColor(categoryColor(for: record))
+                                .foregroundColor(categoryColor(for: records[index]))
                             VStack(alignment: .leading) {
-                                Text(record.category)
-                                Text("\(formattedDate(record.date)): \(record.hyperlipidemia, specifier: "%.2f")")
+                                Text(records[index].category)
+                                Text("\(formattedDate(records[index].date)): \(records[index].hyperlipidemia, specifier: "%.2f")")
                                     .foregroundColor(.gray)
                                     .font(.system(size: 14))
                             }
@@ -359,28 +359,37 @@ struct HyperlipidemiaRecordsListView: View {
     
     private func hyperlipidemiaImage(for record: HyperlipidemiaRecord) -> Image {
         switch record.category {
-        case "正常":
-            return Image(systemName: "drop.circle")
-        case "偏高":
-            return Image(systemName: "drop.circle")
-        case "過高":
-            return Image(systemName: "drop.circle")
-        default:
-            return Image(systemName: "drop.circle")
+        case "正常": return Image(systemName: "drop.circle")
+        case "偏高": return Image(systemName: "drop.circle")
+        case "過高": return Image(systemName: "drop.circle")
+        default: return Image(systemName: "drop.circle")
         }
     }
     
     private func categoryColor(for record: HyperlipidemiaRecord) -> Color {
         switch record.category {
-        case "正常":
-            return Color.green
-        case "偏高":
-            return Color.yellow
-        case "過高":
-            return Color.red
-        default:
-            return Color.red
+        case "正常": return Color.green
+        case "偏高": return Color.yellow
+        case "過高": return Color.red
+        default: return Color.red
         }
+    }
+}
+
+// MARK: 可滑動的血脂紀錄詳細視圖
+struct HyperlipidemiaRecordDetailViewPager: View {
+    let records: [HyperlipidemiaRecord]
+    @State var selectedIndex: Int
+    
+    var body: some View {
+        TabView(selection: $selectedIndex) {
+            ForEach(records.indices, id: \.self) { index in
+                HyperlipidemiaRecordDetailView(record: records[index])
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+        .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
     }
 }
 
@@ -406,18 +415,19 @@ struct HyperlipidemiaRecordDetailView: View {
                                 lineWidth: 4)
                 )
                 .padding()
-            //.offset(y: -50) // 向上移動圖片
             
-            // Color Strip
             colorLegend
                 .frame(height: 20)
                 .padding(.bottom, 60)
+            Text("日期：\(formattedDate(record.date))")
+                .font(.title2)
+                .padding(.bottom, 10)
             Text("血脂：\(String(format: "%.2f", record.hyperlipidemia))")
-                .font(.title)
+                .font(.title2)
                 .padding(.bottom, 5)
             Text("分類：\(record.category)")
                 .foregroundColor(Color("BottonColor"))
-                .font(.title)
+                .font(.title2)
                 .padding(.bottom, 5)
         }
         .navigationTitle("血脂 詳細資訊")
@@ -425,31 +435,24 @@ struct HyperlipidemiaRecordDetailView: View {
     
     private func hyperlipidemiaImage(for record: HyperlipidemiaRecord) -> Image {
         switch record.category {
-        case "正常":
-            return Image(systemName: "drop.circle")
-        case "偏高":
-            return Image(systemName: "drop.circle")
-        case "過高":
-            return Image(systemName: "drop.circle")
-        default:
-            return Image(systemName: "drop.circle")
+        case "正常": return Image(systemName: "drop.circle")
+        case "偏高": return Image(systemName: "drop.circle")
+        case "過高": return Image(systemName: "drop.circle")
+        default: return Image(systemName: "drop.circle")
         }
     }
     
     private func categoryColor(for record: HyperlipidemiaRecord) -> Color {
         switch record.category {
-        case "正常":
-            return Color.green
-        case "偏高":
-            return Color.yellow
-        case "過高":
-            return Color.red
-        default:
-            return Color.red
+        case "正常": return Color.green
+        case "偏高": return Color.yellow
+        case "過高": return Color.red
+        default: return Color.red
         }
     }
 }
 
+// MARK: ColorLegend
 private var colorLegend: some View {
     HStack(spacing: 0) {
         ColorBox(color: .green, label: "正常")
@@ -472,9 +475,10 @@ private struct ColorBox: View {
                 .font(.caption)
                 .padding(.top, 2)
         }
-        .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
+        .frame(maxWidth: .infinity)
     }
 }
+
 struct HyperlipidemiaView_Previews: PreviewProvider {
     static var previews: some View {
         HyperlipidemiaView()

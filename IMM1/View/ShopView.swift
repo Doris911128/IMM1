@@ -204,7 +204,7 @@ struct RecipeView: View
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
- else
+        else
         {
             List
             {
@@ -296,7 +296,7 @@ struct RecipeView: View
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .frame(width: 80)
                                     .keyboardType(.numberPad)
-
+                                    
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .frame(width: 80)
                                     .keyboardType(.numberPad)

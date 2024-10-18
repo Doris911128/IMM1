@@ -224,7 +224,7 @@ struct HyperglycemiaView: View {
                 .frame(width: 350, height: 250)  // 修改外框大小
                 .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))  // 添加外框样式
                 .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5)  // 添加阴影效果
-
+                
                 
                 VStack {
                     HStack {
@@ -309,10 +309,10 @@ struct HyperglycemiaRecordsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(records.reversed()) { record in
-                    NavigationLink(destination: HyperglycemiaRecordDetailView(record: record)) {
+                ForEach(records.indices, id: \.self) { index in
+                    NavigationLink(destination: HyperglycemiaRecordDetailViewPager(records: records, selectedIndex: index)) {
                         HStack {
-                            hyperglycemiaImage(for: record)
+                            hyperglycemiaImage(for: records[index])
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 30, height: 30)
@@ -324,10 +324,10 @@ struct HyperglycemiaRecordsListView: View {
                                         .stroke(Color.orange, lineWidth: 1)
                                 )
                                 .padding(.trailing, 8)
-                                .foregroundColor(categoryColor(for: record))
+                                .foregroundColor(categoryColor(for: records[index]))
                             VStack(alignment: .leading) {
-                                Text(record.category)
-                                Text("\(formattedDate(record.date)): \(record.hyperglycemia, specifier: "%.2f")")
+                                Text(records[index].category)
+                                Text("\(formattedDate(records[index].date)): \(records[index].hyperglycemia, specifier: "%.2f")")
                                     .foregroundColor(.gray)
                                     .font(.system(size: 14))
                             }
@@ -350,36 +350,38 @@ struct HyperglycemiaRecordsListView: View {
     }
     
     private func hyperglycemiaImage(for record: HyperglycemiaRecord) -> Image {
-        switch record.category {
-        case "低血糖":
-            return Image(systemName: "medical.thermometer")
-        case "正常":
-            return Image(systemName: "medical.thermometer")
-        case "偏高":
-            return Image(systemName: "medical.thermometer")
-        case "糖尿病":
-            return Image(systemName: "medical.thermometer")
-        default:
-            return Image(systemName: "medical.thermometer")
-        }
+        return Image(systemName: "medical.thermometer")
     }
     
     private func categoryColor(for record: HyperglycemiaRecord) -> Color {
         switch record.category {
-        case "低血糖":
-            return Color.blue
-        case "正常":
-            return Color.green
-        case "偏高":
-            return Color.yellow
-        case "糖尿病":
-            return Color.red
-        default:
-            return Color.gray
+        case "低血糖": return Color.blue
+        case "正常": return Color.green
+        case "偏高": return Color.yellow
+        case "糖尿病": return Color.red
+        default: return Color.gray
         }
     }
 }
 
+// MARK: 可滑動的血糖紀錄詳細視圖
+struct HyperglycemiaRecordDetailViewPager: View {
+    let records: [HyperglycemiaRecord]
+    @State var selectedIndex: Int
+    
+    var body: some View {
+        TabView(selection: $selectedIndex) {
+            ForEach(records.indices, id: \.self) { index in
+                HyperglycemiaRecordDetailView(record: records[index])
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+        .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+    }
+}
+
+// MARK: 血糖紀錄詳細資訊視圖
 struct HyperglycemiaRecordDetailView: View {
     var record: HyperglycemiaRecord
     
@@ -401,57 +403,41 @@ struct HyperglycemiaRecordDetailView: View {
                                 lineWidth: 4)
                 )
                 .padding()
-            //.offset(y: -50) // 向上移動圖片
             
-            // Color Strip
             colorLegend
                 .frame(height: 20)
-                .padding(.bottom, 60)
-            
+                .padding(.bottom, 40)
+            Text("日期：\(formattedDate(record.date))")
+                .font(.title2)
+                .padding(.bottom, 10)
             
             Text("血糖：\(String(format: "%.2f", record.hyperglycemia))")
-                .font(.title)
+                .font(.title2)
                 .padding(.bottom, 5)
             Text("分類：\(record.category)")
                 .foregroundColor(Color("BottonColor"))
-                .font(.title)
+                .font(.title2)
                 .padding(.bottom, 5)
         }
         .navigationTitle("血糖 詳細資訊")
     }
     
     private func hyperglycemiaImage(for record: HyperglycemiaRecord) -> Image {
-        switch record.category {
-        case "低血糖":
-            return Image(systemName: "medical.thermometer")
-        case "正常":
-            return Image(systemName: "medical.thermometer")
-        case "偏高":
-            return Image(systemName: "medical.thermometer")
-        case "糖尿病":
-            return Image(systemName: "medical.thermometer")
-        default:
-            return Image(systemName: "medical.thermometer")
-        }
+        return Image(systemName: "medical.thermometer")
     }
     
     private func categoryColor(for record: HyperglycemiaRecord) -> Color {
         switch record.category {
-        case "低血糖":
-            return Color.blue
-        case "正常":
-            return Color.green
-        case "偏高":
-            return Color.yellow
-        case "糖尿病":
-            return Color.red
-        default:
-            return Color.red
+        case "低血糖": return Color.blue
+        case "正常": return Color.green
+        case "偏高": return Color.yellow
+        case "糖尿病": return Color.red
+        default: return Color.gray
         }
     }
+    
     private var colorLegend: some View {
         HStack(spacing: 0) {
-            
             ColorBox(color: .blue, label: "低血糖")
             ColorBox(color: .green, label: "正常")
             ColorBox(color: .yellow, label: "偏高")
@@ -473,10 +459,9 @@ struct HyperglycemiaRecordDetailView: View {
                     .font(.caption)
                     .padding(.top, 2)
             }
-            .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
+            .frame(maxWidth: .infinity)
         }
     }
-    
 }
 
 struct HyperglycemiaView_Previews: PreviewProvider {

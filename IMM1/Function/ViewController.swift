@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     
     private var lastPrintTime: Date?
     private let printInterval: TimeInterval = 1.0 // 设置为1秒
-
+    
     override func loadView() {
         view = UIView()
         addCameraView()
@@ -36,7 +36,7 @@ class ViewController: UIViewController {
             cameraView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         do {
@@ -93,7 +93,7 @@ class ViewController: UIViewController {
         for point in points {
             pointsConverted.append(previewLayer.layerPointConverted(fromCaptureDevicePoint: point!))
         }
-
+        
         let thumbTip = pointsConverted[0]
         let wrist = pointsConverted[pointsConverted.count - 1]
         
@@ -113,7 +113,7 @@ class ViewController: UIViewController {
             }
             lastPrintTime = now
         }
-
+        
         cameraView.showPoints(pointsConverted)
     }
 }
@@ -140,7 +140,7 @@ extension ViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
             
             let confidenceThreshold: Float = 0.3
             guard thumbTipPoint.confidence > confidenceThreshold &&
-                  wristPoint.confidence > confidenceThreshold
+                    wristPoint.confidence > confidenceThreshold
             else {
                 cameraView.showPoints([])
                 return

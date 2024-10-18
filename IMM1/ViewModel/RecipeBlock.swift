@@ -7,7 +7,7 @@
 import SwiftUI
 import Foundation
 
-struct RecipeBlock: View 
+struct RecipeBlock: View
 {
     let D_image: String
     let Dis_Name: String
@@ -15,7 +15,7 @@ struct RecipeBlock: View
     let Dis_ID: Int
     @State private var isFavorited: Bool = false // 初始化为 false
     
-    init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0) 
+    init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0)
     {
         self.D_image = imageName
         self.Dis_Name = title
@@ -23,14 +23,14 @@ struct RecipeBlock: View
         self.Dis_ID = Dis_ID
     }
     
-    var body: some View 
+    var body: some View
     {
-        VStack 
+        VStack
         {
-            ZStack(alignment: .topTrailing) 
+            ZStack(alignment: .topTrailing)
             {
                 AsyncImage(url: URL(string: D_image)) { phase in
-                    if let image = phase.image 
+                    if let image = phase.image
                     {
                         image
                             .resizable()
@@ -48,12 +48,12 @@ struct RecipeBlock: View
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 
                 Button(action: {
-                    withAnimation(.easeInOut.speed(3)) 
+                    withAnimation(.easeInOut.speed(3))
                     {
                         self.isFavorited.toggle()
                         toggleFavorite(U_ID: U_ID, Dis_ID: Dis_ID, isFavorited: isFavorited)
                         { result in
-                            switch result 
+                            switch result
                             {
                             case .success(let responseString):
                                 print("Success: \(responseString)")
@@ -77,7 +77,7 @@ struct RecipeBlock: View
                 .symbolEffect(.bounce, value: self.isFavorited)
             }
             
-            HStack(alignment: .bottom) 
+            HStack(alignment: .bottom)
             {
                 Text(Dis_Name)
                     .font(.title)
@@ -94,7 +94,7 @@ struct RecipeBlock: View
         }
         .padding(.horizontal, 20)
         .offset(y: -40)
-        .onAppear 
+        .onAppear
         {
             checkIfFavorited(U_ID: U_ID, Dis_ID: "\(Dis_ID)")
             { result in

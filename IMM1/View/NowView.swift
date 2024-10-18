@@ -12,7 +12,7 @@ struct DishService
         guard let url = URL(string: "http://163.17.9.107/food/php/Dishes.php")
         else { return }
         
-        URLSession.shared.dataTask(with: url) 
+        URLSession.shared.dataTask(with: url)
         { data, response, error in
             guard let data = data, error == nil
             else
@@ -22,10 +22,10 @@ struct DishService
                 return
             }
             
-            do 
+            do
             {
                 let dishes = try JSONDecoder().decode([Dishes].self, from: data)
-                DispatchQueue.main.async 
+                DispatchQueue.main.async
                 {
                     completion(dishes)
                 }
@@ -48,11 +48,11 @@ struct NowView: View
     // MARK: NowView body
     var body: some View
     {
-        NavigationStack 
+        NavigationStack
         {
-            ZStack 
+            ZStack
             {
-                VStack 
+                VStack
                 {
                     Text("立即煮")
                         .font(.largeTitle)
@@ -61,12 +61,12 @@ struct NowView: View
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
                     // MARK: 料理顯示區
-                    ScrollView(showsIndicators: false) 
+                    ScrollView(showsIndicators: false)
                     {
                         VStack {
-                            if let selectedDish = selectedDish 
+                            if let selectedDish = selectedDish
                             {
-                                NavigationLink(destination: MRecipeView(U_ID: " ", Dis_ID: selectedDish.Dis_ID)) 
+                                NavigationLink(destination: MRecipeView(U_ID: " ", Dis_ID: selectedDish.Dis_ID))
                                 {
                                     RecipeBlock(
                                         imageName: selectedDish.D_image,
@@ -87,15 +87,15 @@ struct NowView: View
                 }
             }
         }
-        .onAppear 
+        .onAppear
         {
-            user.fetchUserInfo 
+            user.fetchUserInfo
             { fetchedUser in
-                if let fetchedUser = fetchedUser 
+                if let fetchedUser = fetchedUser
                 {
                     self.user.update(with: fetchedUser)
                     
-                    DishService.loadDishes 
+                    DishService.loadDishes
                     { dishes in
                         self.dishesData = dishes
                         self.selectedDish = dishes.first
