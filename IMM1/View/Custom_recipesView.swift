@@ -49,23 +49,11 @@ func addCRecipe(recipe: CRecipe, U_ID: String, completion: @escaping (Bool) -> V
     }.resume()
 }
 
-
-
-struct CRecipe: Identifiable
-{
-    let id = UUID()
-    let CR_ID : Int
-    var f_name: String //菜名
-    var ingredients: String //食材
-    var method: String //煮法
-    var UTips: String //小技巧
-    var c_image_url: String? // 新增圖片 URL 欄位
-}
-
 struct Custom_recipesView: View
 {
     let U_ID: String // 用於添加收藏
     
+    @State var caRecipes: CA_Recipes = CA_Recipes(customRecipes: [], aiRecipes: [])
     @State private var Crecipes: [CRecipe] = []
     @State private var showingAddRecipeView = false
     @State private var selectedRecipe: CRecipe? = nil

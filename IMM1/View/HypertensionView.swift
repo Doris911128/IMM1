@@ -80,6 +80,7 @@ struct HypertensionView: View {
     @State private var chartData: [HypertensionRecord] = []
     @State private var isShowingList: Bool = false
     @State private var showAlert: Bool = false
+    @State private var animateChart = false
     
     private func averagesEverySevenRecords() -> [HypertensionRecord] {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
@@ -194,13 +195,20 @@ struct HypertensionView: View {
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 20) {
-                        Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                        let records = displayMode == 0 ?
+                        chartData :
+                        (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())
+                        
+                        let chartWidth = CGFloat(max(300, records.count * 50)) // 每個資料點間隔50，最小寬度300
+                        
+                        Chart(records) { record in
                             LineMark(
                                 x: .value("Date", formattedDate(record.date)),
                                 y: .value("Value", record.hypertension)
                             )
-                            .lineStyle(.init(lineWidth: 3)) // 保持线宽为 3
+                            .lineStyle(.init(lineWidth: 2))  // 線條寬度2
                             .foregroundStyle(Color.orange)
+                            .interpolationMethod(.catmullRom)  // 平滑曲線
                             
                             PointMark(
                                 x: .value("Date", formattedDate(record.date)),
@@ -213,14 +221,17 @@ struct HypertensionView: View {
                                     .foregroundColor(Color.black)
                             }
                         }
-                        .chartForegroundStyleScale(["血壓值": .orange])
-                        .frame(width: CGFloat(max(300, chartData.count * 65)), height: 200) // 保持现有的框架大小设置
+                        .chartForegroundStyleScale(["血壓值": .orange])  // 設定圖表顏色樣式
+                        .frame(width: chartWidth, height: 200)  // 動態調整寬度
+                        .scaleEffect(animateChart ? 1 : 0.8)  // 縮放動畫
+                        .opacity(animateChart ? 1 : 0)  // 淡入動畫
+                        .animation(.easeInOut(duration: 0.8), value: animateChart)  // 平滑動畫
                     }
                     .padding()
                 }
-                .frame(width: 350, height: 250)  // 保持外框大小
-                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加外框
-                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5) // 添加阴影
+                .frame(width: 350, height: 250)
+                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
+                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5)
                 
                 
                 VStack {
@@ -282,7 +293,10 @@ struct HypertensionView: View {
                 .offset(y: 10)
             }
             .onAppear {
-                self.connect(name: "BP", action: "fetch")
+                withAnimation {
+                    animateChart = true // 當頁面顯示時啟用動畫
+                }
+                connect(name: "BP", action: "fetch")
             }
             .sheet(isPresented: $isShowingList) {
                 HypertensionRecordsListView(records: $chartData)

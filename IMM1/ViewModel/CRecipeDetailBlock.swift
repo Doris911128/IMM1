@@ -13,9 +13,12 @@ struct CRecipeDetailBlock: View, CRecipeP
     let U_ID: String // 假設需要用戶ID?
     @Binding var Crecipe: CRecipe // 綁定 Recipe 物件 允許修改 Crecipe
     
+    @State var caRecipes: CA_Recipes = CA_Recipes(customRecipes: [], aiRecipes: [])
+    
     @State private var isLoading: Bool = true // 載入狀態
     @State private var loadingError: String? = nil // 加載錯誤訊息
     
+    @State private var currentUserID: String? = nil // 用於保存當前用戶 ID
     @State private var isEditing: Bool = false // 控制編輯彈出框顯示
     
     @State private var editedRecipeName: String = ""
@@ -479,7 +482,21 @@ struct CRecipeDetailBlock: View, CRecipeP
                     
                 }
             }
-        }
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
+            
+            .onAppear {
+                           fetchUserID { userID in
+                               guard let userID = userID else {
+                                   print("Failed to get user ID")
+                                   return
+                               }
+                               self.currentUserID = userID
+                               loadCCRData(for: userID) { customRecipes in
+                                   // 處理獲取到的自訂食譜資料
+                                   self.isLoading = false
+                               }
+                           }
+                       }
+                   }
+                   .navigationBarTitleDisplayMode(.inline)
+               }
+           }

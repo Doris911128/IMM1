@@ -13,7 +13,9 @@ struct AIRecipeBlock: View, AIRecipeP
     let U_ID: String // 用於添加收藏
     let record: ChatRecord // 傳遞進來的單個 ChatRecord
     
-    @State var chatRecords: [ChatRecord] = []
+    @State var caRecipes: CA_Recipes = CA_Recipes(customRecipes: [], aiRecipes: [])
+    
+    @Binding var chatRecords: [ChatRecord]
     @State private var isLoading: Bool = true // 載入狀態
     @State private var loadingError: String? = nil // 加載錯誤訊息
     
@@ -38,6 +40,8 @@ struct AIRecipeBlock: View, AIRecipeP
     @State private var focusedOtherIndex: Int? = nil// 智慧食譜
     @State private var focusedFieldIndex: Int? = nil// 小技巧
     
+    @State private var uploadProgress: Double = 0.0 //追蹤圖片上傳進度
+
     var data: [ChatRecord]
     {
         [record] // 使用傳遞的單個 record
@@ -157,12 +161,13 @@ struct AIRecipeBlock: View, AIRecipeP
                     
                     // MARK: 動態顯示區塊
                     if let foodSteps = extractFoodSteps(from: record.output),
-                       let cookingSteps = extractCookingSteps(from: record.output) {
-                        
+                       let cookingSteps = extractCookingSteps(from: record.output) 
+                    {
                         // 顯示食材和烹飪步驟
                         displayFoodAndCookingSteps(foodSteps: foodSteps, cookingSteps: cookingSteps)
                         
-                    } else {
+                    } else 
+                    {
                         // 顯示智慧食譜編輯區
                         displaySmartRecipeSection()
                     }
@@ -468,26 +473,26 @@ struct AIRecipeBlock: View, AIRecipeP
     }
     
     func saveImageURLToDatabase(imageUrl: String, recipeID: Int, completion: @escaping (Bool) -> Void) {
-        let parameters: [String: Any] = [
-            "recipe_id": recipeID,
-            "ai_image_url": imageUrl
-        ]
-        
-        updateRecipeData(parameters: parameters) { success in
-            completion(success)
+        // 更新食譜數據
+        let updatedRecipe = CRecipe(
+            CR_ID: recipeID,
+            f_name: editedRecipeName.isEmpty ? record.input : editedRecipeName,
+            ingredients: editedFoodSteps.joined(separator: ", "),
+            method: editedCookingSteps.joined(separator: "\n"),
+            UTips: editedTips.joined(separator: "\n"),
+            c_image_url: imageUrl
+        )
+
+        // 調用 editRecipe，只傳入正確的參數
+        editRecipe(recipe: updatedRecipe, U_ID: U_ID, isAIRecipe: false) { success in
+            if success {
+                print("Recipe updated successfully")
+                completion(true)
+            } else {
+                print("Failed to update recipe")
+                completion(false)
+            }
         }
-    }
-    
-    
-    // MARK: 拆分[食譜名稱]
-    func extractRecipeName(from input: String) -> String? {
-        // 假設input是以逗號分隔的多個名稱，我們取第一個作為食譜名稱
-        let recipeNames = input.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        
-        if let firstRecipeName = recipeNames.first, !firstRecipeName.isEmpty {
-            return firstRecipeName
-        }
-        return nil
     }
     
     // MARK: 拆分[食材]
@@ -519,25 +524,28 @@ struct AIRecipeBlock: View, AIRecipeP
         
         return steps.isEmpty ? nil : steps
     }
-    
+
     // MARK: 拆分[料理方法]
     func extractCookingSteps(from output: String) -> [String]? {
-        // 查找料理方法的標題
+        // 查找料理方法的標題，新增“製作步驟”的條件
         guard let methodStartRange = output.range(of: "作法") ??
                 output.range(of: "指示") ??
-                output.range(of: "做法") else {
-            print("找不到 '作法'、'指示' 或 '做法' 的標題")
+                output.range(of: "做法") ??
+                output.range(of: "製作步驟") else {
+            print("找不到 '作法'、'指示'、'做法' 或 '製作步驟' 的標題")
             return nil
         }
         
-        // 找到結束標題
+        // 找到結束標題，這裡增加了可以結束的方法標題
         let end = output.range(of: "小技巧")?.lowerBound ??
-        output.range(of: "小貼士")?.lowerBound ??
-        output.range(of: "isAICol")?.lowerBound ??
-        output.endIndex
+                  output.range(of: "小貼士")?.lowerBound ??
+                  output.range(of: "isAICol")?.lowerBound ??
+                  output.endIndex
         
+        // 獲取料理方法的內容
         let methodContent = String(output[methodStartRange.upperBound..<end])
         
+        // 將料理方法按行拆分，去除多餘的空格和空行
         let steps = methodContent.split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
@@ -574,18 +582,26 @@ struct AIRecipeBlock: View, AIRecipeP
         return tips.isEmpty ? nil : tips
     }
     // MARK: - AIRecipeP 協議要求的實作方法
-    func itemName() -> String
-    {
+    func itemName() -> String {
         // 如果名稱已編輯，返回編輯後的名稱
-        if !editedRecipeName.isEmpty
-        {
+        if !editedRecipeName.isEmpty {
+            print("名稱來自編輯後的名稱: \(editedRecipeName)")
             return editedRecipeName
         }
-        else
-        {
-            return record.input ?? "Unknown AI Recipe"
+        // 否則嘗試從 output 中提取名稱
+        else if let extractedName = record.output.extractRecipeName() {
+            print("名稱成功從 output 提取: \(extractedName)")
+            return extractedName
+        }
+        // 如果無法提取名稱，返回默認的 record.input 或 "Unknown AI Recipe"
+        else {
+            let fallbackName = record.input ?? "Unknown AI Recipe"
+            print("提取失敗，使用默認名稱: \(fallbackName)")
+            return fallbackName
         }
     }
+
+
     
     func itemImageURL() -> URL?
     {
@@ -606,33 +622,27 @@ struct AIRecipeBlock: View, AIRecipeP
     
     // MARK: AI 烹飪書 AICookbookView
     // 包括所需食材、AI 生成的烹飪方法和小技巧
-    func AICookbookView(safeArea: EdgeInsets) -> AnyView
-    {
+    func AICookbookView(safeArea: EdgeInsets) -> AnyView {
         return AnyView(
-            
-            VStack(spacing: 18)
-            {
-                // 食譜顯示內容
-                if let foodSteps = extractFoodSteps(from: record.output),
-                   let cookingSteps = extractCookingSteps(from: record.output)
-                {
-                    // MARK: 顯示食材
-                    VStack(alignment: .leading)
-                    {
+            VStack(spacing: 18) {
+                // 食譜顯示內容，直接使用 record.output
+                let foodSteps = extractFoodSteps(from: record.output)
+                let cookingSteps = extractCookingSteps(from: record.output)
+
+                // MARK: 顯示食材
+                if let foodSteps = foodSteps {
+                    VStack(alignment: .leading) {
                         Text("所需食材")
                             .foregroundStyle(.orange)
                             .font(.title2)
                             .bold()
                             .padding(.leading, 20)
                         
-                        ForEach(foodSteps, id: \.self)
-                        { food in
-                            HStack(spacing:25)
-                            {
+                        ForEach(foodSteps, id: \.self) { food in
+                            HStack(spacing: 25) {
                                 Text("•")
                                     .font(.title)
                                     .foregroundColor(.orange)
-                                
                                 Text(food)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -640,20 +650,19 @@ struct AIRecipeBlock: View, AIRecipeP
                             .padding(.vertical, -2)
                         }
                     }
-                    
-                    // MARK: 料理方法
-                    VStack(alignment: .leading)
-                    {
+                }
+
+                // MARK: 料理方法
+                if let cookingSteps = cookingSteps {
+                    VStack(alignment: .leading) {
                         Text("料理方法")
                             .foregroundStyle(.orange)
                             .font(.title2)
                             .bold()
                             .padding(.leading, 20)
                         
-                        ForEach(Array(cookingSteps.enumerated()), id: \.offset)
-                        { index, step in
-                            HStack(alignment: .top)
-                            {
+                        ForEach(Array(cookingSteps.enumerated()), id: \.offset) { index, step in
+                            HStack(alignment: .top) {
                                 let stepNumber = "\(index + 1)."
                                 let stepDescription = step.trimmingCharacters(in: .whitespaces)
                                 
@@ -667,59 +676,54 @@ struct AIRecipeBlock: View, AIRecipeP
                                     .font(.body)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .padding(.horizontal, 35) //内容左右的留白
-                            .padding(.vertical, 3) //上下行距
+                            .padding(.horizontal, 35) // 内容左右的留白
+                            .padding(.vertical, 3) // 上下行距
                         }
                     }
-                    
-                    // MARK: 小技巧（如果有）
-                    if let tips = extractTips(from: record.output)
-                    {
-                        VStack(alignment: .leading)
-                        {
-                            Text("小技巧")
-                                .foregroundStyle(.orange)
-                                .font(.title2)
-                                .bold()
-                                .padding(.leading, 20)
-                            
-                            ForEach(Array(tips.enumerated()), id: \.offset)
-                            { index, tip in
-                                HStack(alignment: .top)
-                                {
-                                    let tipNumber = "\(index + 1)."
-                                    let tipDescription = tip.trimmingCharacters(in: .whitespaces)
-                                    
-                                    Text(tipNumber)
-                                        .font(.body)
-                                        .bold()
-                                        .foregroundColor(.orange)
-                                        .frame(width: 30, alignment: .leading)
-                                    
-                                    Text(tipDescription)
-                                        .font(.body)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.leading, 5)
-                                        .lineSpacing(2)
-                                }
-                                .padding(.horizontal, 35)
-                                .padding(.vertical, 3)
+                }
+
+                // MARK: 小技巧（如果有）
+                if let tips = extractTips(from: record.output) {
+                    VStack(alignment: .leading) {
+                        Text("小技巧")
+                            .foregroundStyle(.orange)
+                            .font(.title2)
+                            .bold()
+                            .padding(.leading, 20)
+                        
+                        ForEach(Array(tips.enumerated()), id: \.offset) { index, tip in
+                            HStack(alignment: .top) {
+                                let tipNumber = "\(index + 1)."
+                                let tipDescription = tip.trimmingCharacters(in: .whitespaces)
+                                
+                                Text(tipNumber)
+                                    .font(.body)
+                                    .bold()
+                                    .foregroundColor(.orange)
+                                    .frame(width: 30, alignment: .leading)
+                                
+                                Text(tipDescription)
+                                    .font(.body)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.leading, 5)
+                                    .lineSpacing(2)
                             }
+                            .padding(.horizontal, 35)
+                            .padding(.vertical, 3)
                         }
                     }
-                } else// MARK: 例外處理 - 智慧食譜
-                {
-                    // 如果無法拆分食材或料理方法，顯示完整的 output 並顯示“智慧食譜”
-                    VStack(alignment: .leading)
-                    {
+                }
+
+                // MARK: 例外處理 - 智慧食譜
+                if foodSteps == nil && cookingSteps == nil {
+                    VStack(alignment: .leading) {
                         Text("智慧食譜")
                             .foregroundStyle(.orange)
                             .font(.title2)
                             .bold()
                             .padding(.leading, 20)
                         
-                        ScrollView
-                        {
+                        ScrollView {
                             Text(record.output)
                                 .font(.body)
                                 .padding(.horizontal, 25)
@@ -732,6 +736,7 @@ struct AIRecipeBlock: View, AIRecipeP
             }
         )
     }
+
     
     // MARK: body
     var body: some View
@@ -773,46 +778,43 @@ struct AIRecipeBlock: View, AIRecipeP
             .toolbarBackground(Color("menusheetbackgroundcolor"), for: .navigationBar)
             .toolbar
             {
-                ToolbarItem(placement: .navigationBarTrailing)
-                {
-                    HStack
-                    {
-                        VStack
-                        {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack {
+                        VStack {
                             // 固定的編輯按鈕
                             Button(action: {
-                                // 打開編輯彈出框
+                                // 直接使用 record.output
                                 self.editedFoodSteps = extractFoodSteps(from: record.output) ?? []
                                 self.editedCookingSteps = extractCookingSteps(from: record.output) ?? []
                                 isEditing = true
-                                
-                            })
-                            {
+                            }) {
                                 Image(systemName: "pencil.circle.fill")
                                     .font(.system(size: 25))
                                     .foregroundColor(.orange)
                             }
                         }
-                        VStack
-                        {
+                        
+                        VStack {
                             Button(action: {
-                                withAnimation(.easeInOut.speed(3))
-                                {
-                                    toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol)
-                                    { result in
-                                        switch result
-                                        {
-                                        case .success(let message):
+                                toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
+                                    switch result {
+                                    case .success(let message):
+                                        DispatchQueue.main.async {
+                                            if let index = chatRecords.firstIndex(where: { $0.Recipe_ID == record.Recipe_ID }) {
+                                                chatRecords[index].isAICol.toggle() // 更新收藏狀態
+                                            }
                                             print("isAICol Action successful: \(message)")
-                                        case .failure(let error):
+                                        }
+                                    case .failure(let error):
+                                        DispatchQueue.main.async {
                                             print("Error toggling AICol: \(error.localizedDescription)")
                                         }
                                     }
                                 }
                             }) {
                                 Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
-                                    .font(.title2)
-                                    .foregroundStyle(.orange)
+                                    .font(.system(size: 25))
+                                    .foregroundColor(.orange)
                             }
                             .animation(.none)
                         }

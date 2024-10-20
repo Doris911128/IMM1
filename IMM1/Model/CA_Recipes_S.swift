@@ -7,33 +7,53 @@
 
 import Foundation
 
-struct CA_Recipes_S: Codable 
+struct CA_Recipes: Codable
 {
-    var customRecipes: [CustomRecipe] // 自訂食譜
-    var aiRecipes: [AIRecipe]         // AI 生成的食譜
+    var customRecipes: [CRecipe] // 自訂食譜
+    var aiRecipes: [ChatRecord]  // AI 生成的食譜
 }
 
-
-// 自訂食譜的結構
-struct CustomRecipe: Codable, Identifiable 
+struct CRecipe: Identifiable, Codable
 {
-    var id: Int { CR_ID }
-    let CR_ID: Int
-    let f_name: String
-    let ingredients: String
-    let method: String
-    let UTips: String
-    let c_image_url: String?
+    let id = UUID()
+    let CR_ID : Int
+    var f_name: String //菜名
+    var ingredients: String //食材
+    var method: String //煮法
+    var UTips: String //小技巧
+    var c_image_url: String? // 新增圖片 URL 欄位
 }
 
-// AI 生成食譜的結構
-struct AIRecipe: Codable, Identifiable 
+//MARK: 此畫面主結構＿歷史聊天紀錄
+struct ChatRecord: Identifiable, Codable
 {
     var id: Int { Recipe_ID }
     let Recipe_ID: Int
-    let f_name: String
-    let ingredients: String
-    let method: String
-    let UTips: String
-    let ai_image_url: String?
+    let U_ID: String
+    var input: String
+    let output: String
+    var isAICol: Bool
+    var ai_image_url: String? // 新增圖片 URL 欄位
+
+    // 自定义解码方法，将 Int 转换为 Bool
+    enum CodingKeys: String, CodingKey 
+    {
+        case Recipe_ID, U_ID, input, output, isAICol = "isAICol", ai_image_url
+    }
+    
+    // init方法只在解碼過程中使用
+    init(from decoder: Decoder) throws
+    {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        Recipe_ID = try container.decode(Int.self, forKey: .Recipe_ID)
+        U_ID = try container.decode(String.self, forKey: .U_ID)
+        input = try container.decode(String.self, forKey: .input)
+        output = try container.decode(String.self, forKey: .output)
+        let isAIColInt = try container.decode(Int.self, forKey: .isAICol)
+        isAICol = isAIColInt == 1
+        ai_image_url = try container.decodeIfPresent(String.self, forKey: .ai_image_url)
+    }
+
+    
 }
+

@@ -83,6 +83,7 @@ struct HyperglycemiaView: View {
     @State private var chartData: [HyperglycemiaRecord] = []
     @State private var isShowingList: Bool = false
     @State private var showAlert: Bool = false
+    @State private var animateChart = false
     
     private func averagesEverySevenRecords() -> [HyperglycemiaRecord] {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
@@ -197,13 +198,20 @@ struct HyperglycemiaView: View {
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 20) {
-                        Chart(displayMode == 0 ? chartData : (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())) { record in
+                        let records = displayMode == 0 ?
+                        chartData :
+                        (displayMode == 1 ? averagesEverySevenRecords() : averagesEveryThirtyRecords())
+                        
+                        let chartWidth = CGFloat(max(300, records.count * 50)) // 動態寬度，50 為每個點的間隔
+                        
+                        Chart(records) { record in
                             LineMark(
                                 x: .value("Date", formattedDate(record.date)),
                                 y: .value("Value", record.hyperglycemia)
                             )
-                            .lineStyle(.init(lineWidth: 3))  // 保持线宽为 3
+                            .lineStyle(.init(lineWidth: 2))  // 線條寬度
                             .foregroundStyle(Color.orange)
+                            .interpolationMethod(.catmullRom)  // 平滑曲線
                             
                             PointMark(
                                 x: .value("Date", formattedDate(record.date)),
@@ -216,14 +224,17 @@ struct HyperglycemiaView: View {
                                     .foregroundColor(Color.black)
                             }
                         }
-                        .chartForegroundStyleScale(["血糖值": .orange])  // 修改图表前景样式
-                        .frame(width: CGFloat(max(300, chartData.count * 65)), height: 200)  // 使用与新代码一致的框架大小设置
+                        .chartForegroundStyleScale(["血糖值": .orange])  // 設定圖表顏色樣式
+                        .frame(width: chartWidth, height: 200)  // 動態寬度
+                        .scaleEffect(animateChart ? 1 : 0.8)  // 動畫縮放效果
+                        .opacity(animateChart ? 1 : 0)  // 動畫透明度
+                        .animation(.easeInOut(duration: 0.8), value: animateChart)  // 平滑動畫
                     }
                     .padding()
                 }
-                .frame(width: 350, height: 250)  // 修改外框大小
-                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))  // 添加外框样式
-                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5)  // 添加阴影效果
+                .frame(width: 350, height: 250)
+                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
+                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5)
                 
                 
                 VStack {
@@ -284,6 +295,11 @@ struct HyperglycemiaView: View {
                     }
                 }
                 .offset(y: 10)
+            }
+            .onAppear {
+                withAnimation {
+                    animateChart = true // 當頁面出現時啟動動畫
+                }
             }
             .onAppear {
                 self.connect(name: "BS", action: "fetch")

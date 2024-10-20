@@ -26,49 +26,18 @@ struct ResponseWrapper: Codable
     var chatRecords: [ChatRecord] // 根據實際的 JSON 結構定義
 }
 
-//MARK: 此畫面主結構＿歷史聊天紀錄
-struct ChatRecord: Identifiable, Codable
-{
-    var id: Int { Recipe_ID }
-    let Recipe_ID: Int
-    let U_ID: String
-    var input: String
-    let output: String
-    var isAICol: Bool
-    var ai_image_url: String? // 新增圖片 URL 欄位
-    
-    // 自定义解码方法，将 Int 转换为 Bool
-    enum CodingKeys: String, CodingKey
-    {
-        case Recipe_ID, U_ID, input, output, isAICol = "isAICol", ai_image_url
-    }
-    
-    init(from decoder: Decoder) throws
-    {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        Recipe_ID = try container.decode(Int.self, forKey: .Recipe_ID)
-        U_ID = try container.decode(String.self, forKey: .U_ID)
-        input = try container.decode(String.self, forKey: .input)
-        output = try container.decode(String.self, forKey: .output)
-        let isAIColInt = try container.decode(Int.self, forKey: .isAICol)
-        isAICol = isAIColInt == 1
-        ai_image_url = try container.decodeIfPresent(String.self, forKey: .ai_image_url) // 解碼圖片 URL
-    }
-}
-
 //MARK: 用於顯示歷史對話紀錄的視圖
-struct ChatHistoryView: View
-{
+struct ChatHistoryView: View {
     @State private var chatRecords: [ChatRecord] = []
     @State private var currentUserID: String? = nil
+    @State private var showingClearAlert = false
+    @State private var showBookmarkIcon = false // 控制 bookmark.fill 圖示的顯示
+    @State private var bookmarkOpacity = 0.0   // 控制透明度，用於漸入漸出效果
     
-    
-    //MARK: 根據用戶的 ID 從伺服器獲取該用戶的聊天記錄
-    func fetchChatRecords(for userID: String)
-    {
-        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe_History.php?U_ID=\(userID)")
-        else
-        {
+
+    // MARK: 根據用戶的 ID 從伺服器獲取該用戶的聊天記錄
+    func fetchChatRecords(for userID: String) {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetRecipe_History.php?U_ID=\(userID)") else {
             print("Invalid URL")
             return
         }
@@ -79,16 +48,13 @@ struct ChatHistoryView: View
                 return
             }
             
-            guard let data = data
-            else
-            {
+            guard let data = data else {
                 print("No data received")
                 return
             }
             
             // Print raw JSON
-            if let jsonString = String(data: data, encoding: .utf8)
-            {
+            if let jsonString = String(data: data, encoding: .utf8) {
                 print("Raw JSON: \(jsonString)")
             }
             
@@ -98,8 +64,7 @@ struct ChatHistoryView: View
                 let records = try decoder.decode([ChatRecord].self, from: data)
                 
                 // Filter the records for the current user
-                DispatchQueue.main.async
-                {
+                DispatchQueue.main.async {
                     self.chatRecords = records.filter { $0.U_ID == userID }
                 }
             } catch {
@@ -108,81 +73,205 @@ struct ChatHistoryView: View
         }.resume()
     }
     
-    var body: some View
-    {
-        VStack
-        {
-            Text("歷史對話紀錄")
-                .font(.system(size: 22))
-                .bold()
-                .padding()
-                .offset(y:5)
+
+       private func deleteChatRecord(at offsets: IndexSet) {
+           offsets.forEach { index in
+               let recordToDelete = chatRecords[index]
+               // 構造刪除請求的 URL
+               guard let url = URL(string: "http://163.17.9.107/food/php/GetHistory_Delete.php?U_ID=\(recordToDelete.U_ID)&Recipe_ID=\(recordToDelete.Recipe_ID)") else {
+                   print("Invalid URL")
+                   return
+               }
             
-            ScrollView
-            {
-                if chatRecords.isEmpty
-                {
-                    // 顯示暫時無歷史紀錄的視圖
-                    VStack
-                    {
+            var request = URLRequest(url: url)
+            request.httpMethod = "DELETE"
+            
+            print("Sending delete request to: \(url)")
+            
+            URLSession.shared.dataTask(with: request) { data, response, error in
+                if let error = error {
+                    print("Error deleting chat record: \(error.localizedDescription)")
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("Response status code: \(httpResponse.statusCode)")
+                    
+                    if httpResponse.statusCode == 200 {
+                        DispatchQueue.main.async {
+                            // 使用 withAnimation 來逐一刪除並添加動畫效果
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                chatRecords.remove(at: index)
+                                print("Chat record deleted successfully.")
+                            }
+                        }
+                    } else {
+                        print("Failed to delete chat record. Status code: \(httpResponse.statusCode)")
+                    }
+                } else {
+                    print("Response is not HTTPURLResponse")
+                }
+            }.resume()
+        }
+    }
+
+    
+    private func clearChatHistory() {
+        guard let userID = currentUserID else { return }
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetHistory_Clear.php?U_ID=\(userID)") else {
+            print("Invalid URL")
+            return
+        }
+        
+        // 首先獲取聊天記錄的副本
+        let recordsToDelete = chatRecords
+
+        // 使用 URLSession 進行請求以清除歷史
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("Error clearing chat history: \(error.localizedDescription)")
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Response status code: \(httpResponse.statusCode)")
+                
+                if httpResponse.statusCode == 200 {
+                    DispatchQueue.main.async {
+                        // 逐一刪除聊天記錄並添加動畫效果
+                        for record in recordsToDelete {
+                            if let index = chatRecords.firstIndex(where: { $0.id == record.id }) {
+                                withAnimation(.easeInOut(duration: 0.5)) {
+                                    chatRecords.remove(at: index)
+                                }
+                            }
+                        }
+                        print("Chat history cleared successfully.")
+                    }
+                } else {
+                    print("Failed to clear chat history. Status code: \(httpResponse.statusCode)")
+                }
+            } else {
+                print("Response is not HTTPURLResponse")
+            }
+        }.resume()
+    }
+
+    
+    var body: some View {
+        ZStack {
+            VStack {
+                if chatRecords.isEmpty {
+                    VStack {
                         Image("空ai紀錄")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 180, height: 180)
+                        
                         Text("暫時無歷史紀錄")
                             .font(.system(size: 18))
                             .foregroundColor(.gray)
                     }
-                    .offset(y:180)
                 } else {
-                    VStack(spacing: 20) {  // 设置卡片之间的垂直间距
-                        ForEach(chatRecords) { record in
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.white)
-                                    .shadow(radius: 4)
-                                
-                                VStack(alignment: .leading) {
-                                    HStack {
-                                        Text("問：\(record.input)")
-                                            .fontWeight(.bold)
-                                        Spacer()
-                                        
-                                        Button(action: {
-                                            toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
-                                                switch result {
-                                                case .success(let message):
-                                                    DispatchQueue.main.async {
-                                                        if let index = chatRecords.firstIndex(where: { $0.Recipe_ID == record.Recipe_ID }) {
-                                                            chatRecords[index].isAICol.toggle() // 更新收藏狀態
-                                                        }
-                                                        print("isAICol Action successful: \(message)") // 打印成功消息
-                                                    }
-                                                case .failure(let error):
-                                                    DispatchQueue.main.async {
-                                                        print("Error toggling AICol: \(error.localizedDescription)")
-                                                    }
-                                                }
-                                            }
-                                        }) {
-                                            Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
-                                                .font(.title)
-                                                .foregroundColor(.red)
-                                        }
-                                        .offset(y: -22)
-                                        
-                                    }
-                                    Text("答：\(record.output)")
-                                        .foregroundColor(.gray)
-                                }
+                    HStack {
+                        Text("歷史對話紀錄")
+                            .font(.system(size: 22))
+                            .bold()
+                            .padding()
+                            .offset(x: 30,y: 5)
+                            .frame(maxWidth: .infinity, alignment: .center)
+
+                        Button(action: {
+                            showingClearAlert = true
+                        }) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 25))
+                                .foregroundColor(.orange)
                                 .padding()
-                            }
-                            .padding(.horizontal)
+                                .offset(y:5)
                         }
                     }
-                    .padding(.vertical) // 添加顶端和底端的间距
+                    
+                    List {
+                        ForEach(chatRecords) { record in
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text("問：\(record.input)")
+                                        .fontWeight(.bold)
+                                    Spacer()
+                                    
+                                    Button(action: {
+                                        toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
+                                            switch result {
+                                            case .success(let message):
+                                                DispatchQueue.main.async {
+                                                    if let index = chatRecords.firstIndex(where: { $0.Recipe_ID == record.Recipe_ID }) {
+                                                        chatRecords[index].isAICol.toggle()
+                                                        
+                                                        // 判斷新的 isAICol 值是否為 true
+                                                        if chatRecords[index].isAICol {
+                                                            showBookmarkIcon = true // 顯示 bookmark 圖示
+                                                            
+                                                            // 使用動畫漸入並放大
+                                                            withAnimation(.easeInOut(duration: 0.5)) {
+                                                                bookmarkOpacity = 1.0
+                                                            }
+                                                            
+                                                            // 停留 1 秒後漸出並隱藏圖示
+                                                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                                                withAnimation(.easeInOut(duration: 0.5)) {
+                                                                    bookmarkOpacity = 0.0
+                                                                }
+                                                                // 在透明度完全消失後隱藏圖示
+                                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                                                    showBookmarkIcon = false
+                                                                }
+                                                            }
+                                                        } else {
+                                                            // 如果 isAICol 為 false，則立即隱藏圖示
+                                                            showBookmarkIcon = false
+                                                        }
+                                                    }
+                                                    print("isAICol Action successful: \(message)")
+                                                }
+                                            case .failure(let error):
+                                                DispatchQueue.main.async {
+                                                    print("Error toggling AICol: \(error.localizedDescription)")
+                                                }
+                                            }
+                                        }
+                                    }) {
+                                        Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
+                                            .font(.system(size: 25))
+                                            .foregroundColor(.orange)
+                                    }
+
+
+                                    .offset(y: -2.5)
+                                }
+                                Text("答：\(record.output ?? "無回應")")
+                                    .foregroundColor(.gray)
+                            }
+                            .padding()
+                            .frame(width: UIScreen.main.bounds.width - 40)
+                            .padding(.horizontal)
+                        }
+                        .onDelete(perform: deleteChatRecord)
+                    }
                 }
             }
+            
+            // 中央顯示的 bookmark.fill 圖示，並控制透明度以實現漸入漸出效果
+            if showBookmarkIcon {
+                Image(systemName: "bookmark.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.orange)
+                    .opacity(bookmarkOpacity)
+                    .scaleEffect(bookmarkOpacity)  // 根據透明度變化控制縮放
+                    .transition(.opacity)  // 漸入漸出效果
+                    .animation(.easeInOut(duration: 0.5), value: bookmarkOpacity)  // 加入動畫
+            }
+
         }
         .onAppear {
             fetchUserID { userID in
@@ -194,8 +283,27 @@ struct ChatHistoryView: View
                 fetchChatRecords(for: userID)
             }
         }
+        .alert(isPresented: $showingClearAlert) {
+            Alert(
+                title: Text("確認清除聊天記錄"),
+                message: Text("您確定要清除所有聊天記錄嗎？"),
+                primaryButton: .destructive(Text("清除")) {
+                    clearChatHistory()
+                },
+                secondaryButton: .cancel(Text("取消"))
+            )
+        }
     }
 }
+
+
+
+
+
+
+
+
+
 
 //MARK: 主要的互動界面
 struct AIView: View

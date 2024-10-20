@@ -6,34 +6,30 @@
 
 import SwiftUI
 
-struct AIRecipeView: View, AIRecipeP
-{
+struct AIRecipeView: View, AIRecipeP {
     let U_ID: String // 用於添加收藏
     
+    @State var caRecipes: CA_Recipes = CA_Recipes(customRecipes: [], aiRecipes: [])
     @State var chatRecords: [ChatRecord] = []
     @State private var isLoading: Bool = true // 載入狀態
     @State private var loadingError: String? = nil // 載入錯誤訊息
     
     @State private var currentUserID: String? = nil // 用於保存當前用戶 ID
     
-    var data: [ChatRecord]
-    {
+    var data: [ChatRecord] {
         chatRecords
     }
     
     // MARK: - AIRecipeP 協議要求的實作方法
-    func itemName() -> String
-    {
+    func itemName() -> String {
         return chatRecords.first?.input ?? "Unknown AI Recipe"
     }
     
-    func itemImageURL() -> URL?
-    {
+    func itemImageURL() -> URL? {
         return nil // AI 食譜通常沒有封面圖片
     }
     
-    func HeaderView(size: CGSize, recordInput: String? = nil) -> AnyView
-    {
+    func HeaderView(size: CGSize, recordInput: String? = nil) -> AnyView {
         // 返回簡易名稱
         return AnyView(
             Text(itemName())
@@ -43,27 +39,22 @@ struct AIRecipeView: View, AIRecipeP
         )
     }
     
-    func AICookbookView(safeArea: EdgeInsets) -> AnyView
-    {
+    func AICookbookView(safeArea: EdgeInsets) -> AnyView {
         // 這裡直接呼叫協定擴充中的預設實現，保持程式碼簡潔
         return self.AICookbookView(safeArea: safeArea)
     }
     
     // MARK: AIRecipeView body
-    var body: some View
-    {
-        NavigationStack
-        {
-            VStack
-            {
+    var body: some View {
+        NavigationStack {
+            VStack {
                 Text("AI 食譜庫")
                     .font(.largeTitle)
                     .bold()
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.leading, 20)
                 
-                if isLoading
-                {
+                if isLoading {
                     // 載入中的轉圈動畫
                     VStack {
                         Spacer()
@@ -71,31 +62,23 @@ struct AIRecipeView: View, AIRecipeP
                         Spacer()
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if let error = loadingError
-                {
-                    VStack
-                    {
+                } else if let error = loadingError {
+                    VStack {
                         Text("載入失敗: \(error)")
                             .font(.body)
                             .foregroundColor(.red)
                         Spacer().frame(height: 120)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                } else if chatRecords.isEmpty
-                {
+                } else if chatRecords.isEmpty {
                     // 當沒有記錄時，顯示空狀態
                     AIEmptyStateView()
-                } else
-                {
-                    ScrollView(showsIndicators: false)
-                    {
-                        LazyVStack
-                        {
-                            ForEach(chatRecords)
-                            { record in
-                                NavigationLink(destination: AIRecipeBlock(U_ID: U_ID, record: record))
-                                {
-                                    AIR_Block(record: record)
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        LazyVStack {
+                            ForEach(chatRecords, id: \.Recipe_ID) { record in
+                                NavigationLink(destination: AIRecipeBlock(U_ID: U_ID, record: record, chatRecords: $chatRecords)) {
+                                    AIR_Block(record: record, chatRecords: $chatRecords) // 傳入 chatRecords
                                 }
                                 .padding(10)
                             }
@@ -103,13 +86,9 @@ struct AIRecipeView: View, AIRecipeP
                     }
                 }
             }
-            .onAppear
-            {
-                fetchUserID
-                { userID in
-                    guard let userID = userID
-                    else
-                    {
+            .onAppear {
+                fetchUserID { userID in
+                    guard let userID = userID else {
                         print("Failed to get user ID")
                         return
                     }
@@ -122,32 +101,42 @@ struct AIRecipeView: View, AIRecipeP
 }
 
 //MARK: 外部公模板 AIR_Block
-struct AIR_Block: View
-{
+struct AIR_Block: View {
     let record: ChatRecord
-    
-    var body: some View
-    {
-        ZStack
-        {
+    @Binding var chatRecords: [ChatRecord] // 使用 Binding 傳遞 chatRecords
+
+    var body: some View {
+        ZStack {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.white)
                 .shadow(radius: 4)
-            
-            VStack(alignment: .leading)
-            {
-                HStack
-                {
+
+            VStack(alignment: .leading) {
+                HStack {
                     Text(record.input)
                         .font(.system(size: 22))
                         .bold()
                     Spacer()
                     Button(action: {
-                        toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in }
+                        toggleAIColmark(U_ID: record.U_ID, Recipe_ID: record.Recipe_ID, isAICol: !record.isAICol) { result in
+                            switch result {
+                            case .success(let message):
+                                DispatchQueue.main.async {
+                                    if let index = chatRecords.firstIndex(where: { $0.Recipe_ID == record.Recipe_ID }) {
+                                        chatRecords[index].isAICol.toggle() // 更新收藏狀態
+                                    }
+                                    print("isAICol Action successful: \(message)")
+                                }
+                            case .failure(let error):
+                                DispatchQueue.main.async {
+                                    print("Error toggling AICol: \(error.localizedDescription)")
+                                }
+                            }
+                        }
                     }) {
                         Image(systemName: record.isAICol ? "bookmark.fill" : "bookmark")
-                            .font(.title)
-                            .foregroundColor(.red)
+                            .font(.system(size: 25))
+                            .foregroundColor(.orange)
                     }
                     .offset(y: -30)
                 }
@@ -160,12 +149,9 @@ struct AIR_Block: View
 }
 
 // MARK: 當AI食譜為空 AIEmptyStateView
-struct AIEmptyStateView: View
-{
-    var body: some View
-    {
-        VStack
-        {
+struct AIEmptyStateView: View {
+    var body: some View {
+        VStack {
             Image("空AI食譜")
                 .resizable()
                 .scaledToFit()
@@ -173,8 +159,7 @@ struct AIEmptyStateView: View
             Text("暫無新增任何AI食譜")
                 .font(.system(size: 18))
                 .foregroundColor(.gray)
-            NavigationLink(destination: AIView())
-            {
+            NavigationLink(destination: AIView()) {
                 Text("前往“AI食譜”添加更多＋＋")
                     .font(.system(size: 18))
                     .foregroundColor(.blue)
@@ -185,8 +170,3 @@ struct AIEmptyStateView: View
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-//
-//#Preview
-//{
-//    AIRecipeView(U_ID:"hhwWhJvWJk")
-//}

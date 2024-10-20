@@ -393,15 +393,18 @@ extension RecipeP
 }
 
 // MARK: extension：AIRecipeP
-extension AIRecipeP
-{
-    func itemName() -> String
-    {
-        return chatRecords.first?.input ?? "Unknown AI Recipe"
+extension AIRecipeP {
+    func itemName() -> String {
+        // 確保有可用的 chatRecord 並解包 output
+        guard let output = chatRecords.first?.output else {
+            return "Unknown AI Recipe"
+        }
+        
+        // 使用 extractRecipeName 方法提取名稱
+        return output.extractRecipeName() ?? "Unknown AI Recipe"
     }
     
-    func itemImageURL() -> URL?
-    {
+    func itemImageURL() -> URL? {
         return nil  // AI 生成的食譜可能沒有封面圖片
     }
 }

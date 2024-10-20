@@ -307,8 +307,8 @@ struct MyView: View
                         }
                         .listRowSeparator(.hidden)
                         
-                        // MARK: 設定_內容＆連結處
-                        Section(header:Text("設置"))
+                        // MARK: 更多功能_內容＆連結處
+                        Section(header:Text("更多功能"))
                         {
                             // MARK: 健康 連結
                             HStack

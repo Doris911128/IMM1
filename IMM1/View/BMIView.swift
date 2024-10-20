@@ -94,7 +94,7 @@ struct BMIView: View {
     @State private var isShowingList: Bool = false
     @State private var isShowingDetailSheet: Bool = false
     @State private var isLoading: Bool = true // Add a loading state
-    
+    @State private var animateChart = false // 控制圖表動畫的狀態
     // 控制 Alert 的顯示
     @State private var showAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -167,15 +167,22 @@ struct BMIView: View {
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 20) {
-                        Chart(displayMode == 0 ? bmiRecordViewModel.bmiRecords.reversed() :
-                                (displayMode == 1 ? bmiRecordViewModel.averagesEverySevenRecordsSorted().reversed() :
-                                    bmiRecordViewModel.averagesEveryThirtyRecordsSorted().reversed())) { record in
+                        let records = displayMode == 0 ?
+                        bmiRecordViewModel.bmiRecords.reversed() :
+                        (displayMode == 1 ?
+                         bmiRecordViewModel.averagesEverySevenRecordsSorted().reversed() :
+                            bmiRecordViewModel.averagesEveryThirtyRecordsSorted().reversed())
+                        
+                        let chartWidth = CGFloat(max(300, records.count * 50)) // 動態調整寬度
+                        
+                        Chart(records) { record in
                             LineMark(
                                 x: .value("Date", formattedDate(record.date)),
                                 y: .value("BMI", record.bmi)
                             )
-                            .lineStyle(.init(lineWidth: 2))
-                            .foregroundStyle(Color.orange)
+                            .lineStyle(.init(lineWidth: 2)) // 線條寬度
+                            .foregroundStyle(Color.orange)  // 統一顏色
+                            .interpolationMethod(.catmullRom) // 平滑曲線
                             
                             PointMark(
                                 x: .value("Date", formattedDate(record.date)),
@@ -185,17 +192,20 @@ struct BMIView: View {
                             .annotation(position: .top) {
                                 Text("\(record.bmi, specifier: "%.2f")")
                                     .font(.system(size: 12))
-                                    .foregroundColor(Color.black)
+                                    .foregroundColor(.black)
                             }
                         }
-                                    .chartForegroundStyleScale(["BMI值": .orange])
-                                    .frame(width: CGFloat(max(300, bmiRecordViewModel.bmiRecords.count * 65)), height: 200)
+                        .frame(width: chartWidth, height: 200)
+                        .scaleEffect(animateChart ? 1 : 0.8) // 縮放效果
+                        .opacity(animateChart ? 1 : 0) // 動畫透明度
+                        .animation(.easeInOut(duration: 0.8), value: animateChart) // 平滑動畫
                     }
                     .padding()
                 }
-                .frame(width: 350, height: 250)  // 固定外框大小
-                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2)) // 添加外框
-                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5) // 添加陰影
+                .frame(width: 350, height: 250)
+                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
+                .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5)
+                
                 
                 
                 VStack {
@@ -282,6 +292,11 @@ struct BMIView: View {
                 .offset(y: 24)
             }
             .onAppear {
+                withAnimation {
+                    animateChart = true // 當頁面出現時啟動動畫
+                }
+            }
+            .onAppear {
                 if isLoading {
                     connect(name: "FindBMI")
                 }
@@ -312,7 +327,7 @@ struct BMIRecordsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(records.indices, id: \.self) { index in
+                ForEach(records.indices.reversed(), id: \.self) { index in
                     NavigationLink(destination: BMIRecordDetailViewPager(records: records, selectedIndex: index)) {
                         HStack {
                             bmiImage(for: records[index])

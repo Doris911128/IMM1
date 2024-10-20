@@ -10,7 +10,7 @@
 //.lineLimit(10) -> 限制字串行數
 
 import SwiftUI
-
+import Foundation
 
 extension View
 {
@@ -359,121 +359,91 @@ extension View
         }.resume()
     }
     
-    // MARK: 更新ai和自訂食譜數據
-    // 假設是用 URLSession 發送 API 請求來更新資料
-    func updateRecipeData(parameters: [String: Any], completion: @escaping (Bool) -> Void) {
-        // 在此編寫你與後端互動的邏輯，像是 API 請求的實現
-        // 例如：
-        guard let url = URL(string: "http://163.17.9.107/food/php/update") else {
-            completion(false)
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: parameters, options: [])
-            request.httpBody = jsonData
-        } catch {
-            print("Failed to encode JSON")
-            completion(false)
-            return
-        }
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Request error: \(error)")
-                completion(false)
-                return
-            }
-            
-            // 檢查回應的狀態碼，這裡假設成功的狀態碼是 200
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                completion(true)
-            } else {
-                completion(false)
-            }
-        }.resume()
-    }
-    
     // MARK: - 上傳圖片功能
     func uploadImage(_ image: UIImage, completion: @escaping (Result<String, Error>) -> Void) {
         guard let url = URL(string: "http://163.17.9.107/food/php/upload_recipe_image.php") else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid server URL"])))
             return
         }
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        
+
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        
+
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Image data error"])))
             return
         }
-        
+
         var body = Data()
         body.append("--\(boundary)\r\n")
         body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n")
         body.append("Content-Type: image/jpeg\r\n\r\n")
         body.append(imageData)
         body.append("\r\n--\(boundary)--\r\n")
-        
-        request.httpBody = body
-        
-        URLSession.shared.dataTask(with: request) { data, response, error in
+
+        let uploadTask = URLSession.shared.uploadTask(with: request, from: body) { data, response, error in
             if let error = error {
                 completion(.failure(error))
                 return
             }
-            
+
             if let data = data, let response = try? JSONDecoder().decode([String: String].self, from: data), let imageUrl = response["imageUrl"] {
                 completion(.success(imageUrl))
             } else {
-                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "無效的伺服器響應"])))
+                completion(.failure(NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid server response"])))
+            }
+        }
+
+        // Add progress tracking
+        uploadTask.progress.observe(\.fractionCompleted) { progress, _ in
+            DispatchQueue.main.async {
+                print("Upload progress: \(progress.fractionCompleted * 100)%")
+                // 可以在 UI 顯示進度條，例如：progressView.progress = Float(progress.fractionCompleted)
+            }
+        }
+        
+        uploadTask.resume()
+    }
+
+    
+    //MARK: loadCA_Recipes:從後端 API 獲取用戶食譜
+    func loadCCRData(for U_ID: String, completion: @escaping ([CRecipe]) -> Void) {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetCC_Recipes.php") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let postString = "U_ID=\(U_ID)"
+        request.httpBody = postString.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("加载自訂食譜失败: \(error)")
+                return
+            }
+            
+            if let data = data {
+                do {
+                    let decodedData = try JSONDecoder().decode([CRecipe].self, from: data)
+                    DispatchQueue.main.async {
+                        completion(decodedData)
+                    }
+                } catch {
+                    print("JSON 解析失败: \(error)")
+                }
             }
         }.resume()
     }
-    
-    //MARK: loadCA_Recipes:從後端 API 獲取用戶的自訂和 AI 生成食譜
-    //    func loadCA_Recipes(for userID: String) {
-    //        guard let url = URL(string: "http://163.17.9.107/food/php/loadCA_Recipes.php") else { return }
-    //
-    //        var request = URLRequest(url: url)
-    //        request.httpMethod = "POST"
-    //        let postString = "U_ID=\(userID)" // 傳入的 userID
-    //        request.httpBody = postString.data(using: .utf8)
-    //
-    //        URLSession.shared.dataTask(with: request) { data, response, error in
-    //            if let error = error {
-    //                print("載入失敗: \(error)")
-    //                return
-    //            }
-    //
-    //            if let data = data {
-    //                do {
-    //                    let decodedData = try JSONDecoder().decode(CA_Recipes_S.self, from: data)
-    //                    DispatchQueue.main.async {
-    //                        self.customRecipes = decodedData.customRecipes // 更新自訂食譜
-    //                        self.aiRecipes = decodedData.aiRecipes        // 更新 AI 食譜
-    //                    }
-    //                } catch {
-    //                    print("JSON 解析失敗: \(error)")
-    //                }
-    //            }
-    //        }.resume()
-    //    }
-    
-    
+
+
+
     //MARK: editRecipe: 編輯自訂或 AI 生成食譜
     func editRecipe(recipe: CRecipe, U_ID: String, isAIRecipe: Bool, completion: @escaping (Bool) -> Void) {
         let apiEndpoint = isAIRecipe ? "update_ARecipes.php" : "update_CRecipes.php"
         
-        guard let url = URL(string: "http://163.17.9.107/food/php\(apiEndpoint)") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/\(apiEndpoint)") else {
             completion(false)
             return
         }
@@ -483,13 +453,13 @@ extension View
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let recipeData: [String: Any] = [
-            "U_ID": U_ID, // 從外部傳入 U_ID
+            "U_ID": U_ID,
             "f_name": recipe.f_name,
             "ingredients": recipe.ingredients,
             "method": recipe.method,
             "UTips": recipe.UTips,
             "c_image_url": recipe.c_image_url ?? "",
-            "CR_ID": recipe.CR_ID // 自訂食譜ID或AI食譜ID
+            "CR_ID": recipe.CR_ID
         ]
         
         do {
@@ -514,8 +484,34 @@ extension View
             }
         }.resume()
     }
-    
+
+
 }
+
+extension String {
+    func extractRecipeName() -> String? {
+        // 查找 "所需材料" 或 "原料" 的開始位置
+        guard let foodStartRange = self.range(of: "所需材料") ?? self.range(of: "原料") else {
+            print("找不到 '所需材料' 或 '原料' 的標題")
+            return nil
+        }
+
+        // 找到食材標題之前的範圍，將內容提取為名稱
+        let nameContent = String(self[..<foodStartRange.lowerBound])
+
+        // 將名稱進行換行符號拆分，並取最後一行作為食譜名稱
+        let nameLines = nameContent.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        // 找到最後一行非空的文本作為食譜名稱
+        if let recipeName = nameLines.last, !recipeName.isEmpty {
+            return recipeName
+        } else {
+            print("食譜名稱拆分失敗，找不到有效的名稱")
+            return nil
+        }
+    }
+}
+
 
 // 追加Data的擴展
 extension Data {

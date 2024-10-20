@@ -478,12 +478,8 @@ struct AddIngredients: View
     @State private var ingredientsInfo: [IngredientInfo] = []
     @State private var refreshTrigger = false
     
-    @State private var manualIngredientName: String = ""
-    @State private var manualIngredientUnit: String = ""
-    @State private var isManualEntry: Bool = false
-    
     // 預設的食材單位選擇列表
-    private let predefinedUnits = ["顆", "毫升", "個", "克", "瓣",  "塊", "片", "條", "支"]
+    private let predefinedUnits = ["顆", "毫升", "個", "克", "瓣", "塊", "片", "條", "支"]
     
     var onAdd: (StockIngredient) -> Void
     
@@ -491,7 +487,6 @@ struct AddIngredients: View
     @Binding var isEditing: Bool
     
     // MARK: [var] filteredIngredients
-    // 用戶手動輸入關鍵字時，會篩選出符合條件的食材清單
     var filteredIngredients: [IngredientInfo]
     {
         if searchText.isEmpty
@@ -526,7 +521,6 @@ struct AddIngredients: View
     }
     
     // MARK: [func] fetchIngredientNames
-    // 從伺服器獲取可用的食材名稱並存儲於 ingredientsInfo 中
     private func fetchIngredientNames()
     {
         let networkManager = NetworkManager()
@@ -552,7 +546,6 @@ struct AddIngredients: View
     }
     
     // MARK: [func] sendDataToServer
-    // 將新增加的食材資料以 JSON 格式發送到伺服器
     private func sendDataToServer(json: String?)
     {
         guard let jsonData = json, let url = URL(string: "http://163.17.9.107/food/php/Stock.php")
@@ -601,53 +594,34 @@ struct AddIngredients: View
         {
             ZStack
             {
-                // 預設[空]圖片，放置在背景圖層
                 Image("庫存頭腳")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: UIScreen.main.bounds.width, height: 100) // 適配螢幕寬度，調整高度
-                    .position(x: UIScreen.main.bounds.width / 2, y: 0) // 固定位置在頂部
-                    .zIndex(1) // 設定為背景圖層
+                    .frame(width: UIScreen.main.bounds.width, height: 100)
+                    .position(x: UIScreen.main.bounds.width / 2, y: 0)
+                    .zIndex(1)
                 
-                // Form內容，放置在前景層
                 Form
                 {
                     Section(header: Text("新增食材"))
                     {
-                        Toggle("手動輸入食材", isOn: $isManualEntry)
+                        TextField("搜索食材", text: $searchText)
+                            .autocapitalization(.none)
                         
-                        if isManualEntry
+                        Picker("選擇食材", selection: $selectedIngredientIndex)
                         {
-                            TextField("食材名稱", text: $manualIngredientName)
-                            
-                            Picker("食材單位", selection: $manualIngredientUnit)
-                            {
-                                ForEach(predefinedUnits, id: \.self)
-                                { unit in
-                                    Text(unit).tag(unit)
-                                }
+                            ForEach(filteredIngredients.indices, id: \.self)
+                            { index in
+                                Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
                             }
-                            .pickerStyle(MenuPickerStyle())
-                        } else
-                        {
-                            TextField("搜索食材", text: $searchText)
-                                .autocapitalization(.none)
-                            
-                            Picker("選擇食材", selection: $selectedIngredientIndex)
-                            {
-                                ForEach(filteredIngredients.indices, id: \.self)
-                                { index in
-                                    Text("\(filteredIngredients[index].F_Name) (\(filteredIngredients[index].F_Unit))").tag(index)
-                                }
-                            }
-                            .pickerStyle(MenuPickerStyle())
                         }
+                        .pickerStyle(MenuPickerStyle())
                         
                         TextField("請輸入食材數量", text: $newIngredientQuantity)
                             .keyboardType(.numberPad)
                     }
                 }
-                .zIndex(0) // 確保Form內容在圖片之上
+                .zIndex(0)
             }
             .toolbar
             {
@@ -657,34 +631,18 @@ struct AddIngredients: View
                     {
                         if let SK_SUM = Int(newIngredientQuantity), SK_SUM > 0
                         {
-                            let F_ID: Int
-                            let F_Name: String
-                            let F_Unit: String
-                            
-                            if isManualEntry
+                            if filteredIngredients.isEmpty
                             {
-                                F_ID = -1 // 特殊值表示手動輸入
-                                F_Name = manualIngredientName
-                                F_Unit = manualIngredientUnit
-                            } else
-                            {
-                                if filteredIngredients.isEmpty
-                                {
-                                    showAlert = true // 如果沒有可用成分，則顯示警報
-                                    return
-                                }
-                                let selectedInfo = filteredIngredients[selectedIngredientIndex]
-                                F_ID = selectedInfo.F_ID
-                                F_Name = selectedInfo.F_Name
-                                F_Unit = selectedInfo.F_Unit
+                                showAlert = true
+                                return
                             }
-                            
+                            let selectedInfo = filteredIngredients[selectedIngredientIndex]
                             let newIngredient = StockIngredient(
                                 U_ID: UUID().uuidString,
-                                F_ID: F_ID,
-                                F_Name: F_Name,
+                                F_ID: selectedInfo.F_ID,
+                                F_Name: selectedInfo.F_Name,
                                 SK_SUM: SK_SUM,
-                                F_Unit: F_Unit
+                                F_Unit: selectedInfo.F_Unit
                             )
                             onAdd(newIngredient)
                             let json = toJSONString(F_ID: newIngredient.F_ID, F_Name: newIngredient.F_Name, F_Unit: newIngredient.F_Unit!, SK_SUM: newIngredient.SK_SUM, U_ID: newIngredient.U_ID)
@@ -694,7 +652,7 @@ struct AddIngredients: View
                             
                             isSheetPresented = false
                             isEditing = false
-                            refreshTrigger.toggle()  // Toggle the refresh trigger to update the view
+                            refreshTrigger.toggle()
                         } else
                         {
                             showAlert = true
@@ -720,8 +678,8 @@ struct AddIngredients: View
             fetchIngredientNames()
         }
     }
-    
 }
+
 
 struct StockView_Previews: PreviewProvider
 {
