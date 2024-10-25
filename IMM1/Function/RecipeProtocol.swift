@@ -59,7 +59,7 @@ protocol RecipeP: RecipeProtocol where DataType == Dishes
 // 用於顯示AI生成食譜的協議，繼承自RecipeProtocol 含載入AI資料、顯示數據內容方法
 protocol AIRecipeP: RecipeProtocol where DataType == ChatRecord
 {
-    var chatRecords: [ChatRecord] { get set }
+    var aiRecipes: [ChatRecord] { get set }
     
     // 顯示 AI 烹飪書視圖，包括所需食材和 AI 生成的烹飪方法
     func AICookbookView(safeArea: EdgeInsets) -> AnyView
@@ -396,7 +396,7 @@ extension RecipeP
 extension AIRecipeP {
     func itemName() -> String {
         // 確保有可用的 chatRecord 並解包 output
-        guard let output = chatRecords.first?.output else {
+        guard let output = aiRecipes.first?.output else {
             return "Unknown AI Recipe"
         }
         

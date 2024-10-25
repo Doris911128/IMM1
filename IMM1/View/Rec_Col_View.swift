@@ -9,6 +9,7 @@ import SwiftUI
 
 struct Rec_Col_View: View
 {
+    @State private var aiRecipes: [ChatRecord] = [] // 在此聲明 aiRecipes 狀態變數
     var body: some View
     {
         TabView
@@ -17,7 +18,7 @@ struct Rec_Col_View: View
                 .tabItem {
                     Label("我的最愛", systemImage: "heart.fill")
                 }
-            AIRecipeView(U_ID: " ")
+            AIRecipeView(aiRecipes: $aiRecipes, U_ID: " ")
                 .tabItem {
                     Label("AI食譜庫", systemImage: "book.pages")
                 }

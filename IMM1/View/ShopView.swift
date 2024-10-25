@@ -152,6 +152,7 @@ struct RecipeView: View
     @State private var quantityInputs: [UUID: String] = [:]
     @State private var hiddenIngredients: Set<UUID> = []
     
+    
     init(recipes: Binding<[RecipeWrapper]>, onDeleteIngredient: @escaping (Ingredient) -> Void, selectedIngredients: Binding<[Ingredient]>, onIngredientSelection: @escaping (Int, String, Int) -> Void, ingredients: Binding<[StockIngredient]>) {
         self._recipes = recipes
         self.onDeleteIngredient = onDeleteIngredient
@@ -208,114 +209,125 @@ struct RecipeView: View
         {
             List
             {
-                ForEach(recipes, id: \.sqlResult.id)
-                { wrapper in
-                    if !shouldHideIngredient(wrapper.sqlResult.id) && (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
-                        Section(header: EmptyView())
-                        {
-                            HStack(alignment: .top)
-                            {
-                                if let imageUrl = URL(string: wrapper.sqlResult.foodImage)
-                                {
-                                    AsyncImage(url: imageUrl)
-                                    { phase in
-                                        switch phase
-                                        {
-                                        case .empty:
-                                            ProgressView()
-                                                .frame(width: 100, height: 100)
-                                                .background(Color.gray.opacity(0.1))
-                                                .cornerRadius(10)
-                                        case .success(let image):
-                                            image.resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                                .frame(width: 100, height: 100)
-                                                .cornerRadius(10)
-                                        case .failure:
-                                            Image(systemName: "photo")
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                                .frame(width: 100, height: 100)
-                                                .background(Color.gray.opacity(0.1))
-                                                .cornerRadius(10)
-                                        @unknown default:
-                                            Image(systemName: "photo")
-                                                .resizable()
-                                                .aspectRatio(contentMode: .fill)
-                                                .frame(width: 100, height: 100)
-                                                .background(Color.gray.opacity(0.1))
-                                                .cornerRadius(10)
-                                        }
-                                    }
-                                    .onAppear
-                                    {
-                                        print("Loading image from URL: \(imageUrl)")
-                                    }
-                                } else
-                                {
-                                    Image(systemName: "photo")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fill)
-                                        .frame(width: 50, height: 50)
-                                        .background(Color.gray.opacity(0.1))
-                                        .cornerRadius(10)
-                                        .onAppear {
-                                            print("Invalid URL for image: \(wrapper.sqlResult.foodImage)")
-                                        }
-                                }
-                                Spacer()
-                                    .frame(width: 30) // 添加間隔
-                                
-                                VStack(alignment: .leading) {
-                                    Text(" \(wrapper.sqlResult.name)")
-                                        .font(.system(size: 20)) // 设置字体大小
-                                        .fontWeight(.bold) // 设置字体粗细
-                                        .lineLimit(nil) // 允许多行显示
-                                        .fixedSize(horizontal: false, vertical: true) // 固定垂直尺寸
-                                    
-                                    HStack {
-                                        Text("採購數量: \(wrapper.planAmount ?? "0")\(wrapper.sqlResult.unit)")
-                                            .font(.system(size: 12))
-                                            .padding(.trailing, -50)
-                                    }
-                                    TextField("數量", text: Binding(
-                                        get: {
-                                            self.quantityInputs[wrapper.sqlResult.id] ?? (wrapper.planAmount ?? "")
-                                        },
-                                        set: { newValue in
-                                            // 过滤掉非数字字符
-                                            let filtered = newValue.filter { "0123456789".contains($0) }
-                                            // 更新 quantityInputs 只有在 filtered 不是负数且不为空的情况下才设置
-                                            if !filtered.isEmpty {
-                                                self.quantityInputs[wrapper.sqlResult.id] = filtered
-                                            } else {
-                                                self.quantityInputs[wrapper.sqlResult.id] = ""
+                ForEach(recipes, id: \.sqlResult.id) { wrapper in
+                    if (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
+                        Section(header: EmptyView()) {
+                            if !hiddenIngredients.contains(wrapper.sqlResult.id) {
+                                HStack(alignment: .top) {
+                                    // 食材圖片
+                                    if let imageUrl = URL(string: wrapper.sqlResult.foodImage) {
+                                        AsyncImage(url: imageUrl) { phase in
+                                            switch phase {
+                                            case .empty:
+                                                ProgressView()
+                                                    .frame(width: 100, height: 100)
+                                                    .background(Color.gray.opacity(0.1))
+                                                    .cornerRadius(10)
+                                            case .success(let image):
+                                                image.resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: 100, height: 100)
+                                                    .cornerRadius(10)
+                                            case .failure:
+                                                Image(systemName: "photo")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: 100, height: 100)
+                                                    .background(Color.gray.opacity(0.1))
+                                                    .cornerRadius(10)
+                                            @unknown default:
+                                                Image(systemName: "photo")
+                                                    .resizable()
+                                                    .aspectRatio(contentMode: .fill)
+                                                    .frame(width: 100, height: 100)
+                                                    .background(Color.gray.opacity(0.1))
+                                                    .cornerRadius(10)
                                             }
                                         }
-                                    ))
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .frame(width: 80)
-                                    .keyboardType(.numberPad)
-                                    
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .frame(width: 80)
-                                    .keyboardType(.numberPad)
+                                        .onAppear {
+                                            print("Loading image from URL: \(imageUrl)")
+                                        }
+                                    } else {
+                                        Image(systemName: "photo")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fill)
+                                            .frame(width: 50, height: 50)
+                                            .background(Color.gray.opacity(0.1))
+                                            .cornerRadius(10)
+                                            .onAppear {
+                                                print("Invalid URL for image: \(wrapper.sqlResult.foodImage)")
+                                            }
+                                    }
+                                    Spacer().frame(width: 30)
+
+                                    VStack(alignment: .leading) {
+                                        Text(" \(wrapper.sqlResult.name)")
+                                            .font(.system(size: 20))
+                                            .fontWeight(.bold)
+                                            .lineLimit(nil)
+                                            .fixedSize(horizontal: false, vertical: true)
+
+                                        HStack {
+                                            Text("採購數量: \(wrapper.planAmount ?? "0")\(wrapper.sqlResult.unit)")
+                                                .font(.system(size: 12))
+                                                .padding(.trailing, -50)
+                                        }
+                                        TextField("數量", text: Binding(
+                                            get: {
+                                                self.quantityInputs[wrapper.sqlResult.id] ?? (wrapper.planAmount ?? "")
+                                            },
+                                            set: { newValue in
+                                                let filtered = newValue.filter { "0123456789".contains($0) }
+                                                if !filtered.isEmpty {
+                                                    self.quantityInputs[wrapper.sqlResult.id] = filtered
+                                                } else {
+                                                    self.quantityInputs[wrapper.sqlResult.id] = ""
+                                                }
+                                            }
+                                        ))
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        .frame(width: 80)
+                                        .keyboardType(.numberPad)
+                                    }
+                                    .padding(.vertical, 8)
+
+                                    Spacer()
+
+                                    Image(systemName: "square")
+                                        .foregroundColor(Color("BottonColor"))
+                                        .onTapGesture {
+                                            withAnimation(.easeInOut(duration: 0.3)) {
+                                                if let index = recipes.firstIndex(where: { $0.sqlResult.id == wrapper.sqlResult.id }) {
+                                                    // 先加入到隱藏集合中
+                                                    hiddenIngredients.insert(wrapper.sqlResult.id)
+                                                    
+                                                    // 呼叫 onIngredientSelection
+                                                    onIngredientSelection(
+                                                        recipes[index].sqlResult.fid,
+                                                        recipes[index].sqlResult.uid,
+                                                        recipes[index].sqlResult.amount
+                                                    )
+                                                    
+                                                    // 延遲移除，讓動畫有時間執行
+                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                        withAnimation {
+                                                            recipes.remove(at: index)
+                                                            // 移除後清除隱藏狀態
+                                                            hiddenIngredients.remove(wrapper.sqlResult.id)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        .frame(maxHeight: .infinity)
                                 }
                                 .padding(.vertical, 8)
-                                
-                                Spacer()
-                                
-                                Image(systemName: wrapper.isSelected ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(Color("BottonColor"))
-                                    .onTapGesture {
-                                        toggleIngredientSelection(wrapper)
-                                    }
-                                    .frame(maxHeight: .infinity)
+                                .transition(.opacity) // 使用淡出效果
                             }
-                            .padding(.vertical, 8) // 增加垂直填充，防止内容太紧凑
                         }
                     }
                 }
+
             }
             .listStyle(PlainListStyle())
             .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))

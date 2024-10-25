@@ -131,7 +131,17 @@ struct AddRecipeView: View
     @State private var selectedImage: UIImage? = nil
     @State private var imageURL: String? = nil
     
-    private func saveRecipe() {
+    @State private var showAlert = false
+    @State private var alertMessage = ""
+
+    private func saveRecipe()
+    {
+        // 檢查空值
+        if f_name.isEmpty || ingredientsList.contains(where: { $0.isEmpty }) || stepsList.contains(where: { $0.isEmpty }) {
+            alertMessage = "請確保食譜名稱、所需食材和製作方法都已填寫！"
+            showAlert = true
+            return
+        }
         // 確保唯一的食譜 ID
         let newRecipeID = (Crecipes.map { $0.CR_ID }.max() ?? 0) + 1
         
@@ -148,6 +158,7 @@ struct AddRecipeView: View
     
     var body: some View
     {
+        
         NavigationStack
         {
             Form
@@ -161,12 +172,16 @@ struct AddRecipeView: View
                 }
                 
                 // 新增圖片的功能
-                Section {
-                    VStack {
-                        Button(action: {
+                Section
+                {
+                    VStack
+                    {
+                        Button(action:
+                                {
                             isImagePickerPresented = true // 顯示圖片選擇器
                         }) {
-                            HStack {
+                            HStack
+                            {
                                 Image(systemName: "arrow.up.doc.fill")
                                     .font(.title)
                                     .foregroundColor(.orange)
@@ -177,28 +192,41 @@ struct AddRecipeView: View
                                     .foregroundColor(.orange)
                             }
                         }
-                        .sheet(isPresented: $isImagePickerPresented) {
+                        .sheet(isPresented: $isImagePickerPresented)
+                        {
                             ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
                         }
                         
                         // 如果有選擇圖片，顯示圖片預覽和上傳按鈕
-                        if let selectedImage = selectedImage {
-                            Image(uiImage: selectedImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 200)
+                        if let selectedImage = selectedImage
+                        {
+                            
+                                    HStack {
+                                        Spacer() // 左側留空白
+                                        Image(uiImage: selectedImage)
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit) // 讓圖片保持比例
+                                            .frame(height: 200) // 固定高度
+                                            .frame(maxWidth: .infinity) // 最大寬度填滿父容器
+                                        Spacer() // 右側留空白
+                                    }
+                                
                             
                             // 上傳圖片按鈕
-                            Button(action: {
-                                uploadImage(selectedImage) { result in
-                                    switch result {
+                            Button(action:
+                                    {
+                                uploadImage(selectedImage)
+                                { result in
+                                    switch result
+                                    {
                                     case .success(let imageUrl):
                                         imageURL = imageUrl // 保存上傳成功的圖片 URL
                                     case .failure(let error):
                                         print("圖片上傳失敗: \(error.localizedDescription)")
                                     }
                                 }
-                            }) {
+                            })
+                            {
                                 Text("確認上傳")
                                     .font(.body)
                                     .bold()
@@ -211,103 +239,152 @@ struct AddRecipeView: View
                     }
                 }
                 
-                Section(header:
-                            Text("所需食材")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading))
+                // 食材區塊
+                Section(header: Text("所需食材").font(.headline))
                 {
-                    ForEach(ingredientsList.indices, id: \.self)
-                    { index in
-                        TextField("輸入所需食材", text: $ingredientsList[index])
-                            .frame(height: 40)
-                    }
-                    
-                    HStack
-                    {
-                        Spacer()
-                        Button(action: {
-                            ingredientsList.append("") // 新增食材
-                        })
+                    ForEach(ingredientsList.indices, id: \.self) { index in
+                        HStack
                         {
-                            HStack
+                            // 確保索引安全地綁定
+                            TextField("輸入所需食材", text: Binding(
+                                get:
+                                    {
+                                    if ingredientsList.indices.contains(index)
+                                    {
+                                        return ingredientsList[index]
+                                    } else
+                                    {
+                                        return ""
+                                    }
+                                },
+                                set:
+                                    { newValue in
+                                    if ingredientsList.indices.contains(index)
+                                    {
+                                        ingredientsList[index] = newValue
+                                    }
+                                }
+                            ))
+
+                            .frame(height: 40)
+                            
+                            if ingredientsList.count > 1
                             {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.title)
-                                    .foregroundColor(.orange)
-                                Text("新增食材")
-                                    .font(.body)
-                                    .bold()
-                                    .foregroundColor(.orange)
+                                Button(action:
+                                        {
+                                    ingredientsList.remove(at: index)
+                                })
+                                {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
                             }
                         }
-                        Spacer()
                     }
+                    Button(action: { ingredientsList.append("") })
+                    {
+                        Label("新增食材", systemImage: "plus.circle.fill")
+                            .foregroundColor(ingredientsList.last?.isEmpty == false ? .orange : .gray)
+                    }
+                    .disabled(ingredientsList.last?.isEmpty ?? true)
                 }
                 
-                Section(header:
-                            Text("製作方法")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading))
+                // 製作步驟區塊
+                Section(header: Text("製作方法").font(.headline))
                 {
-                    ForEach(stepsList.indices, id: \.self)
-                    { index in
-                        TextField("輸入製作步驟", text: $stepsList[index])
-                            .frame(height: 40)
-                    }
-                    
-                    HStack
-                    {
-                        Spacer()
-                        Button(action: {
-                            stepsList.append("") // 新增步驟
-                        })
+                    ForEach(stepsList.indices, id: \.self) { index in
+                        HStack
                         {
-                            HStack
+                            TextField("輸入製作步驟", text: Binding(
+                                get:
+                                    {
+                                    if stepsList.indices.contains(index)
+                                        {
+                                        return stepsList[index]
+                                    } else
+                                        {
+                                        return ""
+                                    }
+                                },
+                                set:
+                                    { newValue in
+                                    if stepsList.indices.contains(index)
+                                        {
+                                        stepsList[index] = newValue
+                                    }
+                                }
+                            ))
+                           
+                            .frame(height: 40)
+                            
+                            if stepsList.count > 1
                             {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.title)
-                                    .foregroundColor(.orange)
-                                Text("新增步驟")
-                                    .font(.body)
-                                    .bold()
-                                    .foregroundColor(.orange)
+                                Button(action:
+                                        {
+                                    stepsList.remove(at: index)
+                                })
+                                {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
                             }
                         }
-                        Spacer()
                     }
+                    Button(action: { stepsList.append("") })
+                    {
+                        Label("新增步驟", systemImage: "plus.circle.fill")
+                            .foregroundColor(stepsList.last?.isEmpty == false ? .orange : .gray)
+                    }
+                    .disabled(stepsList.last?.isEmpty ?? true)
                 }
                 
-                Section(header:
-                            Text("小技巧")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity, alignment: .leading))
+                // 小技巧區塊
+                Section(header: Text("小技巧").font(.headline))
                 {
-                    ForEach(UTipsList.indices, id: \.self)
-                    { index in
-                        TextField("輸入製作小技巧", text: $UTipsList[index])
-                            .frame(height: 40)
-                    }
-                    
-                    HStack
-                    {
-                        Spacer()
-                        Button(action: {
-                            UTipsList.append("") // 新增步驟
-                        })
+                    ForEach(UTipsList.indices, id: \.self) { index in
+                        HStack
                         {
-                            HStack
+                            TextField("輸入小技巧", text: Binding(
+                                get:
+                                    {
+                                    if UTipsList.indices.contains(index)
+                                        {
+                                        return UTipsList[index]
+                                    } else
+                                        {
+                                        return ""
+                                    }
+                                },
+                                set:
+                                    { newValue in
+                                    if UTipsList.indices.contains(index)
+                                    {
+                                        UTipsList[index] = newValue
+                                    }
+                                }
+                            ))
+                            
+                            .frame(height: 40)
+                            
+                            if UTipsList.count > 1
                             {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.title)
-                                    .foregroundColor(.orange)
-                                Text("新增小技巧")
-                                    .font(.body)
-                                    .bold()
-                                    .foregroundColor(.orange)
+                                Button(action:
+                                        {
+                                    UTipsList.remove(at: index)
+                                })
+                                {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
                             }
                         }
-                        Spacer()
                     }
+                    Button(action: { UTipsList.append("") })
+                    {
+                        Label("新增小技巧", systemImage: "plus.circle.fill")
+                            .foregroundColor(UTipsList.last?.isEmpty == false ? .orange : .gray)
+                    }
+                    .disabled(UTipsList.last?.isEmpty ?? true)
                 }
                 
                 // 將儲存按鈕放回 Form 中，並移除它的背景
@@ -327,6 +404,10 @@ struct AddRecipeView: View
                                 .cornerRadius(10)
                         }
                         Spacer()
+                            .alert(isPresented: $showAlert) {
+                                Alert(title: Text("警告"), message: Text(alertMessage), dismissButton: .default(Text("好")))
+                            }
+
                     }
                 }
                 .listRowBackground(Color.clear) // 只對儲存按鈕的區塊移除背景
@@ -335,7 +416,12 @@ struct AddRecipeView: View
         }
     }
 }
-
+// 安全訪問陣列的擴展
+extension Array {
+    subscript(safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}
 //MARK: 外部公模板 CR_Block
 struct CR_Block: View
 {
