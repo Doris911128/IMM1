@@ -24,6 +24,7 @@ struct CRecipe: Identifiable, Codable
     var c_image_url: String? // 新增圖片 URL 欄位
 }
 
+
 //MARK: 此畫面主結構＿歷史聊天紀錄
 struct ChatRecord: Identifiable, Codable
 {

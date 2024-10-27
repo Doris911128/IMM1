@@ -8,6 +8,14 @@
 import SwiftUI
 import Foundation
 
+// 用於保存暫存的食譜分段數據
+struct EditableRecipe {
+    var recipeName: String
+    var ingredients: [String]
+    var steps: [String]
+    var tips: [String]
+}
+
 struct AIRecipeBlock: View, AIRecipeP
 {
     @Binding var aiRecipes: [ChatRecord] // 使用傳遞的 aiRecipes
@@ -42,6 +50,13 @@ struct AIRecipeBlock: View, AIRecipeP
     @State private var focusedFieldIndex: Int? = nil// 小技巧
     
     @State private var uploadProgress: Double = 0.0 //追蹤圖片上傳進度
+    
+    @State private var tempRecipeData: EditableRecipe = EditableRecipe(
+            recipeName: "",
+            ingredients: [],
+            steps: [],
+            tips: []
+        )
     
     var data: [ChatRecord]
     {
@@ -137,15 +152,15 @@ struct AIRecipeBlock: View, AIRecipeP
                             .padding(.bottom, 5)
                             .padding(.leading, 15)
                         
-                        if focusedNameIndex {
-                            Text("Before: \(aiRecipe.input)")
+                        if focusedNameIndex, let recipeName = aiRecipe.output.extractRecipeName() {
+                            Text("Before: \(recipeName)")
                                 .font(.system(size: 12))
                                 .foregroundColor(.gray)
                                 .padding(.leading, 15)
                         }
                         
                         HStack(alignment: .top) {
-                            TextField("更新食譜名稱", text: $editedRecipeName)
+                            TextField("更新食譜名稱", text: $tempRecipeData.recipeName)
                                 .padding()
                                 .background(Color.gray.opacity(0.2))
                                 .cornerRadius(8)
@@ -769,7 +784,7 @@ struct AIRecipeBlock: View, AIRecipeP
                     editView
                 }
             }
-
+            
             .toolbarBackground(Color("menusheetbackgroundcolor"), for: .navigationBar)
             .toolbar
             {

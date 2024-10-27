@@ -26,7 +26,9 @@ struct MyView: View
     @State var isDarkMode: Bool = false
     @State private var isNameSheetPresented = false //更新名字完後會自動關掉ＳＨＥＥＴ
     @State private var isAnimatingColorChange = false // 新增的状态变量，用于动画
-    
+    @State private var showingImagePickerAlert = false  // 相簿選取的警示
+    @State private var showingPresetImageAlert = false  // 預設圖片選取的警示
+    @State private var selectedImageData: Data?         // 暫存選中的圖片數據
     
     @Environment(\.presentationMode) private var presentationMode
     @EnvironmentObject var user: User // 從環境中獲取用戶資訊
@@ -208,11 +210,22 @@ struct MyView: View
                                 }
                             }
                         }
+                        .alert("確認從相簿更換頭像", isPresented: $showingImagePickerAlert) {
+                            Button("取消", role: .cancel) {}
+                            Button("確認") {
+                                if let data = selectedImageData {
+                                    self.userImage = data
+                                }
+                            }
+                        } message: {
+                            Text("您確定要使用相簿中的圖片嗎？")
+                        }
                         .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
                         .onChange(of: pickImage) { newItem in
                             Task {
                                 if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                                    self.userImage = data
+                                    self.selectedImageData = data
+                                    self.showingImagePickerAlert = true // 顯示相簿確認警示
                                 }
                             }
                         }
@@ -291,13 +304,13 @@ struct MyView: View
                                 }
                                 .padding(.bottom, 5)
                                 
-//                                // MARK: 飲食偏好->暫時食譜顯示 連結
-//                                HStack {
-//                                    NavigationLink(destination: Custom_recipesView(U_ID: " ")) {
-//                                        InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
-//                                    }
-//                                }
-//                                .padding(.bottom, 5)
+                                //                                // MARK: 飲食偏好->暫時食譜顯示 連結
+                                //                                HStack {
+                                //                                    NavigationLink(destination: Custom_recipesView(U_ID: " ")) {
+                                //                                        InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
+                                //                                    }
+                                //                                }
+                                //                                .padding(.bottom, 5)
                                 
                                 // MARK: 我的最愛 連結
                                 HStack {
@@ -436,7 +449,8 @@ struct MyView: View
         ]
         
         @Environment(\.presentationMode) var presentationMode
-        
+        @State private var showingPresetImageAlert = false  // 預設圖片選取的警示
+        @State private var selectedImageData: Data?         // 暫存選中的圖片數據
         @State private var selectedImageName: String?
         @Binding var userImage: Data?
         let presetImages = ["我的最愛", "已採購", "公開食譜", "分類未新增最愛", "自訂食材預設圖片", "空庫存", "空AI食譜", "省錢分類", "庫存菜單", "庫存頭腳", "素食分類", "健康推薦", "採購", "烹飪", "最愛", "減肥分類", "過往食譜", "懶人分類", "AI食譜"] // 替換為你的預設圖片名稱
@@ -452,8 +466,8 @@ struct MyView: View
                         Button(action: {
                             self.selectedImageName = imageName
                             if let imageName = self.selectedImageName {
-                                self.userImage = UIImage(named: imageName)?.pngData()
-                                self.presentationMode.wrappedValue.dismiss() // 返回到原本的畫面
+                                self.selectedImageData = UIImage(named: imageName)?.pngData()
+                                self.showingPresetImageAlert = true // 顯示預設圖片確認警示
                             }
                         }) {
                             Image(imageName)
@@ -466,6 +480,17 @@ struct MyView: View
                     }
                 }
                 .padding()
+            }
+            .alert("確認使用預設圖片", isPresented: $showingPresetImageAlert) {
+                Button("取消", role: .cancel) {}
+                Button("確認") {
+                    if let data = selectedImageData {
+                        self.userImage = data
+                        self.presentationMode.wrappedValue.dismiss() // 返回到原本的畫面
+                    }
+                }
+            } message: {
+                Text("您確定要使用此預設圖片嗎？")
             }
         }
     }

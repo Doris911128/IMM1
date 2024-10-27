@@ -6,48 +6,7 @@
 
 import SwiftUI
 
-//MARK: addCRecipe: 新增自訂食譜
-func addCRecipe(recipe: CRecipe, U_ID: String, completion: @escaping (Bool) -> Void) {
-    guard let url = URL(string: "http://163.17.9.107/food/php/add_CRecipes.php") else {
-        completion(false)
-        return
-    }
-    
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    
-    let recipeData: [String: Any] = [
-        "U_ID": U_ID,
-        "f_name": recipe.f_name,
-        "ingredients": recipe.ingredients,
-        "method": recipe.method,
-        "UTips": recipe.UTips,
-        "c_image_url": recipe.c_image_url ?? ""
-    ]
-    
-    do {
-        let jsonData = try JSONSerialization.data(withJSONObject: recipeData, options: [])
-        request.httpBody = jsonData
-    } catch {
-        completion(false)
-        return
-    }
-    
-    URLSession.shared.dataTask(with: request) { data, response, error in
-        if let error = error {
-            print("新增自訂食譜失敗: \(error)")
-            completion(false)
-            return
-        }
-        
-        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-            completion(true)
-        } else {
-            completion(false)
-        }
-    }.resume()
-}
+
 
 struct Custom_recipesView: View
 {
@@ -104,17 +63,76 @@ struct Custom_recipesView: View
             }
             .sheet(isPresented: $showingAddRecipeView)
             {
-                AddRecipeView(Crecipes: $Crecipes)
+                AddRecipeView(Crecipes: $Crecipes, U_ID: U_ID)
             }
+            
         }
     }
 }
+
+//MARK: addCRecipe: 新增自訂食譜
+func addCRecipe(recipe: CRecipe, U_ID: String, completion: @escaping (Bool) -> Void) {
+    guard let url = URL(string: "http://163.17.9.107/food/php/add_CRecipes.php") else {
+        completion(false)
+        return
+    }
+    
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    
+    let recipeData: [String: Any] = [
+        "U_ID": U_ID,
+        "f_name": recipe.f_name,
+        "ingredients": recipe.ingredients,
+        "method": recipe.method,
+        "UTips": recipe.UTips,
+        "c_image_url": recipe.c_image_url ?? ""
+    ]
+
+    
+    do {
+        let jsonData = try JSONSerialization.data(withJSONObject: recipeData, options: [])
+        request.httpBody = jsonData
+    } catch {
+        completion(false)
+        return
+    }
+    URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error = error {
+            print("新增自訂食譜失敗: \(error)")
+            completion(false)
+            return
+        }
+        
+        if let httpResponse = response as? HTTPURLResponse {
+            print("HTTP Status Code: \(httpResponse.statusCode)")
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                print("伺服器返回數據: \(responseString)") // 打印返回的数据
+            }
+            if httpResponse.statusCode == 200 {
+                completion(true)
+            } else {
+                print("伺服器錯誤: \(httpResponse.statusCode)")
+                completion(false)
+            }
+        } else {
+            print("無法獲取伺服器回應")
+            completion(false)
+        }
+    }.resume()
+
+
+}
+
 
 //MARK: 新增用戶自訂食譜視圖
 struct AddRecipeView: View
 {
     @Environment(\.dismiss) var dismiss
     @Binding var Crecipes: [CRecipe] //讓新增的食譜可以同步到主視圖中
+    
+    let U_ID: String // 添加這一行
     
     @State private var f_name = ""
     @State private var ingredients = ""
@@ -142,19 +160,55 @@ struct AddRecipeView: View
             showAlert = true
             return
         }
-        // 確保唯一的食譜 ID
-        let newRecipeID = (Crecipes.map { $0.CR_ID }.max() ?? 0) + 1
         
-        // 將食材、步驟、小技巧組合成字串
+        let newRecipeID = (Crecipes.map { $0.CR_ID }.max() ?? 0) + 1
         let ingredients = ingredientsList.joined(separator: "\n")
         let method = stepsList.joined(separator: "\n")
         let UTips = UTipsList.joined(separator: "\n")
         
-        // 創建新的食譜並將圖片 URL 加入
         let newRecipe = CRecipe(CR_ID: newRecipeID, f_name: f_name, ingredients: ingredients, method: method, UTips: UTips, c_image_url: c_image_url)
-        Crecipes.append(newRecipe)
-        dismiss()
+        
+        // 呼叫 addCRecipe
+        addCRecipe(recipe: newRecipe, U_ID: U_ID) { success in
+            DispatchQueue.main.async {
+                if success {
+                    fetchCRecipes() // 新增成功後從後端重新獲取資料
+                    Crecipes.append(newRecipe)
+                    dismiss()
+                } else {
+                    alertMessage = "儲存失敗，請稍後再試。"
+                    showAlert = true
+                }
+            }
+        }
     }
+    func fetchCRecipes() {
+        guard let url = URL(string: "http://163.17.9.107/food/php/GetCC_Recipe.php") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        // 構造包含 U_ID 的資料以過濾用戶自訂食譜
+        let requestData = ["U_ID": U_ID]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: requestData, options: [])
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let data = data {
+                do {
+                    let decodedResponse = try JSONDecoder().decode([CRecipe].self, from: data)
+                    DispatchQueue.main.async {
+                        self.Crecipes = decodedResponse
+                    }
+                } catch {
+                    print("JSON 解碼錯誤：\(error)")
+                }
+            } else if let error = error {
+                print("請求錯誤：\(error)")
+            }
+        }.resume()
+    }
+
     
     var body: some View
     {
@@ -415,6 +469,7 @@ struct AddRecipeView: View
             .navigationTitle("新增食譜")
         }
     }
+    
 }
 // 安全訪問陣列的擴展
 extension Array {

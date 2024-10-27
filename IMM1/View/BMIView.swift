@@ -195,6 +195,7 @@ struct BMIView: View {
                                     .foregroundColor(.black)
                             }
                         }
+                        .chartForegroundStyleScale(["BMI值": .orange])
                         .frame(width: chartWidth, height: 200)
                         .scaleEffect(animateChart ? 1 : 0.8) // 縮放效果
                         .opacity(animateChart ? 1 : 0) // 動畫透明度
@@ -390,7 +391,7 @@ struct BMIRecordDetailViewPager: View {
     
     var body: some View {
         TabView(selection: $selectedIndex) {
-            ForEach(records.indices, id: \.self) { index in
+            ForEach(records.indices.reversed(), id: \.self) { index in
                 BMIRecordDetailView(record: records[index])
                     .tag(index)
             }

@@ -11,7 +11,7 @@ import SwiftUI
 // 定義字體大小枚舉
 enum FontSize
 {
-    case small, medium, large
+    case small, medium
 }
 
 struct CookingAiView: View
@@ -249,32 +249,25 @@ struct CardView: View
     }
     
     // 切換字體大小方法
-    func toggleFontSize()
-    {
-        switch fontSize
-        {
-        case .small:
-            fontSize = .medium
-        case .medium:
-            fontSize = .large
-        case .large:
-            fontSize = .small
-        }
-    }
+    func toggleFontSize() {
+         switch fontSize {
+         case .small:
+             fontSize = .medium
+         case .medium:
+             fontSize = .small
+         }
+     }
     
     // 根據字體大小枚舉返回對應的字體
-    func font(for size: FontSize) -> Font
-    {
-        switch size
-        {
-        case .small:
-            return .body
-        case .medium:
-            return .title2
-        case .large:
-            return .title
-        }
-    }
+    func font(for size: FontSize) -> Font {
+           switch size {
+           case .small:
+               return .body
+           case .medium:
+               return .title2
+           }
+       }
+
     
     var body: some View
     {
