@@ -73,10 +73,6 @@ struct CookingAiView: View
                 )
                 .padding()
                 
-                //                // 显示步骤数量
-                //                Text("当前食谱步骤数: \(stepsCount)")
-                //                    .font(.title2)
-                //                    .padding()
             }
             .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
         }
@@ -283,17 +279,6 @@ struct CardView: View
                         {
                             VStack(alignment: .leading)
                             {
-                                // 圖片
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(height: 150)
-                                    .cornerRadius(10)
-                                    .overlay(
-                                        Text("Image")
-                                            .foregroundColor(.white)
-                                            .bold()
-                                    )
-                                    .padding()
                                 
                                 Text("步驟 \(index + 1)")
                                     .font(font(for: fontSize)) // 調整字體大小
@@ -303,9 +288,7 @@ struct CardView: View
                                 Text(cookSteps[index])
                                     .font(font(for: fontSize))
                                     .padding()
-                                
                                 Spacer()
-                                
                             }
                             .background(Color.white)
                             .cornerRadius(15)

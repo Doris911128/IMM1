@@ -107,7 +107,8 @@ struct AIR_Block: View {
         ZStack {
             RoundedRectangle(cornerRadius: 10)
                 .fill(Color.white)
-                .shadow(radius: 4)
+            .shadow(radius: 2)
+            
 
             VStack(alignment: .leading) {
                 HStack {

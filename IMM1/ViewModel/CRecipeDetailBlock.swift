@@ -36,6 +36,64 @@ struct CRecipeDetailBlock: View, CRecipeP
     @State private var focusedUCookingIndex: Int? = nil// 步驟
     @State private var focusedUFieldIndex: Int? = nil// 小技巧
     @State private var focusedUTipIndex: Int? = nil
+   
+    private func updateRecipe() {
+        guard let url = URL(string: "http://163.17.9.107/food/php/EditCC_Recipes.php") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // 显式指定类型为 [String: Any]
+        let updatedRecipe: [String: Any] = [
+            "U_ID": U_ID,
+            "CR_ID": Crecipe.CR_ID, // 确保你有 CR_ID
+            "f_name": editedRecipeName,
+            "ingredients": editedUFoodSteps.joined(separator: "\n"),
+            "method": editedUCookingSteps.joined(separator: "\n"),
+            "UTips": editedUTips.joined(separator: "\n"),
+            "c_image_url": imageURL ?? "" // 如果有图片URL的话
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: updatedRecipe, options: [])
+        } catch {
+            print("Error serializing JSON: \(error)")
+            return
+        }
+        
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error updating recipe: \(error)")
+                return
+            }
+
+            if let httpResponse = response as? HTTPURLResponse {
+                print("HTTP Status Code: \(httpResponse.statusCode)")
+            }
+
+            // 这里可以处理服务器的响应
+            if let data = data {
+                // 打印出完整的响应数据以便调试
+                let responseString = String(data: data, encoding: .utf8)
+                print("Response from server: \(responseString ?? "")")
+
+                do {
+                    // 尝试将响应解析为 JSON
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        print("Parsed JSON: \(json)")
+                    }
+                } catch {
+                    print("Error parsing JSON: \(error)")
+                }
+            }
+        }
+
+        task.resume()
+    }
+
+    
+    
     
     var data: [CRecipe]
     {
@@ -52,62 +110,6 @@ struct CRecipeDetailBlock: View, CRecipeP
             
             ScrollView {
                 VStack(spacing: 15) {
-                    
-                    // MARK: 更新圖片按鈕
-                    VStack {
-                        Button(action: {
-                            isImagePickerPresented = true // 顯示圖片選擇器
-                        }) {
-                            HStack {
-                                Image(systemName: "arrow.up.doc.fill")
-                                    .font(.title)
-                                    .foregroundColor(.orange)
-                                Text("更新圖片")
-                                    .font(.body)
-                                    .bold()
-                                    .foregroundColor(.orange)
-                            }
-                            .padding()
-                            .background(
-                                Color.white
-                                    .frame(width: 320, height: 50)
-                                    .cornerRadius(10)
-                                    .shadow(radius: 4)
-                            )
-                        }
-                        .sheet(isPresented: $isImagePickerPresented) {
-                            ImagePicker(selectedImage: $selectedImage, sourceType: .photoLibrary)
-                        }
-                        
-                        // 顯示圖片預覽和上傳按鈕
-                        if let selectedImage = selectedImage {
-                            Image(uiImage: selectedImage)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 200)
-                            
-                            // 上傳圖片按鈕
-                            Button(action: {
-                                uploadImage(selectedImage) { result in
-                                    switch result {
-                                    case .success(let imageUrl):
-                                        imageURL = imageUrl
-                                    case .failure(let error):
-                                        print("圖片上傳失敗: \(error.localizedDescription)")
-                                    }
-                                }
-                            }) {
-                                Text("上傳圖片")
-                                    .font(.body)
-                                    .bold()
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .background(Color.orange)
-                                    .cornerRadius(8)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
                     // MARK: 食譜名稱編輯區塊
                     VStack(alignment: .leading) {
                         Text("食譜名稱")
@@ -255,6 +257,7 @@ struct CRecipeDetailBlock: View, CRecipeP
             // MARK: 確認和取消按鈕
             HStack {
                 Button(action: {
+
                     isEditing = false // 關閉編輯
                 }) {
                     Text("取消")
@@ -267,6 +270,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                 
                 Button(action: {
                     applyUEdits()
+                    updateRecipe() // 將更新資料發送到後端
                     isEditing = false // 確認後關閉編輯
                 }) {
                     Text("確認")

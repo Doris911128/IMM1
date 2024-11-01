@@ -132,17 +132,15 @@ struct StockView: View
     
     // MARK: [func] deleteSelectedIngredients 刪除標記和同步
     // 刪除選中標記的食材，並同步刪除到伺服器
-    private func deleteSelectedIngredients()
-    {
+    private func deleteSelectedIngredients() {
         let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
-        guard !selectedIngredients.isEmpty
-        else
-        {
+        guard !selectedIngredients.isEmpty else {
             print("No ingredients selected for deletion")
             return
         }
         showAlert = true
     }
+    
     
     // MARK: [func] sendIngredientData 發送刪除資料
     // 將刪除的食材資料發送到伺服器
@@ -360,6 +358,8 @@ struct StockView: View
                                             .cornerRadius(8)
                                             .shadow(radius: 4)
                                         }
+                                        .transition(.opacity) // Adding a fade-out transition
+                                        .animation(.easeInOut(duration: 0.3), value: ingredients.count)
                                         
                                         if isEditing
                                         {
@@ -424,46 +424,56 @@ struct StockView: View
                                 }
                             } else {
                                 Button(action: {
-                                    if ingredients.contains { $0.isSelectedForDeletion } {
+                                    if ingredients.contains(where: { $0.isSelectedForDeletion }) {
                                         showAlert.toggle()
                                     } else {
-                                        isEditing.toggle()
+                                        // 全選功能：選擇所有項目
+                                        for index in ingredients.indices {
+                                            ingredients[index].isSelectedForDeletion = true
+                                        }
                                     }
                                 }) {
-                                    Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "確定")
-                                }
-                                .padding()
-                                .alert(isPresented: $showAlert) {
-                                    Alert(
-                                        title: Text("確認刪除"),
-                                        message: Text("您確定要刪除所選的食材嗎？"),
-                                        primaryButton: .default(Text("確定")) {
-                                            let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
-                                            selectedIngredients.forEach { ingredient in
-                                                print("Deleting Ingredient: F_ID=\(ingredient.F_ID), U_ID=\(ingredient.U_ID)")
-                                                sendIngredientData(F_ID: ingredient.F_ID, U_ID: ingredient.U_ID)
-                                            }
-                                            
-                                            let indexSet = IndexSet(ingredients.indices.filter { ingredients[$0].isSelectedForDeletion })
-                                            ingredients.remove(atOffsets: indexSet)
-                                            
-                                            fetchData()
-                                            isEditing = false
-                                        },
-                                        secondaryButton: .cancel(Text("取消")) {
-                                            ingredients.indices.forEach { index in
-                                                ingredients[index].isSelectedForDeletion = false
-                                            }
-                                            isEditing = false
-                                        }
-                                    )
+                                    Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "全選")
                                 }
                             }
                         }
+                        .padding()
                     }
                 }
             }
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("確認刪除"),
+                    message: Text("您確定要刪除所選的食材嗎？"),
+                    primaryButton: .default(Text("確定")) {
+                        let selectedIngredients = ingredients.filter { $0.isSelectedForDeletion }
+                        selectedIngredients.forEach { ingredient in
+                            print("Deleting Ingredient: F_ID=\(ingredient.F_ID), U_ID=\(ingredient.U_ID)")
+                            sendIngredientData(F_ID: ingredient.F_ID, U_ID: ingredient.U_ID)
+                        }
+                        
+                        let indexSet = IndexSet(ingredients.indices.filter { ingredients[$0].isSelectedForDeletion })
+                        
+                        // Perform deletion with animation after a slight delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation {
+                                ingredients.remove(atOffsets: indexSet)
+                            }
+                        }
+                        
+                        fetchData()
+                        isEditing = false
+                    },
+                    secondaryButton: .cancel(Text("取消")) {
+                        ingredients.indices.forEach { index in
+                            ingredients[index].isSelectedForDeletion = false
+                        }
+                        isEditing = false
+                    }
+                )
+            }
         }
+        
         .id(triggerRefresh)
     }
 }

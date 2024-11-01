@@ -139,18 +139,20 @@ struct RecipeWrapper: Codable
     }
 }
 
-struct RecipeView: View
-{
+struct RecipeView: View {
     @Binding var recipes: [RecipeWrapper]
-    
     var onDeleteIngredient: (Ingredient) -> Void
     var onIngredientSelection: (Int, String, Int) -> Void
-    
     @Binding var selectedIngredients: [Ingredient]
-    @Binding var ingredients: [StockIngredient] // 添加对 ingredients 的绑定
+    @Binding var ingredients: [StockIngredient]
     
     @State private var quantityInputs: [UUID: String] = [:]
     @State private var hiddenIngredients: Set<UUID> = []
+    @State private var showPurchasedMessage = false
+    @State private var purchasedIngredientName: String = "" // 儲存已採買的食材名稱
+    @State private var showPurchaseAnimation = false
+    @State private var isAllSelected = false // 用於追蹤是否全選
+    
     
     
     init(recipes: Binding<[RecipeWrapper]>, onDeleteIngredient: @escaping (Ingredient) -> Void, selectedIngredients: Binding<[Ingredient]>, onIngredientSelection: @escaping (Int, String, Int) -> Void, ingredients: Binding<[StockIngredient]>) {
@@ -158,212 +160,212 @@ struct RecipeView: View
         self.onDeleteIngredient = onDeleteIngredient
         self._selectedIngredients = selectedIngredients
         self.onIngredientSelection = onIngredientSelection
-        self._ingredients = ingredients // 正确绑定 ingredients
+        self._ingredients = ingredients
     }
     
-    var body: some View
-    {
-        if recipes.isEmpty
-        {
-            VStack
-            {
-                Spacer().frame(height: 200) // 调整此高度以控制顶部间距
-                VStack
-                {
-                    Image("採購")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 180, height: 180) // 调整图片大小
-                }
-                VStack
-                {
-                    Text("目前無採買項目")
-                        .font(.system(size: 18))
-                        .foregroundColor(.gray)
-                }
-                Spacer() // 自动将内容推到中心位置
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // 确保内容在顶部对齐
-        } else if recipes.allSatisfy({ recipe in
-            // 確認所有 recipes 中的食材是否都存在於 ingredients 中
-            ingredients.contains(where: { $0.F_ID == recipe.sqlResult.fid })
-        }) {
-            VStack {
-                Spacer().frame(height: 200)
+    var body: some View {
+        ZStack {
+            if recipes.isEmpty {
+                EmptyShopView()
+            } else if isAllSelected || recipes.allSatisfy({ recipe in
+                ingredients.contains(where: { $0.F_ID == recipe.sqlResult.fid })
+            }) {
+                PurchasedIngredientsView()
+            } else {
                 VStack {
-                    Image("已採購")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 180, height: 180)
-                }
-                VStack {
-                    Text("已有所需採購食材，快去烹飪吧")
-                        .font(.system(size: 18))
-                        .foregroundColor(.gray)
-                }
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        }
-        else
-        {
-            List
-            {
-                ForEach(recipes, id: \.sqlResult.id) { wrapper in
-                    if (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
-                        Section(header: EmptyView()) {
-                            if !hiddenIngredients.contains(wrapper.sqlResult.id) {
-                                HStack(alignment: .top) {
-                                    // 食材圖片
-                                    if let imageUrl = URL(string: wrapper.sqlResult.foodImage) {
-                                        AsyncImage(url: imageUrl) { phase in
-                                            switch phase {
-                                            case .empty:
-                                                ProgressView()
-                                                    .frame(width: 100, height: 100)
-                                                    .background(Color.gray.opacity(0.1))
-                                                    .cornerRadius(10)
-                                            case .success(let image):
-                                                image.resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 100, height: 100)
-                                                    .cornerRadius(10)
-                                            case .failure:
-                                                Image(systemName: "photo")
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 100, height: 100)
-                                                    .background(Color.gray.opacity(0.1))
-                                                    .cornerRadius(10)
-                                            @unknown default:
-                                                Image(systemName: "photo")
-                                                    .resizable()
-                                                    .aspectRatio(contentMode: .fill)
-                                                    .frame(width: 100, height: 100)
-                                                    .background(Color.gray.opacity(0.1))
-                                                    .cornerRadius(10)
-                                            }
-                                        }
-                                        .onAppear {
-                                            print("Loading image from URL: \(imageUrl)")
-                                        }
-                                    } else {
-                                        Image(systemName: "photo")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(width: 50, height: 50)
-                                            .background(Color.gray.opacity(0.1))
-                                            .cornerRadius(10)
-                                            .onAppear {
-                                                print("Invalid URL for image: \(wrapper.sqlResult.foodImage)")
-                                            }
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                recipes.forEach { recipe in
+                                    if !hiddenIngredients.contains(recipe.sqlResult.id) {
+                                        hiddenIngredients.insert(recipe.sqlResult.id)
+                                        onIngredientSelection(
+                                            recipe.sqlResult.fid,
+                                            recipe.sqlResult.uid,
+                                            recipe.sqlResult.amount
+                                        )
                                     }
-                                    Spacer().frame(width: 30)
-
-                                    VStack(alignment: .leading) {
-                                        Text(" \(wrapper.sqlResult.name)")
-                                            .font(.system(size: 20))
-                                            .fontWeight(.bold)
-                                            .lineLimit(nil)
-                                            .fixedSize(horizontal: false, vertical: true)
-
-                                        HStack {
-                                            Text("採購數量: \(wrapper.planAmount ?? "0")\(wrapper.sqlResult.unit)")
-                                                .font(.system(size: 12))
-                                                .padding(.trailing, -50)
-                                        }
-                                        TextField("數量", text: Binding(
-                                            get: {
-                                                self.quantityInputs[wrapper.sqlResult.id] ?? (wrapper.planAmount ?? "")
-                                            },
-                                            set: { newValue in
-                                                let filtered = newValue.filter { "0123456789".contains($0) }
-                                                if !filtered.isEmpty {
-                                                    self.quantityInputs[wrapper.sqlResult.id] = filtered
-                                                } else {
-                                                    self.quantityInputs[wrapper.sqlResult.id] = ""
-                                                }
-                                            }
-                                        ))
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 80)
-                                        .keyboardType(.numberPad)
-                                    }
-                                    .padding(.vertical, 8)
-
-                                    Spacer()
-
-                                    Image(systemName: "square")
-                                        .foregroundColor(Color("BottonColor"))
-                                        .onTapGesture {
-                                            withAnimation(.easeInOut(duration: 0.3)) {
-                                                if let index = recipes.firstIndex(where: { $0.sqlResult.id == wrapper.sqlResult.id }) {
-                                                    // 先加入到隱藏集合中
-                                                    hiddenIngredients.insert(wrapper.sqlResult.id)
-                                                    
-                                                    // 呼叫 onIngredientSelection
-                                                    onIngredientSelection(
-                                                        recipes[index].sqlResult.fid,
-                                                        recipes[index].sqlResult.uid,
-                                                        recipes[index].sqlResult.amount
-                                                    )
-                                                    
-                                                    // 延遲移除，讓動畫有時間執行
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                                        withAnimation {
-                                                            recipes.remove(at: index)
-                                                            // 移除後清除隱藏狀態
-                                                            hiddenIngredients.remove(wrapper.sqlResult.id)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        .frame(maxHeight: .infinity)
                                 }
-                                .padding(.vertical, 8)
-                                .transition(.opacity) // 使用淡出效果
+                                isAllSelected = true
+                            }
+                        }) {
+                            Text("全選")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color("BottonColor"))
+                                .padding(.trailing, 16)
+                        }
+                    }
+                    
+                    List {
+                        ForEach(recipes, id: \.sqlResult.id) { wrapper in
+                            if (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
+                                Section(header: EmptyView()) {
+                                    if !hiddenIngredients.contains(wrapper.sqlResult.id) {
+                                        RecipeItemView(wrapper: wrapper, hiddenIngredients: $hiddenIngredients, onIngredientSelection: onIngredientSelection)
+                                            .transition(.opacity) // 使用淡出動畫
+                                    }
+                                }
                             }
                         }
                     }
-                }
-
-            }
-            .listStyle(PlainListStyle())
-            .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
-        }
-    }
-    
-    private func toggleIngredientSelection(_ wrapper: RecipeWrapper) {
-        if let index = recipes.firstIndex(where: { $0.sqlResult.id == wrapper.sqlResult.id }) {
-            let defaultQuantity = wrapper.planAmount ?? ""
-            let quantity = Int(quantityInputs[wrapper.sqlResult.id] ?? defaultQuantity) ?? 0
-            recipes[index].sqlResult.amount = quantity
-            recipes[index].isSelected.toggle()
-            if recipes[index].isSelected {
-                selectedIngredients.append(recipes[index].sqlResult)
-                onIngredientSelection(recipes[index].sqlResult.fid, recipes[index].sqlResult.uid, recipes[index].sqlResult.amount)
-                hiddenIngredients.insert(wrapper.sqlResult.id)
-            } else {
-                if let selectedIndex = selectedIngredients.firstIndex(where: { $0.id == wrapper.sqlResult.id }) {
-                    selectedIngredients.remove(at: selectedIndex)
+                    .listStyle(PlainListStyle())
+                    .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
+                    .animation(.easeInOut, value: hiddenIngredients) // 為隱藏的食材列表添加動畫效果
                 }
             }
+            
+            if showPurchaseAnimation {
+                PurchasedMessageView(purchasedIngredientName: $purchasedIngredientName, showPurchaseAnimation: $showPurchaseAnimation)
+            }
         }
-    }
-    
-    private func shouldHideIngredient(_ id: UUID) -> Bool {
-        return hiddenIngredients.contains(id)
     }
 }
 
-struct ShopView: View
-{
+struct EmptyShopView: View {
+    var body: some View {
+        VStack {
+            Spacer().frame(height: 200)
+            Image("採購")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 180, height: 180)
+            Text("目前無採買項目")
+                .font(.system(size: 18))
+                .foregroundColor(.gray)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+struct PurchasedIngredientsView: View {
+    var body: some View {
+        VStack {
+            Spacer().frame(height: 200)
+            Image("已採購")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 180, height: 180)
+            Text("已有所需採購食材，快去烹飪吧")
+                .font(.system(size: 18))
+                .foregroundColor(.gray)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+}
+
+struct RecipeItemView: View {
+    let wrapper: RecipeWrapper
+    @Binding var hiddenIngredients: Set<UUID>
+    var onIngredientSelection: (Int, String, Int) -> Void
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            if let imageUrl = URL(string: wrapper.sqlResult.foodImage) {
+                AsyncImage(url: imageUrl) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 100, height: 100)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(10)
+                    case .success(let image):
+                        image.resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(10)
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(10)
+                    @unknown default:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 100)
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(10)
+                    }
+                }
+            } else {
+                Image(systemName: "photo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 50, height: 50)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(10)
+            }
+            
+            Spacer().frame(width: 30)
+            
+            VStack(alignment: .leading) {
+                Text(" \(wrapper.sqlResult.name)")
+                    .font(.system(size: 20))
+                    .fontWeight(.bold)
+                    .lineLimit(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                HStack {
+                    Text("採購數量: \(wrapper.planAmount ?? "0")\(wrapper.sqlResult.unit)")
+                        .font(.system(size: 12))
+                        .padding(.trailing, -50)
+                }
+            }
+            .padding(.vertical, 8)
+            
+            Spacer()
+            
+            Image(systemName: "square")
+                .foregroundColor(Color("BottonColor"))
+                .onTapGesture {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        hiddenIngredients.insert(wrapper.sqlResult.id)
+                        onIngredientSelection(wrapper.sqlResult.fid, wrapper.sqlResult.uid, wrapper.sqlResult.amount)
+                    }
+                }
+                .frame(maxHeight: .infinity)
+        }
+        .padding(.vertical, 8)
+        .transition(.opacity)
+    }
+}
+
+struct PurchasedMessageView: View {
+    @Binding var purchasedIngredientName: String
+    @Binding var showPurchaseAnimation: Bool
+    
+    var body: some View {
+        VStack {
+            Spacer()
+            Text("已採購食材：\(purchasedIngredientName)")
+                .font(.body)
+                .padding()
+                .background(Color.black.opacity(0.7))
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                .scaleEffect(showPurchaseAnimation ? 1 : 0.8)
+                .opacity(showPurchaseAnimation ? 1 : 0)
+                .animation(.easeInOut(duration: 0.8), value: showPurchaseAnimation)
+        }
+        .zIndex(1)
+    }
+    
+}
+
+
+struct ShopView: View {
     @State private var recipes: [RecipeWrapper] = []
     @State private var isLoading = true
     @State private var selectedIngredients: [Ingredient] = []
     @State private var userUID: String?
     @State private var ingredients: [StockIngredient] = [] // 初始化 ingredients 数组
+    @State private var isAllSelected = false // 跟踪是否已经选择所有食材
+
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -371,12 +373,20 @@ struct ShopView: View
         return formatter
     }()
     
+    private var currentDate: Date {
+        return Date()
+    }
+    
     private var sevenDaysAgo: Date {
         return Calendar.current.date(byAdding: .day, value: -7, to: currentDate)!
     }
     
-    private var currentDate: Date {
-        return Date()
+    private var sevenDaysLater: Date {
+        return Calendar.current.date(byAdding: .day, value: 6, to: currentDate)!
+    }
+    
+    private var oneDayBefore: Date {
+        return Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
     }
     
     func getUserUIDFromDatabase() {
@@ -393,10 +403,18 @@ struct ShopView: View
                 HStack {
                     Text("採購")
                         .font(.title)
+                        .frame(maxWidth: .infinity, alignment: .center) // 使「採購」置中
+                    
+                    //                    Spacer() // Spacer 會推動右邊的元素到最右邊
+                    
+                    
                 }
-                Text("你需要採購的食材")
+                //                .padding() // 添加內邊距
+                
+                Text("您需要採購的食材")
                     .font(.system(size: 12))
                     .foregroundColor(.gray)
+                
                 
                 if isLoading {
                     ProgressView("加载中...")
@@ -412,14 +430,21 @@ struct ShopView: View
                     )
                 }
             }
-        }
-        .onAppear {
-            getUserUIDFromDatabase()
-            loadRecipes()
-            loadIngredients() // 确保加载库存食材
-        }
-        .onDisappear {
-            sendSelectedIngredientsToBackend()
+            .onAppear {
+                loadRecipes()
+                loadIngredients()
+                
+                // 每次返回ShopView時，檢查並更新isAllSelected的狀態
+                if !recipes.allSatisfy({ recipe in
+                    ingredients.contains(where: { $0.F_ID == recipe.sqlResult.fid })
+                }) {
+                    isAllSelected = false
+                }
+            }
+
+            .onDisappear {
+                sendSelectedIngredientsToBackend()
+            }
         }
     }
     
@@ -438,16 +463,8 @@ struct ShopView: View
         }
     }
     
-    private var sevenDaysLater: Date {
-        return Calendar.current.date(byAdding: .day, value: 6, to: currentDate)!
-    }
-    
-    private var oneDayBefore: Date {
-        return Calendar.current.date(byAdding: .day, value: -1, to: currentDate)!
-    }
-    
     private func sendJSONDataToBackend(jsonData: Data) {
-        guard let url = URL(string:"http://163.17.9.107/food/php/ShopStock.php") else {
+        guard let url = URL(string: "http://163.17.9.107/food/php/ShopStock.php") else {
             print("无效的 URL")
             return
         }
@@ -482,6 +499,14 @@ struct ShopView: View
                 switch result {
                 case .success(let recipes):
                     self.recipes = recipes.sorted(by: { $0.sqlResult.name < $1.sqlResult.name })
+                    
+                    // 檢查新增的食材是否不在已選中的食材列表中
+                    if !recipes.allSatisfy({ recipe in
+                        ingredients.contains(where: { $0.F_ID == recipe.sqlResult.fid })
+                    }) {
+                        isAllSelected = false
+                    }
+                    
                     self.isLoading = false
                 case .failure(let error):
                     print("Error loading recipes: \(error)")
@@ -490,9 +515,10 @@ struct ShopView: View
             }
         }
     }
+
+
     
-    private func loadIngredients()
-    {
+    private func loadIngredients() {
         // 加载库存食材的逻辑
         let networkManager = NetworkManager()
         networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php") { result in
@@ -502,7 +528,7 @@ struct ShopView: View
                     let name = stock.F_Name ?? "未知食材"
                     let unit = stock.F_Unit ?? "未指定单位"
                     let SK_SUM = stock.SK_SUM ?? 0
-                    let image = stock.Food_imge ?? ""  // 确保Food_imge被正确解析
+                    let image = stock.Food_imge ?? ""  // 确保 Food_imge 被正确解析
                     
                     return StockIngredient(U_ID: stock.U_ID ?? UUID().uuidString, F_ID: stock.F_ID, F_Name: name, SK_SUM: SK_SUM, F_Unit: unit, Food_imge: image)
                 }
@@ -512,6 +538,7 @@ struct ShopView: View
         }
     }
 }
+
 
 
 struct ShopView_Previews: PreviewProvider {

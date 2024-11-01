@@ -490,9 +490,12 @@ extension View
 
 extension String {
     func extractRecipeName() -> String? {
-        // 查找 "所需材料" 或 "原料" 的開始位置
-        guard let foodStartRange = self.range(of: "所需材料") ?? self.range(of: "原料") else {
-            print("找不到 '所需材料' 或 '原料' 的標題")
+        // 查找 "所需材料"、"原料"、"食材" 或 "材料" 的開始位置
+        guard let foodStartRange = self.range(of: "所需材料") ??
+                self.range(of: "原料") ??
+                self.range(of: "食材") ??
+                self.range(of: "材料") else {
+            print("找不到 '所需材料'、'原料'、'食材' 或 '材料' 的標題")
             return nil
         }
 
@@ -511,6 +514,7 @@ extension String {
         }
     }
 }
+
 
 
 // 追加Data的擴展
