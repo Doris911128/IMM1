@@ -112,7 +112,7 @@ enum AppError: Error {
         let message: String?
         switch self {
         case .captureSessionSetup(let reason):
-            title = "AVSession Setup Error"
+            title = "AVSession 設置錯誤"
             message = reason
         case .visionError(let error):
             title = "Vision Error"

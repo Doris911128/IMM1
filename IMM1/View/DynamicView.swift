@@ -14,7 +14,7 @@ struct DynamicView: View {
     
     @State private var selectedRecord: DynamicRecordType = .BMI
     @GestureState private var dragOffset: CGSize = .zero
-    
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
         VStack {
             // 按鈕選擇器
@@ -25,7 +25,7 @@ struct DynamicView: View {
                 recordButton(.hyperlipidemia, title: "血脂")
             }
             .frame(maxWidth: .infinity, maxHeight: 50)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color.black : Color.white)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(Color.orange, lineWidth: 2)
@@ -50,7 +50,8 @@ struct DynamicView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding()
-            .background(Color.white)
+            
+            .background(colorScheme == .dark ? Color.black : Color.white)
             .offset(x: dragOffset.width) // 追蹤拖動中的位移
             .gesture(
                 DragGesture()
@@ -71,7 +72,7 @@ struct DynamicView: View {
                     }
             )
         }
-        .background(Color.white)
+        .background(colorScheme == .dark ? Color.black : Color.white)
     }
     
     // 自定義按鈕
@@ -84,7 +85,8 @@ struct DynamicView: View {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(selectedRecord == type ? Color.orange : Color.clear)
             )
-            .foregroundColor(selectedRecord == type ? .white : .black)
+            .foregroundColor(selectedRecord == type ? .black : .gray)
+        
             .onTapGesture {
                 withAnimation {
                     selectedRecord = type

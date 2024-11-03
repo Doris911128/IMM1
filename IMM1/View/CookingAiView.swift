@@ -24,57 +24,90 @@ struct CookingAiView: View
     @State private var currentIndex: Int = 0 // 当前卡片索引
     @State private var stepsCount: Int = 0 // 新增狀態變量來跟蹤步驟數量
     
+    @State private var showHint: Bool = false
+    @State private var hintMessage: String = ""
+    
     var body: some View
     {
         NavigationView
         {
-            VStack(spacing: 0)
+            ZStack
             {
-                HStack
+                VStack(spacing: 0)
                 {
-                    Text(selectedDish?.Dis_Name ?? "Unknown食譜名稱")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .padding(.leading)
-                    Spacer()
-                }
-                .padding(.top, 95) // 根据需要调整顶部 padding
-                .background(Color.white)
-                .zIndex(1)
-                
-                ScrollView(.horizontal, showsIndicators: false)
-                {
-                    HStack(spacing: 20)
+                    HStack
                     {
-                        if let selectedDish = selectedDish
-                        {
-                            CardView(dish: selectedDish, stepsCount: $stepsCount) // 传递步驟數量
-                                .frame(maxWidth: .infinity, alignment: .center) // 卡片水平居中
-                                .offset(x: scrollOffset) // 应用滑动偏移
-                            
-                        }
+                        Text(selectedDish?.Dis_Name ?? "Unknown食譜名稱")
+                            .font(.largeTitle)
+                            .fontWeight(.bold)
+                            .padding(.leading)
+                        Spacer()
                     }
-                    .padding(.horizontal)
-                    .frame(maxHeight: .infinity, alignment: .center) // 让卡片垂直居中
+                    .padding(.top, 95) // 根据需要调整顶部 padding
+                    .background(Color.white)
+                    .zIndex(1)
+                    
+                    ScrollView(.horizontal, showsIndicators: false)
+                    {
+                        HStack(spacing: 20)
+                        {
+                            if let selectedDish = selectedDish
+                            {
+                                CardView(dish: selectedDish, stepsCount: $stepsCount) // 传递步驟數量
+                                    //.frame(maxWidth: .infinity, alignment: .center) // 卡片水平居中
+                                    .frame(width: UIScreen.main.bounds.width * 0.85, height: UIScreen.main.bounds.height * 0.5) // 設置外部框架大小，不影響滑動邏輯
+                                    .offset(x: scrollOffset) // 应用滑动偏移
+                                
+                            }
+                        }
+                        .padding(.horizontal)
+                        .frame(maxHeight: .infinity, alignment: .center) // 让卡片垂直居中
+                        
+                    }
+                    
+                    // 添加 HandPoseDetectionView
+                    HandPoseDetectionView(onGestureDetected: { detectedGesture in
+                        self.gesture = detectedGesture
+                        updateScrollOffset()
+                    })
+                    .frame(width: 300, height: 200)
+                    .background(Color.black)
+                    .cornerRadius(10)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.orange, lineWidth: 2)
+                    )
+                    .padding()
                     
                 }
+                .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
                 
-                // 添加 HandPoseDetectionView
-                HandPoseDetectionView(onGestureDetected: { detectedGesture in
-                    self.gesture = detectedGesture
-                    updateScrollOffset()
-                })
-                .frame(width: 100, height: 100)
-                .background(Color.black)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.blue, lineWidth: 2)
-                )
-                .padding()
                 
+                // 顯示提示訊息
+                if showHint
+                {
+                    VStack
+                    {
+                        Spacer()
+                        Text(hintMessage)
+                            .font(.headline)
+                            .padding()
+                            .background(Color.yellow)
+                            .cornerRadius(8)
+                            .transition(.opacity)
+                            .onAppear
+                        {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3)
+                            {
+                                withAnimation
+                                {
+                                    self.showHint = false
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
         }
         .onAppear
         {
@@ -82,36 +115,76 @@ struct CookingAiView: View
         }
     }
     
-    func updateScrollOffset() {
-        let screenWidth = UIScreen.main.bounds.width
-        let cardWidth = screenWidth * 0.85
-        let stepCard = stepsCount
-        
-        switch gesture {
-        case "👎":
-            if currentIndex < stepCard - 1 {
-                currentIndex += 1
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    scrollOffset -= cardWidth
-                }
-                print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
-                
-            }
-        case "👍":
-            if currentIndex > 0 {
-                currentIndex -= 1
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    scrollOffset += cardWidth
-                }
-                print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
-            }
-        case "✋":
-            break
-        default:
-            break
-        }
-    }
+//    func updateScrollOffset() {
+//        let screenWidth = UIScreen.main.bounds.width
+//        let cardWidth = screenWidth * 0.85
+//        let stepCard = stepsCount
+//        
+//        switch gesture {
+//        case "👎":
+//            if currentIndex < stepCard - 1 {
+//                currentIndex += 1
+//                withAnimation(.easeInOut(duration: 0.5)) {
+//                    scrollOffset -= cardWidth
+//                }
+//                print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
+//                
+//            }
+//        case "👍":
+//            if currentIndex > 0 {
+//                currentIndex -= 1
+//                withAnimation(.easeInOut(duration: 0.5)) {
+//                    scrollOffset += cardWidth
+//                }
+//                print("當前卡片索引: \(currentIndex + 1), 總步驟數: \(stepCard)")
+//            }
+//        case "✋":
+//            break
+//        default:
+//            break
+//        }
+//    }
     
+    func updateScrollOffset() {
+            let screenWidth = UIScreen.main.bounds.width
+            let cardWidth = screenWidth * 0.85
+            let stepCard = stepsCount
+            
+            switch gesture {
+            case "👎":
+                if currentIndex < stepCard - 1 {
+                    currentIndex += 1
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        scrollOffset -= cardWidth
+                    }
+                    hintMessage = "前往下一步驟 (\(currentIndex + 1)/\(stepCard))"
+                    showHint = true
+                } else {
+                    hintMessage = "已到達最後一步驟"
+                    showHint = true
+                }
+                
+            case "👍":
+                if currentIndex > 0 {
+                    currentIndex -= 1
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        scrollOffset += cardWidth
+                    }
+                    hintMessage = "返回上一步驟 (\(currentIndex + 1)/\(stepCard))"
+                    showHint = true
+                } else {
+                    hintMessage = "已在第一步驟"
+                    showHint = true
+                }
+                
+            case "✋":
+                hintMessage = "手勢偵測：請做出 👍 或 👎 手勢"
+                showHint = true
+                
+            default:
+                break
+            }
+        }
     
     // 從後端載入菜譜數據的方法
     func loadDishesData()
@@ -245,25 +318,29 @@ struct CardView: View
     }
     
     // 切換字體大小方法
-    func toggleFontSize() {
-         switch fontSize {
-         case .small:
-             fontSize = .medium
-         case .medium:
-             fontSize = .small
-         }
-     }
+    func toggleFontSize() 
+    {
+        switch fontSize 
+        {
+        case .small:
+            fontSize = .medium
+        case .medium:
+            fontSize = .small
+        }
+    }
     
     // 根據字體大小枚舉返回對應的字體
-    func font(for size: FontSize) -> Font {
-           switch size {
-           case .small:
-               return .body
-           case .medium:
-               return .title2
-           }
-       }
-
+    func font(for size: FontSize) -> Font 
+    {
+        switch size 
+        {
+        case .small:
+            return .body
+        case .medium:
+            return .title2
+        }
+    }
+    
     
     var body: some View
     {
@@ -283,7 +360,7 @@ struct CardView: View
                                 Text("步驟 \(index + 1)")
                                     .font(font(for: fontSize)) // 調整字體大小
                                     .fontWeight(.bold) // 保持粗體
-                                    .padding([.leading, .trailing])
+                                    .padding([.leading, .trailing, .top])
                                 
                                 Text(cookSteps[index])
                                     .font(font(for: fontSize))
@@ -295,6 +372,7 @@ struct CardView: View
                             .shadow(radius: 5)
                             //卡片大小
                             .frame(width: UIScreen.main.bounds.width * 0.8, height: UIScreen.main.bounds.height * 0.6)
+                           // .scaleEffect(x: 1.01, y: 0.7) // 寬度增加5%，高度縮小到67%
                             
                             //字體切換按鈕
                             Button(action: {

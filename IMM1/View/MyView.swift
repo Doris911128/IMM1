@@ -147,211 +147,201 @@ struct MyView: View
     }
     
     // MARK: MyView body
-    var body: some View {
-        NavigationStack {
-            GeometryReader { geometry in
-                ZStack {
-                    VStack(spacing: 20) {
-                        // MARK: 頭像
-                        VStack(spacing: 20) {
-                            if let userImage = self.userImage,
-                               let image = UIImage(data: userImage) {
-                                Button(action: {
-                                    self.showingActionSheet = true
-                                }) {
-                                    Circle()
-                                        .tint(Color("BackColor"))
-                                        .scaledToFit()
-                                        .frame(width: 160)
-                                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
-                                        .overlay {
-                                            Image(uiImage: image)
-                                                .resizable()
-                                                .scaledToFill()
-                                                .clipShape(Circle())
-                                        }
-                                }
-                                .actionSheet(isPresented: $showingActionSheet) {
-                                    ActionSheet(title: Text("選擇圖片"), buttons: [
-                                        .default(Text("從相簿選取")) {
-                                            self.showingImagePicker = true
-                                        },
-                                        .default(Text("使用系統預設圖片")) {
-                                            self.showPresetImages = true
-                                        },
-                                        .cancel()
-                                    ])
-                                }
-                            } else {
-                                Button(action: {
-                                    self.showingActionSheet = true
-                                }) {
-                                    Circle()
-                                        .fill(.gray)
-                                        .scaledToFit()
-                                        .frame(width: 160)
-                                        .overlay {
-                                            Image("放縱分類")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .clipShape(Circle())
-                                        }
-                                }
-                                .actionSheet(isPresented: $showingActionSheet) {
-                                    ActionSheet(title: Text("選擇圖片"), buttons: [
-                                        .default(Text("從相簿選取")) {
-                                            self.showingImagePicker = true
-                                        },
-                                        .default(Text("使用系統預設圖片")) {
-                                            self.showPresetImages = true
-                                        },
-                                        .cancel()
-                                    ])
-                                }
-                            }
-                        }
-                        .alert("確認從相簿更換頭像", isPresented: $showingImagePickerAlert) {
-                            Button("取消", role: .cancel) {}
-                            Button("確認") {
-                                if let data = selectedImageData {
-                                    self.userImage = data
-                                }
-                            }
-                        } message: {
-                            Text("您確定要使用相簿中的圖片嗎？")
-                        }
-                        .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
-                        .onChange(of: pickImage) { newItem in
-                            Task {
-                                if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                                    self.selectedImageData = data
-                                    self.showingImagePickerAlert = true // 顯示相簿確認警示
-                                }
-                            }
-                        }
-                        .sheet(isPresented: $showPresetImages) {
-                            PresetImageSelectionView(userImage: $userImage)
-                        }
+    var body: some View 
+    {
+        NavigationStack 
+        {
+            GeometryReader
+            { geometry in
+                ZStack 
+                {
+                    VStack 
+                    {
+                        Spacer().frame(height: 15)
                         
-                        // MARK: 標籤
-                        // 这里可以继续添加其他组件
-                        
-                        // MARK: 下方資訊(個人資訊＋設置)
-                        List {
-                            Section(header: Text("個人資訊").foregroundColor(isDarkMode ? .white : .black)) {
-                                // MARK: 用戶名稱
-                                HStack {
-                                    VStack {
+                        Form
+                        {
+                            // MARK: 頭像
+                            Section {
+                                VStack() {
+                                    if let userImage = self.userImage,
+                                       let image = UIImage(data: userImage) {
                                         Button(action: {
-                                            isNameSheetPresented.toggle()
+                                            self.showingActionSheet = true
                                         }) {
-                                            HStack {
-                                                InformationLabel(image: "person.fill", label: "姓名")
-                                                Text(user.name)
-                                                    .foregroundColor(.gray)
-                                            }
+                                            Circle()
+                                                .tint(Color.clear) // 背景變透明
+                                                .scaledToFit()
+                                                .frame(width: 160)
+                                                .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
+                                                .overlay {
+                                                    Image(uiImage: image)
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .clipShape(Circle())
+                                                }
                                         }
-                                        .buttonStyle(PlainButtonStyle())
-                                        .cornerRadius(8)
-                                    }
-                                    .sheet(isPresented: $isNameSheetPresented) {
-                                        NameSheetView(name: $user.name, isPresented: $isNameSheetPresented)
+                                        .actionSheet(isPresented: $showingActionSheet) {
+                                            ActionSheet(title: Text("選擇圖片"), buttons: [
+                                                .default(Text("從相簿選取")) {
+                                                    self.showingImagePicker = true
+                                                },
+                                                .default(Text("使用系統預設圖片")) {
+                                                    self.showPresetImages = true
+                                                },
+                                                .cancel()
+                                            ])
+                                        }
+                                    } else {
+                                        Button(action: {
+                                            self.showingActionSheet = true
+                                        }) {
+                                            Circle()
+                                                .fill(Color.clear) // 背景變透明
+                                                .scaledToFit()
+                                                .frame(width: 160)
+                                                .overlay {
+                                                    Image("放縱分類")
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .clipShape(Circle())
+                                                }
+                                        }
+                                        .actionSheet(isPresented: $showingActionSheet) {
+                                            ActionSheet(title: Text("選擇圖片"), buttons: [
+                                                .default(Text("從相簿選取")) {
+                                                    self.showingImagePicker = true
+                                                },
+                                                .default(Text("使用系統預設圖片")) {
+                                                    self.showPresetImages = true
+                                                },
+                                                .cancel()
+                                            ])
+                                        }
                                     }
                                 }
-                                .padding(.vertical, 2) // 调整上下间隔
-                                // MARK: 性別
+                                .frame(maxWidth: .infinity, alignment: .center) // 置中
+                                .alert("確認從相簿更換頭像", isPresented: $showingImagePickerAlert) 
+                                {
+                                    Button("取消", role: .cancel) {}
+                                    Button("確認") {
+                                        if let data = selectedImageData {
+                                            self.userImage = data
+                                        }
+                                    }
+                                } message: {
+                                    Text("您確定要使用相簿中的圖片嗎？")
+                                }
+                                .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
+                                .onChange(of: pickImage) 
+                                { newItem in
+                                    Task {
+                                        if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                                            self.selectedImageData = data
+                                            self.showingImagePickerAlert = true // 顯示相簿確認警示
+                                        }
+                                    }
+                                }
+                                .sheet(isPresented: $showPresetImages) 
+                                {
+                                    PresetImageSelectionView(userImage: $userImage)
+                                }
+                            }
+                            .background(Color.clear) // Section 背景透明
+                            .listRowBackground(Color.clear) // 確保行背景也透明
+                            .padding(.bottom, -10) // 減少底部間距
+                            .padding(.top, -5)
+                            
+                            // 個人資訊
+                            Section(header: Text("個人資訊").foregroundColor(isDarkMode ? .white : .black)) {
+                                
+                                // 用戶名稱
+                                HStack {
+                                    Button(action: {
+                                        isNameSheetPresented.toggle()
+                                    }) {
+                                        HStack {
+                                            InformationLabel(image: "person.fill", label: "姓名")
+                                            Text(user.name)
+                                                .foregroundColor(.gray)
+                                        }
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
+                                .sheet(isPresented: $isNameSheetPresented) {
+                                    NameSheetView(name: $user.name, isPresented: $isNameSheetPresented)
+                                }
+                                
+                                // 性別
                                 HStack {
                                     self.label[1]
                                     Text(self.setInformation(index: 1))
                                         .foregroundColor(.gray)
                                 }
-                                .padding(.vertical, 2) // 调整上下间隔
                                 
-                                // MARK: 生日
+                                // 生日
                                 HStack {
                                     self.label[2]
                                     Text(self.setInformation(index: 2))
                                         .foregroundColor(.gray)
                                 }
-                                .padding(.vertical, 2) // 调整上下间隔
                             }
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(isDarkMode ? Color.gray.opacity(0.2) : Color.white.opacity(0.2))
-                            .padding(.vertical, 2) // 调整上下间隔
+                            .listRowBackground(isDarkMode ? Color.gray.opacity(0.2) : Color.white)
+                            //.padding(.bottom, -10) // 減少底部間距
                             
-                            // MARK: 更多功能_內容＆連結處
+                            // 更多功能
                             Section(header: Text("更多功能").foregroundColor(isDarkMode ? .white : .black)) {
-                                // MARK: 健康 連結
-                                HStack {
-                                    NavigationLink(destination: DynamicView()) {
-                                        InformationLabel(image: "chart.xyaxis.line", label: "健康")
-                                    }
-                                }
-                                .padding(.bottom, 5)
-                                // MARK: 過往食譜 連結
-                                HStack {
-                                    NavigationLink(destination: PastRecipesView()) {
-                                        InformationLabel(image: "clock.arrow.circlepath", label: "過往食譜")
-                                    }
-                                }
-                                .padding(.bottom, 5)
                                 
-                                // MARK: 食材紀錄 連結
-                                HStack {
-                                    NavigationLink(destination: StockView()) {
-                                        InformationLabel(image: "doc.on.clipboard", label: "檢視庫存")
-                                    }
+                                // 健康 連結
+                                NavigationLink(destination: DynamicView()) {
+                                    InformationLabel(image: "chart.xyaxis.line", label: "健康")
                                 }
-                                .padding(.bottom, 5)
                                 
-                                //                                // MARK: 飲食偏好->暫時食譜顯示 連結
-                                //                                HStack {
-                                //                                    NavigationLink(destination: Custom_recipesView(U_ID: " ")) {
-                                //                                        InformationLabel(image: "fork.knife", label: "飲食偏好->暫時食譜顯示")
-                                //                                    }
-                                //                                }
-                                //                                .padding(.bottom, 5)
-                                
-                                // MARK: 我的最愛 連結
-                                HStack {
-                                    NavigationLink(destination: Rec_Col_View()) {
-                                        InformationLabel(image: "tray.2.fill", label: "食譜收藏庫")
-                                    }
+                                // 過往食譜 連結
+                                NavigationLink(destination: PastRecipesView()) {
+                                    InformationLabel(image: "clock.arrow.circlepath", label: "過往食譜")
                                 }
-                                .padding(.bottom,5)
                                 
-                                // MARK: 深淺模式
+                                // 食材紀錄 連結
+                                NavigationLink(destination: StockView()) {
+                                    InformationLabel(image: "doc.on.clipboard", label: "檢視庫存")
+                                }
+                                
+                                // 我的最愛 連結
+                                NavigationLink(destination: Rec_Col_View()) {
+                                    InformationLabel(image: "tray.2.fill", label: "食譜收藏庫")
+                                }
+                                
+                                // 深淺模式切換
                                 HStack {
-                                    HStack {
-                                        Image(systemName: !self.colorScheme ? "moon.fill" : "sun.max.fill")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: 30, height: 30)
-                                            .rotationEffect(.degrees(!self.colorScheme ? 360 : 0))
-                                            .animation(.spring(response: 0.5, dampingFraction: 0.5), value: self.colorScheme)
-                                        
-                                        Text(!self.colorScheme ? "   深色模式" : "   淺色模式")
-                                            .bold()
-                                            .font(.body)
-                                            .alignmentGuide(.leading) { d in d[.leading] }
-                                            .opacity(1)
-                                            .animation(.easeInOut(duration: 0.3), value: self.colorScheme)
-                                    }
+                                    Image(systemName: !self.colorScheme ? "moon.fill" : "sun.max.fill")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 30, height: 30)
+                                        .rotationEffect(.degrees(!self.colorScheme ? 360 : 0))
+                                        .animation(.spring(response: 0.5, dampingFraction: 0.5), value: self.colorScheme)
+                                    
+                                    Text(!self.colorScheme ? "   深色模式" : "   淺色模式")
+                                        .bold()
+                                        .font(.body)
+                                        .alignmentGuide(.leading) { d in d[.leading] }
+                                        .opacity(1)
+                                        .animation(.easeInOut(duration: 0.3), value: self.colorScheme)
+                                    
                                     Toggle("", isOn: self.$colorScheme)
                                         .tint(Color("BottonColor"))
                                         .scaleEffect(0.75)
                                         .offset(x: 30)
                                         .onChange(of: self.colorScheme) { newValue in
                                             withAnimation(.easeInOut(duration: 0.3)) {
-                                                // 不需要額外的 isDarkMode 狀態
                                                 fetchUserInfo()
                                             }
                                         }
                                 }
-                                .padding(.bottom, 5)
-                                // MARK: 登出
+                                
+                                // 登出按鈕
                                 Button(action: {
-                                    logout() // 调用登出函数
+                                    logout()
                                     withAnimation(.easeInOut) {
                                         self.signin = false
                                     }
@@ -370,25 +360,23 @@ struct MyView: View
                                     }
                                 }
                             }
-                            .padding(.bottom, 10)
-                            
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(isDarkMode ? Color.gray.opacity(0.2) : Color.white.opacity(0.2)) // 根据模式设置背景色
+                            .listRowBackground(isDarkMode ? Color.gray.opacity(0.2) : Color.white)
                         }
-                        .listStyle(.plain)
-                        .listStyle(InsetListStyle())
+                        .listStyle(InsetGroupedListStyle())
+                        .background(isDarkMode ? Color.black : Color(.systemGray6))
                         .onChange(of: self.colorScheme) { newValue in
                             self.isDarkMode = !self.colorScheme
                         }
                     }
+                    
+                }
+                .preferredColorScheme(self.colorScheme ? .light : .dark) // 控制深浅模式切换
+                .onAppear 
+                {
+                    fetchUserInfo()
                 }
             }
-            .preferredColorScheme(self.colorScheme ? .light : .dark) // 控制深浅模式切换
-            .onAppear {
-                fetchUserInfo()
-            }
         }
-        
     }
     
     

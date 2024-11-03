@@ -87,7 +87,7 @@ struct BMIView: View {
     @EnvironmentObject private var user: User
     @State private var height: String = ""
     @State private var weight: String = ""
-    
+    @Environment(\.colorScheme) var colorScheme // 获取系统的深浅模式
     @StateObject private var bmiRecordViewModel = BMIRecordViewModel()
     @StateObject private var temperatureSensorViewModel = TemperatureSensorViewModel(allSensors: [TemperatureSensor(id: "BMI", records: [])])
     @State private var displayMode: Int = 0 // 0 for Daily, 1 for Weekly
@@ -156,7 +156,7 @@ struct BMIView: View {
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color("BottonColor"))
+                            .foregroundColor(Color(.orange))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -200,11 +200,31 @@ struct BMIView: View {
                         .scaleEffect(animateChart ? 1 : 0.8) // 縮放效果
                         .opacity(animateChart ? 1 : 0) // 動畫透明度
                         .animation(.easeInOut(duration: 0.8), value: animateChart) // 平滑動畫
+                        .chartXAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // X 轴日期颜色
+                                   }
+                               }
+                               // 设置 Y 轴的网格线颜色
+                               .chartYAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // Y 轴标签颜色
+                                   }
+                               }
                     }
                     .padding()
                 }
                 .frame(width: 350, height: 250)
                 .background(RoundedRectangle(cornerRadius: 10).stroke(Color.orange, lineWidth: 2))
+                
                 .shadow(color: Color.gray.opacity(0.3), radius: 10, x: 0, y: 5)
                 
                 
@@ -223,6 +243,7 @@ struct BMIView: View {
                             Text("每30日").tag(2)
                         }
                         .pickerStyle(MenuPickerStyle())
+                        .accentColor(Color.orange)
                     }
                     
                     VStack(spacing: -5) {
@@ -273,7 +294,7 @@ struct BMIView: View {
                             .foregroundColor(Color("ButColor"))
                             .padding(10)
                             .frame(width: 300, height: 50)
-                            .background(Color("BottonColor"))
+                            .background(Color(.orange))
                             .cornerRadius(100)
                             .font(.title3)
                     }
@@ -310,6 +331,7 @@ struct BMIView: View {
             }
             .padding(.bottom, 25)
             .offset(y: 0)
+            .background(colorScheme == .dark ? Color.black : Color.white) // 深色模式使用灰色背景，浅色模式使用白色背景
         }
     }
 }
@@ -538,6 +560,7 @@ struct BMIRecordDetailView: View {
                     .padding(.top, 2)
             }
             .frame(maxWidth: .infinity) // 使每个 ColorBox 充满可用宽度
+            
         }
     }
     

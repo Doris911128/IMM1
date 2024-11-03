@@ -153,19 +153,19 @@ struct SignupView: View {
                     VStack(spacing: 20) {
                         TextField("輸入您的帳號", text: self.$information.0)
                             .padding()
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.5))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
                             .autocapitalization(.none)
                         SecureField("輸入您的密碼", text: self.$information.1)
                             .padding()
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.5))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
                             .autocapitalization(.none)
                         SecureField("再次輸入密碼", text: self.$information.2)
                             .padding()
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.5))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
                             .autocapitalization(.none)
@@ -176,7 +176,7 @@ struct SignupView: View {
                     VStack {
                         TextField("您的名稱", text: self.$information.3)
                             .padding()
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.5))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
                             .autocapitalization(.none)
@@ -226,14 +226,14 @@ struct SignupView: View {
                     VStack {
                         TextField("輸入您的身高", text: self.$information.6)
                             .padding()
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.5))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
                     }
                     VStack {
                         TextField("輸入您的體重", text: self.$information.7)
                             .padding()
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.gray.opacity(0.5))
                             .frame(width: 300, height: 50)
                             .cornerRadius(100)
                     }

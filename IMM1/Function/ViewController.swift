@@ -58,11 +58,11 @@ class ViewController: UIViewController {
     
     func setupAVSession() throws {
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) else {
-            throw AppError.captureSessionSetup(reason: "Could not find a front facing camera.")
+            throw AppError.captureSessionSetup(reason: "找不到前置鏡頭")
         }
         
         guard let deviceInput = try? AVCaptureDeviceInput(device: videoDevice) else {
-            throw AppError.captureSessionSetup(reason: "Could not create video device input.")
+            throw AppError.captureSessionSetup(reason: "無法建立視訊設備輸入")
         }
         
         let session = AVCaptureSession()
@@ -70,7 +70,7 @@ class ViewController: UIViewController {
         session.sessionPreset = AVCaptureSession.Preset.high
         
         guard session.canAddInput(deviceInput) else {
-            throw AppError.captureSessionSetup(reason: "Could not add video device input to the session")
+            throw AppError.captureSessionSetup(reason: "無法將視訊設備輸入新增至 會話session 中")
         }
         session.addInput(deviceInput)
         
@@ -81,7 +81,7 @@ class ViewController: UIViewController {
             dataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
             dataOutput.setSampleBufferDelegate(self, queue: videoDataOutputQueue)
         } else {
-            throw AppError.captureSessionSetup(reason: "Could not add video data output to the session")
+            throw AppError.captureSessionSetup(reason: "無法將視訊資料輸出新增至會話session中")
         }
         session.commitConfiguration()
         cameraFeedSession = session

@@ -286,6 +286,7 @@ struct StockView: View
                         {
                             LazyVGrid(columns: columns, spacing: 20)
                             {
+                                
                                 ForEach(ingredients.indices, id: \.self)
                                 { index in
                                     ZStack(alignment: .topLeading)
@@ -354,9 +355,12 @@ struct StockView: View
                                                 }
                                             }
                                             .padding()
-                                            .background(Color(UIColor.systemBackground))
+                                            .background(Color(UIColor { traitCollection in
+                                                traitCollection.userInterfaceStyle == .dark ? UIColor(red: 50/255, green: 50/255, blue: 50/255, alpha: 1) : UIColor.white
+                                            }))
                                             .cornerRadius(8)
                                             .shadow(radius: 4)
+
                                         }
                                         .transition(.opacity) // Adding a fade-out transition
                                         .animation(.easeInOut(duration: 0.3), value: ingredients.count)
@@ -383,7 +387,9 @@ struct StockView: View
                                         
                                     }
                                 }
+                                
                             }
+                            
                             .padding()
                         }
                     }

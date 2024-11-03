@@ -33,7 +33,7 @@ struct ChatHistoryView: View {
     @State private var showingClearAlert = false
     @State private var showBookmarkIcon = false // 控制 bookmark.fill 圖示的顯示
     @State private var bookmarkOpacity = 0.0   // 控制透明度，用於漸入漸出效果
-    
+
 
     // MARK: 根據用戶的 ID 從伺服器獲取該用戶的聊天記錄
     func fetchChatRecords(for userID: String) {
@@ -318,7 +318,7 @@ struct AIView: View
     @State private var selectedItems: Set<String> = []
     @State private var showHistory: Bool = false
     @State private var isLoading1 = false
-    
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
         VStack {
             VStack(spacing: 0) {
@@ -328,7 +328,7 @@ struct AIView: View
                         showHistory.toggle()
                     }) {
                         Image(systemName: "clock.arrow.circlepath")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.orange)
                             .imageScale(.large)
                             .frame(width: 40, height: 40)
                     }
@@ -345,7 +345,7 @@ struct AIView: View
                     Spacer()
                     NavigationLink(destination: AIphotoView(messageText: $messageText)) {
                         Image(systemName: "camera.fill")
-                            .foregroundColor(.blue)
+                            .foregroundColor(.orange)
                             .imageScale(.large)
                             .frame(width: 40, height: 40)
                             .offset(x: -20, y: 0)
@@ -394,23 +394,23 @@ struct AIView: View
             
             HStack(spacing: 12) { // 增加 TextField 和按鈕之間的間距
                 TextField("請輸入食材，將幫您生成食譜", text: $messageText)
+                    .foregroundColor(colorScheme == .dark ? Color.white : Color.black) // 根据深浅模式调整文字颜色
+                    .background(colorScheme == .dark ? Color.black.opacity(0.2) : Color.white) // 背景颜色
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .frame(minHeight: CGFloat(30))
-                
                     .padding(.top, -20) // 向上移動 TextField
-                Button(action: sendMessage) {
-                    Image(systemName: "paperplane.fill")
-                        .foregroundColor(.blue)
-                        .imageScale(.large)
-                    
-                        .padding(.top,-20) // 向上移動 TextField
-                }
+                   
+
+                Image(systemName: "paperplane.fill")
+                    .foregroundColor(colorScheme == .dark ? Color(red: 255/255, green: 243/255, blue: 229/255) : Color(red: 1.0, green: 0.67, blue: 0.36))
+                               .imageScale(.large)
+                               .padding(.top, -20) // 向上移动 TextField
                 .padding() // 增加按鈕與文字框的左邊距離
             }
             .padding() // 縮短 HStack 之間的上邊距
             
         }
-        
+
         
         .sheet(item: $selectedOption) { option in
             OptionSheet(option: option.title, selectedItems: $selectedItems) {
@@ -431,6 +431,7 @@ struct AIView: View
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
             }
         }
+        
     }
     
     //MARK: 點擊發送按鈕時被調用
@@ -569,8 +570,8 @@ struct OptionButton: View {
             Text(title)
                 .padding(.horizontal, 20) // Adjust horizontal padding for a capsule effect
                 .padding(.vertical, 10) // Adjust vertical padding for a capsule effect
-                .background(Color.blue.opacity(0.2))
-                .foregroundColor(.blue) // Set text color to match the background
+                .background(Color(red: 253/255, green: 212/255, blue: 161/255).opacity(0.2)) // 背景色FFD4A1，透明度设置为0.8
+                .foregroundColor(Color(red: 246/255, green: 143/255, blue: 28/255)) // 字色F68F1C
                 .clipShape(Capsule()) // Create a capsule shape
                 .frame(minWidth: 100) // Set a minimum width
         }
@@ -698,6 +699,7 @@ struct OptionSheet: View {
                     Text("No options available.")
                 }
             }
+            
             .navigationTitle(option)
             .navigationBarItems(trailing: Button("完成") {
                 onDismiss()

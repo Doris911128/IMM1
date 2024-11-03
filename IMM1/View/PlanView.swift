@@ -299,39 +299,36 @@ struct PlanView: View {
                 {
                     HStack
                     {
-                        ForEach(0..<7, id: \.self)
-                        { offset in
+                        ForEach(0..<7, id: \.self) { offset in
                             let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
                             let dateString = dateFormatter.string(from: date)
                             let dayOfWeek = dayOfWeekFormatter.string(from: date)
                             Button(action: {
-                                if selectedDate == dateString
-                                {
+                                if selectedDate == dateString {
                                     showSingleDayView.toggle()
-                                    if (!showSingleDayView)
-                                    {
+                                    if (!showSingleDayView) {
                                         selectedDate = nil
                                     }
-                                } else
-                                {
+                                } else {
                                     selectedDate = dateString
                                     showSingleDayView = true
                                 }
                             }) {
-                                VStack
-                                {
+                                VStack {
                                     Text(displayDateFormatter.string(from: date))
                                         .font(.headline)
+                                        .foregroundColor(selectedDate == dateString && showSingleDayView ? .white : .primary) // 在选中状态下为白色，否则为主色调
                                     Text(dayOfWeek)
                                         .font(.subheadline)
+                                        .foregroundColor(selectedDate == dateString && showSingleDayView ? .white : .secondary) // 在选中状态下为白色，否则为次要色调
                                 }
                                 .frame(width: 35, height: 50)
                                 .padding()
-                                .background(selectedDate == dateString && showSingleDayView ? Color.orange : Color.gray.opacity(0.2))
-                                .foregroundColor(selectedDate == dateString && showSingleDayView ? .white : .black)
+                                .background(selectedDate == dateString && showSingleDayView ? Color.orange : Color(UIColor.systemGray5))
                                 .clipShape(Capsule())
                             }
                         }
+
                         .padding(3)
                     }
                     .padding(.horizontal)

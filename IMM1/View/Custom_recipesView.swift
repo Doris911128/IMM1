@@ -16,6 +16,7 @@
        @State private var Crecipes: [CRecipe] = []
        @State private var showingAddRecipeView = false
        @State private var selectedRecipe: CRecipe? = nil
+       @Environment(\.colorScheme) var colorScheme
        private func fetchCRecipes() {
               // 添加獲取食譜的邏輯
               guard let url = URL(string: "http://163.17.9.107/food/php/GetCC_Recipes.php") else { return }
@@ -90,7 +91,8 @@
                        isEditing.toggle() // 切換編輯狀態
                    }) {
                        Text(isEditing ? "完成" : "刪除")
-                           .font(.headline)
+                                  .font(.headline)
+                                  .foregroundColor(colorScheme == .dark ? Color(red: 255/255, green: 212/255, blue: 161/255) : Color(red: 246/255, green: 143/255, blue: 28/255)) // 根据颜色模式调整文本颜色
                    }
                    .padding(.leading, 318)
                    .padding(.horizontal, 20)
@@ -547,34 +549,32 @@ private func deleteCRecipeOnServer(recipeID: Int, completion: @escaping (Bool) -
        }
    }
    //MARK: 外部公模板 CR_Block
-   struct CR_Block: View
-   {
-       let recipeName: String // 接收食譜名稱
-       
-       var body: some View
-       {
-           ZStack
-           {
-               RoundedRectangle(cornerRadius: 10)
-                   .fill(Color.white)
-                   .shadow(radius: 2)
-               
-               VStack(alignment: .leading) 
-               {
-                   Text(recipeName)
-                       .font(.system(size: 22))
-                       .bold()
-                       .frame(maxWidth: .infinity, alignment: .center) // 讓名稱居中
-               }
-               .frame(height: 50)
-               .padding(.horizontal) // 左右內部間距
-               .padding(.vertical, 8) // 上下內部間距
-           }
-           .frame(maxWidth: .infinity) // 讓 ZStack 佔滿父視圖的寬度
-           .padding(.horizontal)
-           .padding(.vertical, 10) // 外側上下間距
-       }
-   }
+struct CR_Block: View {
+    let recipeName: String // 接收食譜名稱
+    @Environment(\.colorScheme) var colorScheme // 获取当前颜色模式
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10)
+                            .fill(colorScheme == .dark ? Color.gray.opacity(0.5) : Color.white) // 使用柔和的灰色作为深色模式背景
+                            .shadow(radius: 2)
+
+            VStack(alignment: .leading) {
+                    Text(recipeName)
+                            .font(.system(size: 22))
+                            .bold()
+                            .foregroundColor(colorScheme == .dark ? Color.white : Color.black) // 根据颜色模式调整文字颜色
+                            .frame(maxWidth: .infinity, alignment: .center) // 讓名稱居中
+                        }
+            .frame(height: 50)
+            .padding(.horizontal) // 左右內部間距
+            .padding(.vertical, 8) // 上下內部間距
+        }
+        .frame(maxWidth: .infinity) // 讓 ZStack 佔滿父視圖的寬度
+        .padding(.horizontal)
+        .padding(.vertical, 10) // 外側上下間距
+    }
+}
 
    #Preview
    {

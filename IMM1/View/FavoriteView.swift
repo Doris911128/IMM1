@@ -351,6 +351,7 @@ struct FavoriteView: View {
                     }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title)
+                            .foregroundColor(.orange) // 设置图标颜色为橙色
                     }
                 }
                 .padding(.horizontal, 20)
@@ -374,7 +375,8 @@ struct FavoriteView: View {
                                     Text(category.name)
                                         .padding(.vertical, 10)
                                         .padding(.horizontal, 16)
-                                        .background(selectedCategory?.id == category.id ? Color.blue.opacity(0.4) : Color.blue.opacity(0.2))
+                                        .background(selectedCategory?.id == category.id ? Color.orange.opacity(0.4) : Color.orange.opacity(0.2))
+                                        .foregroundColor(.orange)
                                         .cornerRadius(15)
                                         .lineLimit(1)
                                         .truncationMode(.tail)

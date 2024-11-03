@@ -102,11 +102,11 @@ struct AIRecipeView: View, AIRecipeP {
 struct AIR_Block: View {
     @Binding var aiRecipes: [ChatRecord] // 使用 Binding 傳遞 chatRecords
     var index: Int // 對應於 aiRecipes 中的索引
-
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.white)
+            .fill(colorScheme == .dark ? Color.gray.opacity(0.5) : Color.white)
             .shadow(radius: 2)
             
 
@@ -115,6 +115,7 @@ struct AIR_Block: View {
                     // 使用 extractRecipeName 方法提取並顯示名稱
                     Text(aiRecipes[index].output.extractRecipeName() ?? "Unknown Recipe Name") // 若提取失敗顯示默認名稱
                         .font(.system(size: 22))
+                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
                         .bold()
                     Spacer()
                     Button(action: {
