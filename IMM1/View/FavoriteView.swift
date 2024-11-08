@@ -22,6 +22,7 @@ struct FavoriteView: View {
     @State private var editingCategory: Category? = nil
     @State private var editedCategoryName: String = ""
     @State private var isLongPressing: Bool = false // 用來標記是否在進行長按
+    @State private var showEditCategorySheet = false
     // 編輯按鈕的 action
     func editCategory(category: Category) {
         editedCategoryName = category.name
@@ -348,10 +349,11 @@ struct FavoriteView: View {
                     Spacer()
                     Button(action: {
                         showAddCategoryAlert = true
+                        
                     }) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title)
-                            .foregroundColor(.orange) // 设置图标颜色为橙色
+                            .foregroundColor(.orange)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -395,6 +397,8 @@ struct FavoriteView: View {
                                     HStack {
                                         Button(action: {
                                             editCategory(category: category)
+                                            showEditCategorySheet = true
+                                            loadCategories()
                                         }) {
                                             Image(systemName: "pencil.circle.fill")
                                                 .foregroundColor(.blue)
@@ -483,7 +487,6 @@ struct FavoriteView: View {
                                 )
                                 .padding(.bottom, -70)
                             }
-                            
                         }
                     }
                 }
@@ -493,7 +496,8 @@ struct FavoriteView: View {
                 loadUFavData() // 加載特定分類的食物
             }
             
-            if isEditing {
+            // 編輯分類的sheet
+            .sheet(isPresented: $showEditCategorySheet) {
                 VStack {
                     Text("編輯分類")
                         .font(.title2)
@@ -501,56 +505,82 @@ struct FavoriteView: View {
                     TextField("新的分類名稱", text: $editedCategoryName)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .padding()
-                    Button("確定") {
-                        if !editedCategoryName.isEmpty {
-                            updateCategory()
+                    HStack {
+                        Spacer()
+                        Button("確定") {
+                            if !editedCategoryName.isEmpty {
+                                updateCategory()
+                                showEditCategorySheet = false
+                            }
                         }
-                    }
-                    .padding()
-                    Button("取消") {
-                        isEditing = false
-                        editingCategory = nil
-                        editedCategoryName = ""
+                        .foregroundColor(.orange)
+                        .padding()
+                        
+                        Button("取消") {
+                            isEditing = false
+                            editingCategory = nil
+                            editedCategoryName = ""
+                            showEditCategorySheet = false
+                        }
+                        .foregroundColor(.orange)
+                        .padding()
+                        Spacer()  // 使按鈕向中間靠攏
                     }
                 }
                 .padding()
             }
-        }
-        
-        .sheet(isPresented: $showAddCategoryAlert) {
-            VStack {
-                Text("新增分類")
-                    .font(.title2)
-                    .padding()
-                TextField("分類名稱", text: $newCategoryName)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                Button("確定") {
-                    if !newCategoryName.isEmpty {
-                        addCategory(name: newCategoryName, U_ID: U_ID)
-                        newCategoryName = ""
-                        showAddCategoryAlert = false
+            
+            // 新增分類的sheet
+            .sheet(isPresented: $showAddCategoryAlert) {
+                VStack {
+                    Text("新增分類")
+                        .font(.title2)
+                        .padding()
+                    TextField("分類名稱", text: $newCategoryName)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .padding()
+                    HStack {
+                        Spacer()
+                        Button("確定") {
+                            if !newCategoryName.isEmpty {
+                                   // 呼叫新增分類的函數，並在成功後加載新的分類
+                                   addCategory(name: newCategoryName, U_ID: U_ID)
+                                   
+                                   // 重新加載分類，確保畫面更新
+                                   loadCategories()
+                                   
+                                   // 清空輸入框並隱藏新增分類的sheet
+                                   newCategoryName = ""
+                                   showAddCategoryAlert = false
+                               }
+                           }
+                        .foregroundColor(.orange)
+                        .padding()
+                        Button("取消") {
+                            showAddCategoryAlert = false
+                        }
+                        .foregroundColor(.orange)
+                        .padding()
+                        Spacer()  // 使按鈕向中間靠攏
                     }
                 }
                 .padding()
-                Button("取消") {
-                    showAddCategoryAlert = false
-                }
             }
-            .padding()
-        }
-        .alert(isPresented: $showDeleteConfirmation) {
-            Alert(
-                title: Text("刪除分類"),
-                message: Text("確定要刪除這個分類嗎？"),
-                primaryButton: .destructive(Text("刪除")) {
-                    if let category = categoryToDelete {
-                        deleteCategory(id: category.id)
-                        categoryToDelete = nil
-                    }
-                },
-                secondaryButton: .cancel()
-            )
+            
+            .alert(isPresented: $showDeleteConfirmation) {
+                Alert(
+                    title: Text("刪除分類"),
+                    message: Text("確定要刪除這個分類嗎？"),
+                    primaryButton: .destructive(Text("刪除")) {
+                        if let category = categoryToDelete {
+                            deleteCategory(id: category.id)
+                            categoryToDelete = nil
+                        }
+                    },
+                    
+                    secondaryButton: .cancel()
+                )
+            }
         }
     }
 }

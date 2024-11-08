@@ -110,7 +110,7 @@ struct EditPlanView: View
     @Environment(\.presentationMode) var presentationMode
     @Environment(\.colorScheme) var colorScheme
     @State private var bmiValue: Double = 0.0
-    
+    @FocusState private var isTextFieldFocused: Bool
     
     // 根据 BMI 更新 foodOptions8
     func updateFoodOptions8() {
@@ -534,7 +534,7 @@ struct EditPlanView: View
                         })
                         .padding()
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        
+                        .focused($isTextFieldFocused)
                         Button(action: {
                             performSearch()
                         }) {
@@ -624,6 +624,10 @@ struct EditPlanView: View
                     self.showAlert = false
                 }
             }
+        }
+        .onTapGesture
+        {
+            isTextFieldFocused = false
         }
     }
 }

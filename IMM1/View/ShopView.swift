@@ -146,14 +146,14 @@ struct RecipeView: View {
     @Binding var selectedIngredients: [Ingredient]
     @Binding var ingredients: [StockIngredient]
     
+    @State private var isAllSelected = false // 跟踪是否已经选择所有食材
+    
     @State private var quantityInputs: [UUID: String] = [:]
     @State private var hiddenIngredients: Set<UUID> = []
     @State private var showPurchasedMessage = false
-    @State private var purchasedIngredientName: String = "" // 儲存已採買的食材名稱
+    @State private var purchasedIngredientName: String = ""
     @State private var showPurchaseAnimation = false
-    @State private var isAllSelected = false // 用於追蹤是否全選
-    
-    
+    @State private var showAlert = false
     
     init(recipes: Binding<[RecipeWrapper]>, onDeleteIngredient: @escaping (Ingredient) -> Void, selectedIngredients: Binding<[Ingredient]>, onIngredientSelection: @escaping (Int, String, Int) -> Void, ingredients: Binding<[StockIngredient]>) {
         self._recipes = recipes
@@ -165,36 +165,37 @@ struct RecipeView: View {
     
     var body: some View {
         ZStack {
-            if recipes.isEmpty {
+            if recipes.isEmpty && selectedIngredients.isEmpty {
+                // 沒有採購計劃時顯示 EmptyShopView
                 EmptyShopView()
-            } else if isAllSelected || recipes.allSatisfy({ recipe in
-                ingredients.contains(where: { $0.F_ID == recipe.sqlResult.fid })
-            }) {
+                    .transition(.opacity)
+            } else if isAllSelected
+            {
+                // 所有食材被選取並確認購買後顯示 PurchasedIngredientsView
                 PurchasedIngredientsView()
+                    .transition(.opacity)
             } else {
                 VStack {
                     HStack {
                         Spacer()
                         Button(action: {
-                            withAnimation(.easeInOut(duration: 0.5)) {
-                                recipes.forEach { recipe in
-                                    if !hiddenIngredients.contains(recipe.sqlResult.id) {
-                                        hiddenIngredients.insert(recipe.sqlResult.id)
-                                        onIngredientSelection(
-                                            recipe.sqlResult.fid,
-                                            recipe.sqlResult.uid,
-                                            recipe.sqlResult.amount
-                                        )
-                                    }
-                                }
-                                isAllSelected = true
-                            }
+                            showAlert = true
                         }) {
                             Text("全選")
                                 .font(.system(size: 18))
                                 .foregroundColor(Color("BottonColor"))
                                 .padding(.trailing, 16)
                         }
+                    }
+                    .alert(isPresented: $showAlert) {
+                        Alert(
+                            title: Text("確認全部採購"),
+                            message: Text("是否確定要全部採購？"),
+                            primaryButton: .default(Text("確認")) {
+                                selectAllIngredients()
+                            },
+                            secondaryButton: .cancel(Text("取消"))
+                        )
                     }
                     
                     List {
@@ -203,7 +204,7 @@ struct RecipeView: View {
                                 Section(header: EmptyView()) {
                                     if !hiddenIngredients.contains(wrapper.sqlResult.id) {
                                         RecipeItemView(wrapper: wrapper, hiddenIngredients: $hiddenIngredients, onIngredientSelection: onIngredientSelection)
-                                            .transition(.opacity) // 使用淡出動畫
+                                            .transition(.opacity)
                                     }
                                 }
                             }
@@ -211,16 +212,29 @@ struct RecipeView: View {
                     }
                     .listStyle(PlainListStyle())
                     .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
-                    .animation(.easeInOut, value: hiddenIngredients) // 為隱藏的食材列表添加動畫效果
+                    .animation(.easeInOut, value: hiddenIngredients)
                 }
             }
-            
-            if showPurchaseAnimation {
-                PurchasedMessageView(purchasedIngredientName: $purchasedIngredientName, showPurchaseAnimation: $showPurchaseAnimation)
+        }
+    }
+    
+    private func selectAllIngredients() {
+        withAnimation(.easeInOut(duration: 0.5)) {
+            recipes.forEach { recipe in
+                if !hiddenIngredients.contains(recipe.sqlResult.id) {
+                    hiddenIngredients.insert(recipe.sqlResult.id)
+                    onIngredientSelection(
+                        recipe.sqlResult.fid,
+                        recipe.sqlResult.uid,
+                        recipe.sqlResult.amount
+                    )
+                }
             }
         }
     }
 }
+
+
 
 struct EmptyShopView: View {
     var body: some View {
@@ -252,6 +266,7 @@ struct PurchasedIngredientsView: View {
                 .foregroundColor(.gray)
             Spacer()
         }
+        
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }
@@ -327,6 +342,7 @@ struct RecipeItemView: View {
                         hiddenIngredients.insert(wrapper.sqlResult.id)
                         onIngredientSelection(wrapper.sqlResult.fid, wrapper.sqlResult.uid, wrapper.sqlResult.amount)
                     }
+                    
                 }
                 .frame(maxHeight: .infinity)
         }
@@ -358,15 +374,14 @@ struct PurchasedMessageView: View {
 }
 
 
-struct ShopView: View 
-{
+struct ShopView: View {
     @State private var recipes: [RecipeWrapper] = []
     @State private var isLoading = true
     @State private var selectedIngredients: [Ingredient] = []
     @State private var userUID: String?
     @State private var ingredients: [StockIngredient] = [] // 初始化 ingredients 数组
     @State private var isAllSelected = false // 跟踪是否已经选择所有食材
-
+    
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -435,14 +450,9 @@ struct ShopView: View
                 loadRecipes()
                 loadIngredients()
                 
-                // 每次返回ShopView時，檢查並更新isAllSelected的狀態
-                if !recipes.allSatisfy({ recipe in
-                    ingredients.contains(where: { $0.F_ID == recipe.sqlResult.fid })
-                }) {
-                    isAllSelected = false
-                }
+                
             }
-
+            
             .onDisappear {
                 sendSelectedIngredientsToBackend()
             }
@@ -517,15 +527,18 @@ struct ShopView: View
         }
     }
     
+    
+    
     private func loadIngredients() {
         // 加载库存食材的逻辑
+        
         let networkManager = NetworkManager()
         networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php") { result in
             switch result {
             case .success(let stocks):
                 self.ingredients = stocks.compactMap { stock in
                     let name = stock.F_Name ?? "未知食材"
-                    let unit = stock.F_Unit ?? "未指定单位"
+                    let unit = stock.F_Unit ?? "未指定單位"
                     let SK_SUM = stock.SK_SUM ?? 0
                     let image = stock.Food_imge ?? ""  // 确保 Food_imge 被正确解析
                     
@@ -536,6 +549,7 @@ struct ShopView: View
             }
         }
     }
+    
 }
 
 

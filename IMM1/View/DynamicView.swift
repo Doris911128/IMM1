@@ -15,8 +15,10 @@ struct DynamicView: View {
     @State private var selectedRecord: DynamicRecordType = .BMI
     @GestureState private var dragOffset: CGSize = .zero
     @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         VStack {
+            Spacer(minLength: 44)
             // 按鈕選擇器
             HStack(spacing: 0) {
                 recordButton(.BMI, title: "BMI")
@@ -50,7 +52,6 @@ struct DynamicView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding()
-            
             .background(colorScheme == .dark ? Color.black : Color.white)
             .offset(x: dragOffset.width) // 追蹤拖動中的位移
             .gesture(
@@ -71,6 +72,8 @@ struct DynamicView: View {
                         }
                     }
             )
+        }.onTapGesture {
+            dismissKeyboard()
         }
         .background(colorScheme == .dark ? Color.black : Color.white)
     }

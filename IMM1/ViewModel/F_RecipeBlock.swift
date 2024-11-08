@@ -1,4 +1,3 @@
-//
 //  F_RecipeBlock.swift
 //  IMM1
 //
@@ -20,7 +19,12 @@ struct F_RecipeBlock: View
     @State private var showDeleteConfirmation: Bool = false
     @State private var deleteCategory: FavoriteView.Category?
     @Binding var categories: [FavoriteView.Category]
+    @Environment(\.colorScheme) var colorScheme
     
+    private var backgroundColor: Color
+    {
+        colorScheme == .dark ?  Color.white: Color.black
+    }
     init(imageName: String, title: String, U_ID: String, Dis_ID: Int = 0, categories: Binding<[FavoriteView.Category]>) {
         self.D_image = imageName
         self.Dis_Name = title
@@ -152,12 +156,14 @@ struct F_RecipeBlock: View
                     Text("選擇/刪除分類")
                         .font(.title2)
                         .padding()
-                    
+                        .foregroundColor(backgroundColor)
                     Picker("選擇分類", selection: $selectedCategory) {
                         ForEach(categories) { category in
                             Text(category.name).tag(category as FavoriteView.Category?)
                         }
+                        .accentColor(Color.orange)
                     }
+                    .foregroundColor(.orange)
                     .pickerStyle(MenuPickerStyle())
                     .padding()
                     
@@ -206,6 +212,7 @@ struct F_RecipeBlock: View
                                 showAddToCategory = false
                             }
                         }
+                        .foregroundColor(.orange)
                         .padding()
                         
                         Button("移除") {
@@ -249,6 +256,7 @@ struct F_RecipeBlock: View
                                 showAddToCategory = false
                             }
                         }
+                        .foregroundColor(.orange)
                         
                         .padding()
                     }

@@ -319,6 +319,7 @@ struct AIView: View
     @State private var showHistory: Bool = false
     @State private var isLoading1 = false
     @Environment(\.colorScheme) var colorScheme
+    @FocusState private var isTextFieldFocused: Bool
     var body: some View {
         VStack {
             VStack(spacing: 0) {
@@ -399,7 +400,7 @@ struct AIView: View
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .frame(minHeight: CGFloat(30))
                     .padding(.top, -20) // 向上移動 TextField
-                   
+                    .focused($isTextFieldFocused)
                 Button(action: sendMessage) {
                     Image(systemName: "paperplane.fill")
                         .foregroundColor(colorScheme == .dark ? Color(red: 255/255, green: 243/255, blue: 229/255) : Color(red: 1.0, green: 0.67, blue: 0.36))
@@ -431,6 +432,10 @@ struct AIView: View
                 // Handle the selected image here
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
             }
+        }
+        .onTapGesture
+        {
+            isTextFieldFocused = false
         }
         
     }

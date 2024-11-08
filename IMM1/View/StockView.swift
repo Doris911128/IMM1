@@ -197,7 +197,7 @@ struct StockView: View
         ]
         
         guard let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict),
-              let url = URL(string: "http://163.17.9.107/food/php/StockEdit.php")
+              let url = URL(string: "http://163.17.9.107/food/php/Stockupdate.php")
         else
         {
             print("Error creating JSON or URL")
@@ -435,13 +435,10 @@ struct StockView: View
                                     if ingredients.contains(where: { $0.isSelectedForDeletion }) {
                                         showAlert.toggle()
                                     } else {
-                                        // 全選功能：選擇所有項目
-                                        for index in ingredients.indices {
-                                            ingredients[index].isSelectedForDeletion = true
-                                        }
+                                        isEditing.toggle()
                                     }
                                 }) {
-                                    Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "全選")
+                                    Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "確定")
                                 }
                                 .foregroundColor(.orange)
                             }
@@ -463,12 +460,7 @@ struct StockView: View
                         
                         let indexSet = IndexSet(ingredients.indices.filter { ingredients[$0].isSelectedForDeletion })
                         
-                        // Perform deletion with animation after a slight delay
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation {
-                                ingredients.remove(atOffsets: indexSet)
-                            }
-                        }
+                       
                         
                         fetchData()
                         isEditing = false
