@@ -400,11 +400,12 @@ struct AIView: View
                     .frame(minHeight: CGFloat(30))
                     .padding(.top, -20) // 向上移動 TextField
                    
-
-                Image(systemName: "paperplane.fill")
-                    .foregroundColor(colorScheme == .dark ? Color(red: 255/255, green: 243/255, blue: 229/255) : Color(red: 1.0, green: 0.67, blue: 0.36))
-                               .imageScale(.large)
-                               .padding(.top, -20) // 向上移动 TextField
+                Button(action: sendMessage) {
+                    Image(systemName: "paperplane.fill")
+                        .foregroundColor(colorScheme == .dark ? Color(red: 255/255, green: 243/255, blue: 229/255) : Color(red: 1.0, green: 0.67, blue: 0.36))
+                        .imageScale(.large)
+                        .padding(.top, -20) // 向上移动 TextField
+                }
                 .padding() // 增加按鈕與文字框的左邊距離
             }
             .padding() // 縮短 HStack 之間的上邊距

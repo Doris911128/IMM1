@@ -358,7 +358,8 @@ struct PurchasedMessageView: View {
 }
 
 
-struct ShopView: View {
+struct ShopView: View 
+{
     @State private var recipes: [RecipeWrapper] = []
     @State private var isLoading = true
     @State private var selectedIngredients: [Ingredient] = []
@@ -515,8 +516,6 @@ struct ShopView: View {
             }
         }
     }
-
-
     
     private func loadIngredients() {
         // 加载库存食材的逻辑

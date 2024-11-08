@@ -85,7 +85,7 @@ struct HyperlipidemiaView: View {
     @State private var isShowingList: Bool = false //列表控制
     @State private var showAlert: Bool = false//
     @State private var animateChart = false // 控制圖表動畫的狀態
-    
+    @Environment(\.colorScheme) var colorScheme
     func connect(name: String, action: String) {
         let url = URL(string: "http://163.17.9.107/food/php/\(name).php")!
         var request = URLRequest(url: url)
@@ -149,7 +149,7 @@ struct HyperlipidemiaView: View {
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color("BottonColor"))
+                            .foregroundColor(Color(.orange))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -178,6 +178,7 @@ struct HyperlipidemiaView: View {
                             PointMark(
                                 x: .value("Date", formattedDate(record.date)),
                                 y: .value("Value", record.hyperlipidemia)
+                                
                             )
                             .foregroundStyle(Color.orange)
                             .annotation(position: .top) {
@@ -191,6 +192,25 @@ struct HyperlipidemiaView: View {
                         .scaleEffect(animateChart ? 1 : 0.8)  // 縮放動畫
                         .opacity(animateChart ? 1 : 0)  // 淡入動畫
                         .animation(.easeInOut(duration: 0.8), value: animateChart)  // 平滑動畫
+                        .chartXAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // X 轴日期颜色
+                                   }
+                               }
+                               // 设置 Y 轴的网格线颜色
+                               .chartYAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // Y 轴标签颜色
+                                   }
+                               }
                     }
                     .padding()
                 }
@@ -211,6 +231,7 @@ struct HyperlipidemiaView: View {
                             Text("每7日").tag(1)
                             Text("每30日").tag(2)
                         }
+                        .accentColor(Color.orange)
                         .pickerStyle(MenuPickerStyle())
                         .padding()
                         
@@ -251,7 +272,7 @@ struct HyperlipidemiaView: View {
                                 .foregroundColor(Color("ButColor"))
                                 .padding(10)
                                 .frame(width: 300, height: 50)
-                                .background(Color("BottonColor"))
+                                .background(Color(.orange))
                                 .cornerRadius(100)
                                 .font(.title3)
                         }
@@ -357,7 +378,9 @@ struct HyperlipidemiaRecordsListView: View {
                         }
                     }
                 }
+        
                 .onDelete(perform: deleteRecord)
+                .foregroundColor(.black)
             }
             .navigationTitle("血脂紀錄列表")
             .toolbar {
@@ -366,6 +389,7 @@ struct HyperlipidemiaRecordsListView: View {
                 }
             }
         }
+        .foregroundColor(.orange)
     }
     
     private func deleteRecord(at offsets: IndexSet) {

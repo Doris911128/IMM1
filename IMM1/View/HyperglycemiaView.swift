@@ -84,7 +84,7 @@ struct HyperglycemiaView: View {
     @State private var isShowingList: Bool = false
     @State private var showAlert: Bool = false
     @State private var animateChart = false
-    
+    @Environment(\.colorScheme) var colorScheme
     private func averagesEverySevenRecords() -> [HyperglycemiaRecord] {
         let sortedRecords = chartData.sorted { $0.date < $1.date }
         var results: [HyperglycemiaRecord] = []
@@ -188,7 +188,7 @@ struct HyperglycemiaView: View {
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color("BottonColor"))
+                            .foregroundColor(Color(.orange))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -229,6 +229,25 @@ struct HyperglycemiaView: View {
                         .scaleEffect(animateChart ? 1 : 0.8)  // 動畫縮放效果
                         .opacity(animateChart ? 1 : 0)  // 動畫透明度
                         .animation(.easeInOut(duration: 0.8), value: animateChart)  // 平滑動畫
+                        .chartXAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // X 轴日期颜色
+                                   }
+                               }
+                               // 设置 Y 轴的网格线颜色
+                               .chartYAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // Y 轴标签颜色
+                                   }
+                               }
                     }
                     .padding()
                 }
@@ -249,6 +268,7 @@ struct HyperglycemiaView: View {
                             Text("每7日").tag(1)
                             Text("每30日").tag(2)
                         }
+                        .accentColor(Color.orange)
                         .pickerStyle(MenuPickerStyle())
                         .padding()
                     }
@@ -283,7 +303,7 @@ struct HyperglycemiaView: View {
                                 .foregroundColor(Color("ButColor"))
                                 .padding(10)
                                 .frame(width: 300, height: 50)
-                                .background(Color("BottonColor"))
+                                .background(Color(.orange))
                                 .cornerRadius(100)
                                 .font(.title3)
                         }
@@ -351,14 +371,18 @@ struct HyperglycemiaRecordsListView: View {
                     }
                 }
                 .onDelete(perform: deleteRecord)
+                .foregroundColor(.black)
             }
             .navigationTitle("血糖紀錄列表")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
+                
             }
+            
         }
+        .foregroundColor(.orange)
     }
     
     private func deleteRecord(at offsets: IndexSet) {

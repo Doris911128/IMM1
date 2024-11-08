@@ -134,7 +134,7 @@
                        Text("新增自訂食譜")
                            .font(.headline)
                            .frame(maxWidth: .infinity, maxHeight: 50)
-                           .background(Color.green)
+                           .background(Color.orange)
                            .foregroundColor(.white)
                            .cornerRadius(10)
                            .padding(.horizontal)

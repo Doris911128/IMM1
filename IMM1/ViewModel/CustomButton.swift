@@ -1,4 +1,3 @@
-
 //  CustomButton.swift
 //  IM110CYUT
 //
@@ -11,9 +10,9 @@ struct CustomButton: View
 {
     var imageName: String  // 按钮图片名称
     var buttonText: String // 按钮文字内容
-    var contentText: String
+
     var action: () -> Void // 点击按钮时的动作
-    
+
     var body: some View
     {
         Button(action: action)
@@ -29,14 +28,13 @@ struct CustomButton: View
                         .frame(width: 100, height: 100)
                         .clipShape(Circle()) // 将图像裁剪为圆形
                 }
-                
+
                 VStack(spacing: 5)
                 {
                     Text(buttonText)
                         .foregroundColor(Color("BottonColor"))
                         .font(.system(size: 18))
-                    Text(contentText)
-                        .font(.system(size: 10))
+
                 }
                 .padding()
                 .frame(maxWidth: .infinity)

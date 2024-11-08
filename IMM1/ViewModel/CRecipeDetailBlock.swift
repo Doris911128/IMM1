@@ -37,6 +37,27 @@ struct CRecipeDetailBlock: View, CRecipeP
     @State private var focusedUFieldIndex: Int? = nil// 小技巧
     @State private var focusedUTipIndex: Int? = nil
    
+    @Environment(\.colorScheme) var colorScheme
+    
+    private var backgroundColor: Color {
+        colorScheme == .dark ?  Color.black: Color.white
+    }
+    
+    private var foregroundColor: Color {
+        colorScheme == .dark ?  Color.orange.opacity(0.8): Color.orange
+    }
+    
+    private var textFieldBackgroundColor: Color {
+        colorScheme == .dark ?  Color.white.opacity(0.2): Color.gray.opacity(0.15)
+    }
+    private var backgroundColor1: Color {
+        colorScheme == .dark ? Color(red: 0.2, green: 0.2, blue: 0.2) : Color.white
+    }
+    private var Color1: Color {
+        colorScheme == .dark ?  Color.white: Color.black
+    }
+    
+    
     private func updateRecipe() {
         guard let url = URL(string: "http://163.17.9.107/food/php/EditCC_Recipes.php") else { return }
         
@@ -115,11 +136,11 @@ struct CRecipeDetailBlock: View, CRecipeP
                         Text("食譜名稱")
                             .font(.title2)
                             .bold()
-                            .foregroundStyle(.orange)
+                            .foregroundColor(foregroundColor)
                             .padding(.bottom, 5)
                         TextField("更新食譜名稱", text: $editedRecipeName)
                             .padding()
-                            .background(Color.gray.opacity(0.2))
+                            .background(textFieldBackgroundColor)
                             .cornerRadius(8)
                     }
                     .padding(.horizontal, 15)
@@ -129,7 +150,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                     // MARK: 食材編輯區塊
                     VStack(alignment: .leading) {
                         Text("所需食材")
-                            .foregroundStyle(.orange)
+                            .foregroundColor(foregroundColor)
                             .font(.title2)
                             .bold()
                             .padding(.bottom, 5)
@@ -137,7 +158,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                         ForEach(editedUFoodSteps.indices, id: \.self) { index in
                             TextField("更新食材", text: $editedUFoodSteps[index])
                                 .padding()
-                                .background(Color.gray.opacity(0.2))
+                                .background(textFieldBackgroundColor)
                                 .cornerRadius(8)
                         }
                         
@@ -149,15 +170,15 @@ struct CRecipeDetailBlock: View, CRecipeP
                                 HStack {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.title)
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(.white)
                                     Text("新增食材")
                                         .font(.body)
                                         .bold()
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(Color1)
                                 }
                                 .padding()
                                 .background(
-                                    Color.white
+                                    foregroundColor
                                         .frame(width: 320, height: 50)
                                         .cornerRadius(10)
                                         .shadow(radius: 4)
@@ -171,7 +192,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                     // MARK: 料理方法編輯區塊
                     VStack(alignment: .leading) {
                         Text("料理方法")
-                            .foregroundStyle(.orange)
+                            .foregroundColor(foregroundColor)
                             .font(.title2)
                             .bold()
                             .padding(.bottom, 5)
@@ -179,7 +200,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                         ForEach(editedUCookingSteps.indices, id: \.self) { index in
                             TextField("更新烹飪步驟", text: $editedUCookingSteps[index])
                                 .padding()
-                                .background(Color.gray.opacity(0.2))
+                                .background(textFieldBackgroundColor)
                                 .cornerRadius(8)
                         }
                         
@@ -191,15 +212,15 @@ struct CRecipeDetailBlock: View, CRecipeP
                                 HStack {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.title)
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(.white)
                                     Text("新增步驟")
                                         .font(.body)
                                         .bold()
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(Color1)
                                 }
                                 .padding()
                                 .background(
-                                    Color.white
+                                    foregroundColor
                                         .frame(width: 320, height: 50)
                                         .cornerRadius(10)
                                         .shadow(radius: 4)
@@ -213,7 +234,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                     // MARK: 小技巧編輯區塊
                     VStack(alignment: .leading) {
                         Text("小技巧")
-                            .foregroundStyle(.orange)
+                            .foregroundColor(foregroundColor)
                             .font(.title2)
                             .bold()
                             .padding(.bottom, 5)
@@ -221,7 +242,7 @@ struct CRecipeDetailBlock: View, CRecipeP
                         ForEach(editedUTips.indices, id: \.self) { index in
                             TextField("更新小技巧", text: $editedUTips[index])
                                 .padding()
-                                .background(Color.gray.opacity(0.2))
+                                .background(textFieldBackgroundColor)
                                 .cornerRadius(8)
                         }
                         
@@ -233,15 +254,15 @@ struct CRecipeDetailBlock: View, CRecipeP
                                 HStack {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.title)
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(.white)
                                     Text("新增小技巧")
                                         .font(.body)
                                         .bold()
-                                        .foregroundColor(.orange)
+                                        .foregroundColor(Color1)
                                 }
                                 .padding()
                                 .background(
-                                    Color.white
+                                    foregroundColor
                                         .frame(width: 320, height: 50)
                                         .cornerRadius(10)
                                         .shadow(radius: 4)
@@ -264,7 +285,8 @@ struct CRecipeDetailBlock: View, CRecipeP
                         .font(.title3)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color.gray.opacity(0.2))
+                        .foregroundColor(Color1)
+                        .background(textFieldBackgroundColor)
                         .cornerRadius(8)
                 }
                 
@@ -277,15 +299,15 @@ struct CRecipeDetailBlock: View, CRecipeP
                         .font(.title3)
                         .padding()
                         .frame(maxWidth: .infinity)
-                        .background(Color.orange)
-                        .foregroundColor(.white)
+                        .background(foregroundColor)
+                        .foregroundColor(Color1)
                         .cornerRadius(8)
                 }
             }
             .padding()
         }
         .frame(maxHeight: .infinity)
-        .background(Color.white)
+        .background(backgroundColor1)
         .cornerRadius(20)
         .shadow(radius: 20)
         .padding()

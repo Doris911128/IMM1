@@ -147,23 +147,25 @@ struct MyView: View
     }
     
     // MARK: MyView body
-    var body: some View 
+    var body: some View
     {
-        NavigationStack 
+        NavigationStack
         {
             GeometryReader
             { geometry in
-                ZStack 
+                ZStack
                 {
-                    VStack 
+                    VStack(spacing: 0)
                     {
-                        Spacer().frame(height: 15)
-                        
+                        Spacer().frame(height: 10)
+
                         Form
                         {
                             // MARK: 頭像
-                            Section {
-                                VStack() {
+                            Section
+                            {
+                                VStack() 
+                                {
                                     if let userImage = self.userImage,
                                        let image = UIImage(data: userImage) {
                                         Button(action: {
@@ -221,7 +223,9 @@ struct MyView: View
                                     }
                                 }
                                 .frame(maxWidth: .infinity, alignment: .center) // 置中
-                                .alert("確認從相簿更換頭像", isPresented: $showingImagePickerAlert) 
+                                .padding(.vertical, 10) // 給 Section 內部一些間距，避免裁切
+                                
+                                .alert("確認從相簿更換頭像", isPresented: $showingImagePickerAlert)
                                 {
                                     Button("取消", role: .cancel) {}
                                     Button("確認") {
@@ -233,7 +237,7 @@ struct MyView: View
                                     Text("您確定要使用相簿中的圖片嗎？")
                                 }
                                 .photosPicker(isPresented: $showingImagePicker, selection: $pickImage, matching: .any(of: [.images, .livePhotos]))
-                                .onChange(of: pickImage) 
+                                .onChange(of: pickImage)
                                 { newItem in
                                     Task {
                                         if let data = try? await newItem?.loadTransferable(type: Data.self) {
@@ -242,18 +246,19 @@ struct MyView: View
                                         }
                                     }
                                 }
-                                .sheet(isPresented: $showPresetImages) 
+                                .sheet(isPresented: $showPresetImages)
                                 {
                                     PresetImageSelectionView(userImage: $userImage)
                                 }
                             }
                             .background(Color.clear) // Section 背景透明
                             .listRowBackground(Color.clear) // 確保行背景也透明
-                            .padding(.bottom, -10) // 減少底部間距
-                            .padding(.top, -5)
+                            
+                            .listRowInsets(EdgeInsets(top: -10, leading: 16, bottom: -10, trailing: 16))
                             
                             // 個人資訊
-                            Section(header: Text("個人資訊").foregroundColor(isDarkMode ? .white : .black)) {
+                            Section(header: Text("個人資訊").foregroundColor(isDarkMode ? .white : .black))
+                            {
                                 
                                 // 用戶名稱
                                 HStack {
@@ -287,10 +292,13 @@ struct MyView: View
                                 }
                             }
                             .listRowBackground(isDarkMode ? Color.gray.opacity(0.2) : Color.white)
-                            //.padding(.bottom, -10) // 減少底部間距
+                            
+                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                            
                             
                             // 更多功能
-                            Section(header: Text("更多功能").foregroundColor(isDarkMode ? .white : .black)) {
+                            Section(header: Text("更多功能").foregroundColor(isDarkMode ? .white : .black))
+                            {
                                 
                                 // 健康 連結
                                 NavigationLink(destination: DynamicView()) {
@@ -319,7 +327,7 @@ struct MyView: View
                                         .scaledToFit()
                                         .frame(width: 30, height: 30)
                                         .rotationEffect(.degrees(!self.colorScheme ? 360 : 0))
-                                        .animation(.spring(response: 0.5, dampingFraction: 0.5), value: self.colorScheme)
+                                        .animation(.spring(response: 0.2, dampingFraction: 0.5), value: self.colorScheme)
                                     
                                     Text(!self.colorScheme ? "   深色模式" : "   淺色模式")
                                         .bold()
@@ -361,7 +369,10 @@ struct MyView: View
                                 }
                             }
                             .listRowBackground(isDarkMode ? Color.gray.opacity(0.2) : Color.white)
+                            
+                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                         }
+                        
                         .listStyle(InsetGroupedListStyle())
                         .background(isDarkMode ? Color.black : Color(.systemGray6))
                         .onChange(of: self.colorScheme) { newValue in
@@ -371,7 +382,7 @@ struct MyView: View
                     
                 }
                 .preferredColorScheme(self.colorScheme ? .light : .dark) // 控制深浅模式切换
-                .onAppear 
+                .onAppear
                 {
                     fetchUserInfo()
                 }

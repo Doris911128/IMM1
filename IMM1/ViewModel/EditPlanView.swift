@@ -108,7 +108,7 @@ struct EditPlanView: View
     
     @State private var searchResults: [FoodOption] = []
     @Environment(\.presentationMode) var presentationMode
-    
+    @Environment(\.colorScheme) var colorScheme
     @State private var bmiValue: Double = 0.0
     
     
@@ -346,26 +346,16 @@ struct EditPlanView: View
     //    }
     
     @ViewBuilder
-    private func TempView(imageName: String, buttonText: String, contentText: String , isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View
+    private func TempView(imageName: String, buttonText: String,  isShowingDetail: Binding<Bool>, foodOptions: [Dishes], categoryIndex: Int, categoryTitle: String) -> some View
     {
-        CustomButton(imageName: imageName, buttonText: buttonText ,contentText: contentText)
+        CustomButton(imageName: imageName, buttonText: buttonText )
         {
             currentCategoryIndex = categoryIndex
             isShowingDetail.wrappedValue.toggle()
         }
         .cornerRadius(10)
         .sheet(isPresented: isShowingDetail)
-        //        {
-        //            FoodSelectionView(isShowingDetail: isShowingDetail, editedPlan: $editedPlan, foodOptions: .constant(foodOptions.map { foodData in
-        //                FoodOption(name: foodData.Dis_Name, backgroundImage: URL(string: foodData.D_image ?? "defaultImageURL") ?? URL(string: "defaultImageURL")!, serving: foodData.Dis_serving ?? "")
-        //            }), categoryTitle: categoryTitle)
-        //            .onDisappear {
-        //                if let selectedFood = findSelectedFoodData(for: editedPlan) {
-        //                    self.selectedFoodData = selectedFood
-        //                    self.showAlert = true
-        //                }
-        //            }
-        //        }
+
         {
             if categoryIndex == 0 && foodOptions7.isEmpty
             {
@@ -550,6 +540,7 @@ struct EditPlanView: View
                         }) {
                             Image(systemName: "magnifyingglass")
                                 .padding()
+                                .foregroundColor(.orange)
                         }
                     }
                     .padding(.top, 10)
@@ -558,7 +549,7 @@ struct EditPlanView: View
                     }
                     let names = ["我的最愛","健康推薦" ,"懶人分類", "減肥分類", "省錢分類", "放縱分類", "素食分類", "庫存菜單"]
                     
-                    let contentText = ["美食珍藏庫，專屬小天地","數據分析師，量身訂製法","便捷又快速，食材易準備","低卡且低脂，健康拿滿分","用料超便宜，荷包省省省","高熱量美食，滿滿罪惡感","吃素不單調，色香味俱全","食材訂料理，菜色便整理"]
+                    
                     
                     let showOptions = [foodOptions7,foodOptions8, foodOptions1, foodOptions2, foodOptions3, foodOptions4, foodOptions5, foodOptions6]
                     
@@ -569,7 +560,6 @@ struct EditPlanView: View
                             self.TempView(
                                 imageName: names[index],
                                 buttonText: names[index],
-                                contentText: contentText[index],
                                 isShowingDetail: $show1[index],
                                 foodOptions: showOptions[index],
                                 categoryIndex: index,
@@ -682,7 +672,7 @@ struct CustomToggle: View {
                 .padding() // 確保内部内容不限制高度
                 .frame(height: 30) // 設置高度
                 .background(isOn ? Color.white.opacity(0.2) : Color.orange)
-                .foregroundColor(isOn ? .black : .white)
+                .foregroundColor(isOn ? .orange : .white)
                 .onTapGesture {
                     self.isOn = false
                 }
@@ -694,7 +684,7 @@ struct CustomToggle: View {
                 .padding()
                 .frame(height: 30)
                 .background(isOn ? Color.orange : Color.white.opacity(0.2))
-                .foregroundColor(isOn ? .white : .black)
+                .foregroundColor(isOn ? .white : .orange)
                 .onTapGesture {
                     self.isOn = true
                 }

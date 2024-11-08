@@ -7,13 +7,11 @@
 
 import SwiftUI
 
-struct Rec_Col_View: View
-{
+struct Rec_Col_View: View {
     @State private var aiRecipes: [ChatRecord] = [] // 在此聲明 aiRecipes 狀態變數
-    var body: some View
-    {
-        TabView
-        {
+
+    var body: some View {
+        TabView {
             FavoriteView(U_ID: " ")
                 .tabItem {
                     Label("我的最愛", systemImage: "heart.fill")
@@ -27,10 +25,10 @@ struct Rec_Col_View: View
                     Label("自訂食譜庫", systemImage: "book.pages")
                 }
         }
+        .accentColor(.orange) // 這裡設置了選中項目的顏色為橘色
     }
 }
 
-#Preview
-{
+#Preview {
     Rec_Col_View()
 }

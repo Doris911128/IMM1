@@ -405,6 +405,7 @@ struct StockView: View
                         isAddSheetPresented.toggle()
                     }
                     .padding()
+                    .foregroundColor(.orange)
                 }
                 .padding()
             }
@@ -428,6 +429,7 @@ struct StockView: View
                                 Button("編輯") {
                                     isEditing.toggle()
                                 }
+                                .foregroundColor(.orange)
                             } else {
                                 Button(action: {
                                     if ingredients.contains(where: { $0.isSelectedForDeletion }) {
@@ -441,6 +443,7 @@ struct StockView: View
                                 }) {
                                     Text(ingredients.contains { $0.isSelectedForDeletion } ? "刪除" : "全選")
                                 }
+                                .foregroundColor(.orange)
                             }
                         }
                         .padding()

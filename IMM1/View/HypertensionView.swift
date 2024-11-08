@@ -74,7 +74,7 @@ private func formattedDate(_ date: Date) -> String {
 
 struct HypertensionView: View {
     let upperLimit: Double = 400.0
-    
+    @Environment(\.colorScheme) var colorScheme
     @State private var displayMode: Int = 0
     @State private var hypertension: String = ""
     @State private var chartData: [HypertensionRecord] = []
@@ -185,7 +185,7 @@ struct HypertensionView: View {
                     }) {
                         Image(systemName: "list.dash")
                             .font(.title)
-                            .foregroundColor(Color("BottonColor"))
+                            .foregroundColor(Color(.orange))
                             .padding()
                             .cornerRadius(10)
                             .padding(.trailing, 20)
@@ -226,6 +226,25 @@ struct HypertensionView: View {
                         .scaleEffect(animateChart ? 1 : 0.8)  // 縮放動畫
                         .opacity(animateChart ? 1 : 0)  // 淡入動畫
                         .animation(.easeInOut(duration: 0.8), value: animateChart)  // 平滑動畫
+                        .chartXAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black).foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // X 轴日期颜色
+                                   }
+                               }
+                               // 设置 Y 轴的网格线颜色
+                               .chartYAxis {
+                                   AxisMarks() { _ in
+                                       AxisGridLine()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                                       AxisTick()
+                                       AxisValueLabel()
+                                           .foregroundStyle(colorScheme == .dark ? Color.white : Color.black) // Y 轴标签颜色
+                                   }
+                               }
                     }
                     .padding()
                 }
@@ -246,6 +265,7 @@ struct HypertensionView: View {
                             Text("每7日").tag(1)
                             Text("每30日").tag(2)
                         }
+                        .accentColor(Color.orange)
                         .pickerStyle(MenuPickerStyle())
                         .padding()
                     }
@@ -279,7 +299,7 @@ struct HypertensionView: View {
                                 .foregroundColor(Color("ButColor"))
                                 .padding(10)
                                 .frame(width: 300, height: 50)
-                                .background(Color("BottonColor"))
+                                .background(Color(.orange))
                                 .cornerRadius(100)
                                 .font(.title3)
                         }
@@ -345,6 +365,7 @@ struct HypertensionRecordsListView: View {
                     }
                 }
                 .onDelete(perform: deleteRecord)
+                .foregroundColor(.black)
             }
             .navigationTitle("血壓紀錄列表")
             .toolbar {
@@ -353,6 +374,7 @@ struct HypertensionRecordsListView: View {
                 }
             }
         }
+        .foregroundColor(.orange)
     }
     
     private func deleteRecord(at offsets: IndexSet) {
@@ -424,7 +446,7 @@ struct HypertensionRecordDetailView: View {
                                 lineWidth: 4)
                 )
                 .padding()
-            
+                .foregroundColor(.orange)
             colorLegend
                 .frame(height: 20)
                 .padding(.bottom, 40)
@@ -493,6 +515,7 @@ struct HypertensionRecordDetailView: View {
             .frame(maxWidth: .infinity)
         }
     }
+    
 }
 
 struct HypertensionView_Previews: PreviewProvider {
