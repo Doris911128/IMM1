@@ -47,7 +47,7 @@ struct AIphotoView: View {
                         Image("食材辨識圖片")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: 300, height: 300)
+                            .frame(width: 310, height: 420)
                             .padding(.top, 80)
                     }
 

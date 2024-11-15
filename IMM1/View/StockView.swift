@@ -91,7 +91,8 @@ struct StockView: View
     @State private var triggerRefresh: Bool = false // 用於觸發視圖刷新
     @State private var isLoading: Bool = true // 載入狀態
     @State private var loadingError: String? = nil // 加載錯誤訊息
-    
+    @State private var isSelectAll: Bool = false // 標記是否選擇所有食材
+
     let columns =
     [
         GridItem(.flexible()),
@@ -226,7 +227,12 @@ struct StockView: View
             }
         }.resume()
     }
-    
+    private func toggleSelectAll() {
+        isSelectAll.toggle()
+        for index in ingredients.indices {
+            ingredients[index].isSelectedForDeletion = isSelectAll
+        }
+    }
     // MARK: 主庫存視圖 body
     var body: some View
     {
@@ -243,6 +249,8 @@ struct StockView: View
                 
                 VStack
                 {
+                    // 顯示全選或取消全選按鈕
+                                  
                     //                if isLoading
                     //                {
                     //                    //MARK: 想要載入中轉圈圈動畫
@@ -431,6 +439,10 @@ struct StockView: View
                                 }
                                 .foregroundColor(.orange)
                             } else {
+                                Button(action: toggleSelectAll) {
+                                    Text(isSelectAll ? "取消全選" : "全選")
+                                        .foregroundColor(.orange)
+                                }
                                 Button(action: {
                                     if ingredients.contains(where: { $0.isSelectedForDeletion }) {
                                         showAlert.toggle()

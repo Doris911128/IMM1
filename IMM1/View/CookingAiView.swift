@@ -16,15 +16,18 @@ enum FontSize
 struct CookingAiView: View
 {
     var disID: Int // 新增接收 Dis_ID
+    
     @State private var dishesData: [Dishes] = []
     @State private var selectedDish: Dishes?
     @State private var scrollOffset: CGFloat = 0 // 滑動偏移
     @State private var gesture: String = ""
     @State private var currentIndex: Int = 0 // 當前卡片索引
     @State private var stepsCount: Int = 0 // 新增狀態變量來跟蹤步驟數量
-    @Environment(\.colorScheme) var colorScheme
     @State private var showHint: Bool = false
     @State private var hintMessage: String = ""
+    @State private var showHelp: Bool = false // 新增狀態控制彈跳視窗
+    
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View
     {
@@ -42,33 +45,46 @@ struct CookingAiView: View
                             .padding(.leading)
                         
                         Spacer()
+                        
+                        // 說明按鈕
+                        Button(action: {
+                            showHelp = true // 顯示彈跳視窗
+                        }) {
+                            Image(systemName: "exclamationmark.circle")
+                                .font(.title)
+                                .foregroundColor(.orange)
+                        }
+                        .padding(.trailing)
                     }
-                    
-                    .padding(.top, 95) // 頂部 padding
-                    .background(colorScheme == .dark ? Color.black : Color.white) // 根據顏色模式選擇顏色
+                    .padding(.top, 95)
+                    .background(colorScheme == .dark ? Color.black : Color.white)
                     .zIndex(1)
                     
                     ScrollView(.horizontal, showsIndicators: false)
                     {
-                        HStack(spacing: 20) // 卡片間距
+                        HStack(spacing: 20)
                         {
                             if let selectedDish = selectedDish
                             {
-                                CardView(dish: selectedDish, stepsCount: $stepsCount) // 傳步驟數量
-                                    .frame(maxWidth: .infinity, alignment: .center) // 卡片水平居中
-                                    .offset(x: scrollOffset) // 滑動偏移
-                                    .background(colorScheme == .dark ? Color.black : Color.white)
+                                CardView(dish: selectedDish,
+                                         stepsCount: $stepsCount,
+                                         currentIndex: $currentIndex,
+                                         showHintMessage: showHintMessage)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .offset(x: scrollOffset)
+                                .background(colorScheme == .dark ? Color.black : Color.white)
                             }
                         }
                         .padding(.horizontal)
-                        .frame(maxHeight: .infinity, alignment: .center) // 卡片垂直居中
-                        
+                        .frame(maxHeight: .infinity, alignment: .center)
                     }
                     
-                    // 添加 HandPoseDetectionView
+                    // 手勢檢測視圖
                     HandPoseDetectionView(onGestureDetected: { detectedGesture in
-                        self.gesture = detectedGesture
-                        updateScrollOffset()
+                        if !showHelp { // 僅在未顯示說明視窗時生效
+                            self.gesture = detectedGesture
+                            updateScrollOffset()
+                        }
                     })
                     .frame(width: 310, height: 200)
                     .background(Color.black)
@@ -79,6 +95,8 @@ struct CookingAiView: View
                     )
                     .padding(3)
                 }
+                .blur(radius: showHelp ? 5 : 0) // 底層模糊
+                .allowsHitTesting(!showHelp) // 禁用底層互動
                 
                 // 將提示視圖放在最上層
                 if showHint
@@ -108,6 +126,50 @@ struct CookingAiView: View
                     }
                     .zIndex(2) // 提升層級，確保顯示在最上層
                 }
+                
+                // 彈跳視窗
+                if showHelp
+                {
+                    VStack(spacing: 20)
+                    {
+                        Text("功能說明")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                        
+                        Text("本功能透過手勢切換來查看每個菜譜的烹飪步驟")
+                        
+                        Text("「👍」表示向前、「👎」表示向後")
+                            .multilineTextAlignment(.leading)
+                        
+                        Text("＊請正確維持手勢「👍」、「👎」，否則容易切換步驟失敗＊")
+                            .multilineTextAlignment(.leading)
+                        
+                        Button(action: {
+                            print("按下關閉按鈕") // 確認是否觸發
+                            withAnimation {
+                                showHelp = false
+                            }
+                        }) {
+                            Text("關閉")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.orange)
+                                .cornerRadius(10)
+                        }
+                    }
+                    .padding()
+                    .background(colorScheme == .dark ? Color.black : Color.white)
+                    .cornerRadius(15)
+                    .shadow(radius: 10)
+                    .frame(maxWidth: 300)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 15)
+                            .stroke(Color.orange, lineWidth: 2)
+                    )
+                    .zIndex(3)
+                }
             }
             .edgesIgnoringSafeArea(.top) // 忽略安全区域，使标题紧贴屏幕顶部
             
@@ -130,7 +192,7 @@ struct CookingAiView: View
             }
         }
     }
-
+    
     
     
     func updateScrollOffset()
@@ -219,9 +281,14 @@ struct CardView: View
 {
     let dish: Dishes
     @Binding var stepsCount: Int // 绑定步驟數量
+    @Binding var currentIndex: Int
     @State private var cookSteps: [String] = ["載入中..."]
     @State private var fontSize: FontSize = .medium // 新增狀態變量來跟蹤字體大小
     @Environment(\.colorScheme) var colorScheme
+    
+    // 新增接收父層方法的參數
+    var showHintMessage: (String, Double) -> Void
+    
     //煮法網址載入
     func loadCookDetails(from urlString: String)
     {
@@ -358,7 +425,7 @@ struct CardView: View
                                 Spacer()
                             }
                             .background(colorScheme == .dark ? Color.gray.opacity(0.2) : Color.white) // 深色模式背景為灰色帶透明度，淺色模式背景為白色
-
+                            
                             .cornerRadius(15)
                             .shadow(radius: 3)
                             //卡片大小
@@ -367,13 +434,13 @@ struct CardView: View
                             //字體切換按鈕
                             Button(action: {
                                 toggleFontSize()
-                            })
-                            {
+                                showHintMessage("字體已切換", 1.5)
+                            }) {
                                 Image(systemName: "textformat.size")
                                     .font(.title2)
                                     .padding()
                             }
-                            .background(Color.blue)
+                            .background(Color.orange)
                             .foregroundColor(.white)
                             .clipShape(Circle())
                             .padding()
@@ -381,17 +448,19 @@ struct CardView: View
                     }
                 }
                 .padding(20)
-                .onAppear
-                {
+                .onAppear {
                     loadCookDetails(from: dish.D_Cook ?? "")
+                    if currentIndex == 0 {
+                        showHintMessage("左右滑動以查看步驟", 3.0)
+                    }
                 }
-               
+                
             }
             
         }
         
     }
-   
+    
 }
 
 #Preview

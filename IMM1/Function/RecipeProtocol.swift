@@ -332,7 +332,7 @@ extension RecipeP
                                             .font(.body)
                                             .bold()
                                             .foregroundColor(.orange)
-                                            .frame(width: 20, alignment: .leading)
+                                            .frame(width: 25, alignment: .leading)
                                         
                                         Text(stepDescription)//各步驟煮法
                                             .font(.body)

@@ -173,49 +173,60 @@ struct RecipeView: View {
     
     var body: some View {
         VStack {
-            HStack {
-                Spacer()
-                Button(action: {
-                    showAlert = true
-                }) {
-                    Text("全選")
-                        .font(.system(size: 18))
-                        .foregroundColor(Color("BottonColor"))
-                        .padding(.trailing, 16)
-                }
-            }
-            .alert(isPresented: $showAlert) {
-                Alert(
-                    title: Text("全部採購"),
-                    message: Text("是否確定要全部採購？"),
-                    primaryButton: .default(Text("確認")) {
-                        selectAllIngredients()
-                    },
-                    secondaryButton: .cancel(Text("取消"))
-                )
-            }
-            
-            List {
-                ForEach(recipes, id: \.sqlResult.id) { wrapper in
-                    if (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
-                        Section(header: EmptyView()) {
-                            if !hiddenIngredients.contains(wrapper.sqlResult.id) {
-                                RecipeItemView(
-                                    wrapper: wrapper,
-                                    hiddenIngredients: $hiddenIngredients,
-                                    quantityInputs: $quantityInputs,
-                                    onIngredientSelection: onIngredientSelection
-                                )
-                                .transition(.opacity)
+            if isAllSelected {
+                // 當所有方塊都被選擇後顯示 PurchasedIngredientsView
+                PurchasedIngredientsView()
+            } else {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showAlert = true
+                        }) {
+                            Text("全選")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color("BottonColor"))
+                                .padding(.trailing, 16)
+                        }
+                    }
+                    .alert(isPresented: $showAlert) {
+                        Alert(
+                            title: Text("全部採購"),
+                            message: Text("是否確定要全部採購？"),
+                            primaryButton: .default(Text("確認")) {
+                                selectAllIngredients()
+                                PurchasedIngredientsView()
+                            },
+                            secondaryButton: .cancel(Text("取消"))
+                        )
+                    }
+                    
+                    List {
+                        
+                        ForEach(recipes, id: \.sqlResult.id) { wrapper in
+                            if (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
+                                Section(header: EmptyView()) {
+                                    if !hiddenIngredients.contains(wrapper.sqlResult.id) {
+                                        RecipeItemView(
+                                            
+                                            wrapper: wrapper,
+                                            hiddenIngredients: $hiddenIngredients,
+                                            quantityInputs: $quantityInputs,
+                                            onIngredientSelection: onIngredientSelection
+                                        )
+                                        .transition(.opacity)
+                                        
+                                    }
+                                }
                             }
                         }
                     }
                 }
+                .listStyle(PlainListStyle())
+                .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
+                .animation(.easeInOut, value: hiddenIngredients)
+                .scrollIndicators(.hidden) // 隱藏滾動條
             }
-            .listStyle(PlainListStyle())
-            .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
-            .animation(.easeInOut, value: hiddenIngredients)
-            .scrollIndicators(.hidden) // 隱藏滾動條
         }
     }
     
@@ -277,7 +288,7 @@ struct RecipeItemView: View {
     @Binding var hiddenIngredients: Set<UUID>
     @Binding var quantityInputs: [UUID: String] // 绑定用户输入数量
     var onIngredientSelection: (Int, String, Int) -> Void
-    
+    @State private var isPurchased: Bool = false
     var body: some View {
         HStack(alignment: .top) {
             if let imageUrl = URL(string: wrapper.sqlResult.foodImage) {
@@ -356,32 +367,28 @@ struct RecipeItemView: View {
             
             Spacer()
             
-            Image(systemName: "square")
-                .foregroundColor(Color("BottonColor"))
-                .onTapGesture {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        hiddenIngredients.insert(wrapper.sqlResult.id)
-                        
-                        // 檢查用戶輸入的數量
-                        let amountToSend: Int
-                        if let inputAmount = quantityInputs[wrapper.sqlResult.id], let amount = Int(inputAmount), amount > 0 {
-                            // 使用用戶輸入的數量
-                            amountToSend = amount
-                        } else if let defaultAmount = Int(wrapper.planAmount ?? "0"), defaultAmount > 0 {
-                            // 使用預設的 `planAmount`
-                            amountToSend = defaultAmount
-                        } else {
-                            // 如果兩者都沒有，則設置為 0 或一個預設值
-                            amountToSend = 0
-                        }
-                        
-                        // 使用 amountToSend 傳遞數量
-                        onIngredientSelection(wrapper.sqlResult.fid, wrapper.sqlResult.uid, amountToSend)
-                    }
-                }
-                .frame(maxHeight: .infinity)
-            
-        }
+            Image(systemName: isPurchased ? "checkmark.square.fill" : "square") // 根據選擇狀態更改圖示
+                           .foregroundColor(isPurchased ? .green : Color("BottonColor"))
+                           .onTapGesture {
+                               withAnimation(.easeInOut(duration: 0.3)) {
+                                   isPurchased.toggle() // 切換選擇狀態
+                                   hiddenIngredients.insert(wrapper.sqlResult.id)
+
+                                   let amountToSend: Int
+                                   if let inputAmount = quantityInputs[wrapper.sqlResult.id], let amount = Int(inputAmount), amount > 0 {
+                                       amountToSend = amount
+                                   } else if let defaultAmount = Int(wrapper.planAmount ?? "0"), defaultAmount > 0 {
+                                       amountToSend = defaultAmount
+                                   } else {
+                                       amountToSend = 0
+                                   }
+
+                                   onIngredientSelection(wrapper.sqlResult.fid, wrapper.sqlResult.uid, amountToSend)
+                               }
+                           }
+                           .frame(maxHeight: .infinity)
+                   }
+        
         .padding(.vertical, 8)
         .transition(.opacity)
     }
@@ -450,103 +457,99 @@ struct ShopView: View {
     }
     
     var body: some View {
-        NavigationStack {
-            VStack {
-                HStack {
-                    Text("採購")
-                        .font(.title)
-                        .frame(maxWidth: .infinity, alignment: .center) // 使「採購」置中
-                }
-                
-                Text("您需要採購的食材")
-                    .font(.system(size: 12))
-                    .foregroundColor(.gray)
-                
-                if isLoading
-                {
-                    ProgressView("加載中...")
-                }
-                else if recipes.isEmpty && selectedIngredients.isEmpty
-                {
-                    // 當 `recipes` 和 `selectedIngredients` 都為空時，顯示 EmptyShopView
-                    EmptyShopView()
-                        .transition(.opacity)
-                }
-                else if isAllSelected
-                {
-                    // 當所有食材都被選取後，顯示 PurchasedIngredientsView
-                    PurchasedIngredientsView()
-                        .transition(.opacity)
-                }
-                else {
-                    RecipeView(
-                        recipes: $recipes,
-                        onDeleteIngredient: { ingredient in
-                            // 更新选定的食材...
-                        },
-                        selectedIngredients: $selectedIngredients,
-                        onIngredientSelection: handleIngredientSelection,
-                        ingredients: $ingredients,
-                        isAllSelected: $isAllSelected // 傳遞 isAllSelected
-                    )
-                }
-            }
-            .onAppear {
-                loadRecipes()
-                loadIngredients()
-            }
-            
-            .onDisappear {
-                sendSelectedIngredientsToBackend()
-            }
-        }
-    }
-    
-    private func handleIngredientSelection(_ fid: Int, _ uid: String, _ sksum: Int) {
-        let jsonDict: [String: Any] = [
-            "F_ID": fid,
-            "U_ID": uid,
-            "SK_SUM": sksum
-        ]
-        
-        if let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict, options: []) {
-            sendJSONDataToBackend(jsonData: jsonData)
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                print("JSON String:", jsonString)
-            }
-        }
-    }
-    
-    private func sendJSONDataToBackend(jsonData: Data) {
-        guard let url = URL(string: "http://163.17.9.107/food/php/ShopStock.php") else {
-            print("无效的 URL")
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("发送JSON数据时出错: \(error)")
-                return
-            }
-            
-            if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
-                print("服务器响应错误: \(response.statusCode)")
-                return
-            }
-            
-            if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                print("Response from server: \(responseString)")
-            }
-        }
-        
-        task.resume()
-    }
-    
+           NavigationStack {
+               VStack {
+                   HStack {
+                       Text("採購")
+                           .font(.title)
+                           .frame(maxWidth: .infinity, alignment: .center) // 使「採購」置中
+                   }
+                   
+                   Text("您需要採購的食材")
+                       .font(.system(size: 12))
+                       .foregroundColor(.gray)
+                   
+                   if isLoading {
+                       // 加載中時顯示進度指示器
+                       ProgressView("加載中...")
+                   } else if recipes.isEmpty && selectedIngredients.isEmpty {
+                       // 當菜單和已選食材都為空時顯示 EmptyShopView
+                       EmptyShopView()
+                           .transition(.opacity)
+                   } else if allRecipesInStock() {
+                       // 如果所有菜單的食材都在庫存中，顯示 PurchasedIngredientsView
+                       PurchasedIngredientsView()
+                           .transition(.opacity)
+                   } else {
+                       // 否則顯示菜單的主視圖
+                       RecipeView(
+                           recipes: $recipes,
+                           onDeleteIngredient: { ingredient in
+                               // 更新選定的食材...
+                           },
+                           selectedIngredients: $selectedIngredients,
+                           onIngredientSelection: handleIngredientSelection,
+                           ingredients: $ingredients,
+                           isAllSelected: $isAllSelected // 傳遞 isAllSelected
+                       )
+                   }
+               }
+               .onAppear {
+                   loadRecipes()
+                   loadIngredients()
+               }
+               .onDisappear {
+                   sendSelectedIngredientsToBackend()
+               }
+           }
+       }
+
+
+       
+       private func handleIngredientSelection(_ fid: Int, _ uid: String, _ sksum: Int) {
+           let jsonDict: [String: Any] = [
+               "F_ID": fid,
+               "U_ID": uid,
+               "SK_SUM": sksum
+           ]
+           
+           if let jsonData = try? JSONSerialization.data(withJSONObject: jsonDict, options: []) {
+               sendJSONDataToBackend(jsonData: jsonData)
+               if let jsonString = String(data: jsonData, encoding: .utf8) {
+                   print("JSON String:", jsonString)
+               }
+           }
+       }
+       
+       private func sendJSONDataToBackend(jsonData: Data) {
+           guard let url = URL(string: "http://163.17.9.107/food/php/ShopStock.php") else {
+               print("无效的 URL")
+               return
+           }
+           
+           var request = URLRequest(url: url)
+           request.httpMethod = "POST"
+           request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+           request.httpBody = jsonData
+           
+           let task = URLSession.shared.dataTask(with: request) { data, response, error in
+               if let error = error {
+                   print("发送JSON数据时出错: \(error)")
+                   return
+               }
+               
+               if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+                   print("服务器响应错误: \(response.statusCode)")
+                   return
+               }
+               
+               if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                   print("Response from server: \(responseString)")
+               }
+           }
+           
+           task.resume()
+       }
     private func loadRecipes() {
         ShopNetworkManager().fetchAndAggregateRecipes { result in
             DispatchQueue.main.async {
@@ -572,28 +575,45 @@ struct ShopView: View {
     
     
     
-    private func loadIngredients() {
-        // 加载库存食材的逻辑
-        
-        let networkManager = NetworkManager()
-        networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php") { result in
-            switch result {
-            case .success(let stocks):
-                self.ingredients = stocks.compactMap { stock in
-                    let name = stock.F_Name ?? "未知食材"
-                    let unit = stock.F_Unit ?? "未指定單位"
-                    let SK_SUM = stock.SK_SUM ?? 0
-                    let image = stock.Food_imge ?? ""  // 确保 Food_imge 被正确解析
-                    
-                    return StockIngredient(U_ID: stock.U_ID ?? UUID().uuidString, F_ID: stock.F_ID, F_Name: name, SK_SUM: SK_SUM, F_Unit: unit, Food_imge: image)
-                }
-            case .failure(let error):
-                print("Error: \(error)")
-            }
-        }
-    }
-    
-}
+    private func allRecipesInStock() -> Bool {
+         for recipe in recipes {
+             if let ingredient = ingredients.first(where: { $0.F_ID == recipe.sqlResult.fid }) {
+                 // 如果库存量不足（可以加入其他條件判斷）
+                 if ingredient.SK_SUM < recipe.sqlResult.amount {
+                     return false
+                 }
+             } else {
+                 // 如果沒有找到對應的庫存食材
+                 return false
+             }
+         }
+         return true
+     }
+
+     
+     private func loadIngredients() {
+         let networkManager = NetworkManager()
+         networkManager.fetchData(from: "http://163.17.9.107/food/php/Stock.php") { result in
+             DispatchQueue.main.async {
+                 switch result {
+                 case .success(let stocks):
+                     self.ingredients = stocks.compactMap { stock in
+                         let name = stock.F_Name ?? "未知食材"
+                         let unit = stock.F_Unit ?? "未指定單位"
+                         let SK_SUM = stock.SK_SUM ?? 0
+                         let image = stock.Food_imge ?? "" // 確保圖片路徑有效
+                         return StockIngredient(U_ID: stock.U_ID ?? UUID().uuidString, F_ID: stock.F_ID, F_Name: name, SK_SUM: SK_SUM, F_Unit: unit, Food_imge: image)
+                     }
+                 case .failure(let error):
+                     print("Error loading ingredients: \(error)")
+                 }
+             }
+         }
+     }
+
+     
+ }
+
 
 
 
