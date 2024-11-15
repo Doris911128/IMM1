@@ -146,7 +146,7 @@ struct RecipeView: View {
     @Binding var selectedIngredients: [Ingredient]
     @Binding var ingredients: [StockIngredient]
     
-    @State private var isAllSelected = false // 跟踪是否已经选择所有食材
+    @Binding var isAllSelected: Bool // 跟踪是否已经选择所有食材
     
     @State private var quantityInputs: [UUID: String] = [:]
     @State private var hiddenIngredients: Set<UUID> = []
@@ -155,66 +155,67 @@ struct RecipeView: View {
     @State private var showPurchaseAnimation = false
     @State private var showAlert = false
     
-    init(recipes: Binding<[RecipeWrapper]>, onDeleteIngredient: @escaping (Ingredient) -> Void, selectedIngredients: Binding<[Ingredient]>, onIngredientSelection: @escaping (Int, String, Int) -> Void, ingredients: Binding<[StockIngredient]>) {
+    init(
+        recipes: Binding<[RecipeWrapper]>,
+        onDeleteIngredient: @escaping (Ingredient) -> Void,
+        selectedIngredients: Binding<[Ingredient]>,
+        onIngredientSelection: @escaping (Int, String, Int) -> Void,
+        ingredients: Binding<[StockIngredient]>,
+        isAllSelected: Binding<Bool> // 新增參數
+    ) {
         self._recipes = recipes
         self.onDeleteIngredient = onDeleteIngredient
         self._selectedIngredients = selectedIngredients
         self.onIngredientSelection = onIngredientSelection
         self._ingredients = ingredients
+        self._isAllSelected = isAllSelected // 初始化 isAllSelected
     }
     
     var body: some View {
-        ZStack {
-            if recipes.isEmpty && selectedIngredients.isEmpty {
-                // 沒有採購計劃時顯示 EmptyShopView
-                EmptyShopView()
-                    .transition(.opacity)
-            } else if isAllSelected
-            {
-                // 所有食材被選取並確認購買後顯示 PurchasedIngredientsView
-                PurchasedIngredientsView()
-                    .transition(.opacity)
-            } else {
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            showAlert = true
-                        }) {
-                            Text("全選")
-                                .font(.system(size: 18))
-                                .foregroundColor(Color("BottonColor"))
-                                .padding(.trailing, 16)
-                        }
-                    }
-                    .alert(isPresented: $showAlert) {
-                        Alert(
-                            title: Text("確認全部採購"),
-                            message: Text("是否確定要全部採購？"),
-                            primaryButton: .default(Text("確認")) {
-                                selectAllIngredients()
-                            },
-                            secondaryButton: .cancel(Text("取消"))
-                        )
-                    }
-                    
-                    List {
-                        ForEach(recipes, id: \.sqlResult.id) { wrapper in
-                            if (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
-                                Section(header: EmptyView()) {
-                                    if !hiddenIngredients.contains(wrapper.sqlResult.id) {
-                                        RecipeItemView(wrapper: wrapper, hiddenIngredients: $hiddenIngredients, onIngredientSelection: onIngredientSelection)
-                                            .transition(.opacity)
-                                    }
-                                }
+        VStack {
+            HStack {
+                Spacer()
+                Button(action: {
+                    showAlert = true
+                }) {
+                    Text("全選")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color("BottonColor"))
+                        .padding(.trailing, 16)
+                }
+            }
+            .alert(isPresented: $showAlert) {
+                Alert(
+                    title: Text("全部採購"),
+                    message: Text("是否確定要全部採購？"),
+                    primaryButton: .default(Text("確認")) {
+                        selectAllIngredients()
+                    },
+                    secondaryButton: .cancel(Text("取消"))
+                )
+            }
+            
+            List {
+                ForEach(recipes, id: \.sqlResult.id) { wrapper in
+                    if (Int(wrapper.planAmount ?? "0") ?? 0) > 0 {
+                        Section(header: EmptyView()) {
+                            if !hiddenIngredients.contains(wrapper.sqlResult.id) {
+                                RecipeItemView(
+                                    wrapper: wrapper,
+                                    hiddenIngredients: $hiddenIngredients,
+                                    quantityInputs: $quantityInputs,
+                                    onIngredientSelection: onIngredientSelection
+                                )
+                                .transition(.opacity)
                             }
                         }
                     }
-                    .listStyle(PlainListStyle())
-                    .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
-                    .animation(.easeInOut, value: hiddenIngredients)
                 }
             }
+            .listStyle(PlainListStyle())
+            .padding(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 25))
+            .animation(.easeInOut, value: hiddenIngredients)
+            .scrollIndicators(.hidden) // 隱藏滾動條
         }
     }
     
@@ -230,11 +231,11 @@ struct RecipeView: View {
                     )
                 }
             }
+            // 將 isAllSelected 設為 true
+            isAllSelected = true
         }
     }
 }
-
-
 
 struct EmptyShopView: View {
     var body: some View {
@@ -274,6 +275,7 @@ struct PurchasedIngredientsView: View {
 struct RecipeItemView: View {
     let wrapper: RecipeWrapper
     @Binding var hiddenIngredients: Set<UUID>
+    @Binding var quantityInputs: [UUID: String] // 绑定用户输入数量
     var onIngredientSelection: (Int, String, Int) -> Void
     
     var body: some View {
@@ -330,6 +332,25 @@ struct RecipeItemView: View {
                         .font(.system(size: 12))
                         .padding(.trailing, -50)
                 }
+                
+                // TextField 绑定用户输入
+                TextField(
+                    "數量",
+                    text: Binding(
+                        get: {
+                            // 默認值為 planAmount，如果不存在則返回空字串
+                            quantityInputs[wrapper.sqlResult.id] ?? (wrapper.planAmount ?? "")
+                        },
+                        set: { newValue in
+                            // 僅允許數字輸入
+                            let filtered = newValue.filter { "0123456789".contains($0) }
+                            quantityInputs[wrapper.sqlResult.id] = filtered
+                        }
+                    )
+                )
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .frame(width: 80)
+                .keyboardType(.numberPad)
             }
             .padding(.vertical, 8)
             
@@ -340,18 +361,34 @@ struct RecipeItemView: View {
                 .onTapGesture {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         hiddenIngredients.insert(wrapper.sqlResult.id)
-                        onIngredientSelection(wrapper.sqlResult.fid, wrapper.sqlResult.uid, wrapper.sqlResult.amount)
+                        
+                        // 檢查用戶輸入的數量
+                        let amountToSend: Int
+                        if let inputAmount = quantityInputs[wrapper.sqlResult.id], let amount = Int(inputAmount), amount > 0 {
+                            // 使用用戶輸入的數量
+                            amountToSend = amount
+                        } else if let defaultAmount = Int(wrapper.planAmount ?? "0"), defaultAmount > 0 {
+                            // 使用預設的 `planAmount`
+                            amountToSend = defaultAmount
+                        } else {
+                            // 如果兩者都沒有，則設置為 0 或一個預設值
+                            amountToSend = 0
+                        }
+                        
+                        // 使用 amountToSend 傳遞數量
+                        onIngredientSelection(wrapper.sqlResult.fid, wrapper.sqlResult.uid, amountToSend)
                     }
-                    
                 }
                 .frame(maxHeight: .infinity)
+            
         }
         .padding(.vertical, 8)
         .transition(.opacity)
     }
 }
 
-struct PurchasedMessageView: View {
+struct PurchasedMessageView: View
+{
     @Binding var purchasedIngredientName: String
     @Binding var showPurchaseAnimation: Bool
     
@@ -381,7 +418,6 @@ struct ShopView: View {
     @State private var userUID: String?
     @State private var ingredients: [StockIngredient] = [] // 初始化 ingredients 数组
     @State private var isAllSelected = false // 跟踪是否已经选择所有食材
-    
     
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -420,21 +456,29 @@ struct ShopView: View {
                     Text("採購")
                         .font(.title)
                         .frame(maxWidth: .infinity, alignment: .center) // 使「採購」置中
-                    
-                    //                    Spacer() // Spacer 會推動右邊的元素到最右邊
-                    
-                    
                 }
-                //                .padding() // 添加內邊距
                 
                 Text("您需要採購的食材")
                     .font(.system(size: 12))
                     .foregroundColor(.gray)
                 
-                
-                if isLoading {
-                    ProgressView("加载中...")
-                } else {
+                if isLoading
+                {
+                    ProgressView("加載中...")
+                }
+                else if recipes.isEmpty && selectedIngredients.isEmpty
+                {
+                    // 當 `recipes` 和 `selectedIngredients` 都為空時，顯示 EmptyShopView
+                    EmptyShopView()
+                        .transition(.opacity)
+                }
+                else if isAllSelected
+                {
+                    // 當所有食材都被選取後，顯示 PurchasedIngredientsView
+                    PurchasedIngredientsView()
+                        .transition(.opacity)
+                }
+                else {
                     RecipeView(
                         recipes: $recipes,
                         onDeleteIngredient: { ingredient in
@@ -442,15 +486,14 @@ struct ShopView: View {
                         },
                         selectedIngredients: $selectedIngredients,
                         onIngredientSelection: handleIngredientSelection,
-                        ingredients: $ingredients // 将 ingredients 传递给 RecipeView
+                        ingredients: $ingredients,
+                        isAllSelected: $isAllSelected // 傳遞 isAllSelected
                     )
                 }
             }
             .onAppear {
                 loadRecipes()
                 loadIngredients()
-                
-                
             }
             
             .onDisappear {
