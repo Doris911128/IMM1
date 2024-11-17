@@ -357,10 +357,14 @@ struct EditPlanView: View
         .sheet(isPresented: isShowingDetail)
 
         {
-            if categoryIndex == 0 && foodOptions7.isEmpty
+            if categoryIndex == 0 && foodOptions7.isEmpty 
             {
                 EmptyStateView(imageName: "分類未新增最愛", message: "尚未收藏最愛食譜喔～快去添加吧！")
-            } else if isLoading
+            }else if categoryIndex == 7 && foodOptions6.isEmpty 
+            {
+                EmptyStateView(imageName: "空庫存", message: "尚未有任何庫存喔～快去採購吧！")
+            }
+            else if isLoading
             {
                 LoadingView()
             } else

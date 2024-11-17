@@ -190,6 +190,8 @@ struct PlanView: View {
     @State private var dishServings: [String: String] = [:] // 新增變數來儲存 Dis_Name 和 Dis_serving 的映射
     @State private var hasCreatedNewPlan: Bool = false
     @State private var shakeAnimation: Bool = false
+    @Environment(\.colorScheme) var colorScheme
+    
     // DateFormatter for displaying dates in MM/DD format 用於顯示日期的 DateFormatter
     private var displayDateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -384,7 +386,6 @@ struct PlanView: View {
                                                     if let serving = dishServings[plan.Dis_name] {
                                                         Text(serving)
                                                             .font(.subheadline)
-                                                            .foregroundColor(.black)
                                                     }
                                                 }
                                             }

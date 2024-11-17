@@ -178,7 +178,7 @@ struct HyperglycemiaView: View {
             VStack {
                 HStack {
                     Text("血糖紀錄")
-                        .foregroundColor(Color.black)
+                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x: -60)
@@ -341,7 +341,7 @@ struct HyperglycemiaView: View {
 
 struct HyperglycemiaRecordsListView: View {
     @Binding var records: [HyperglycemiaRecord]
-    
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
         NavigationStack {
             List {
@@ -371,7 +371,7 @@ struct HyperglycemiaRecordsListView: View {
                     }
                 }
                 .onDelete(perform: deleteRecord)
-                .foregroundColor(.black)
+                .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
             }
             .navigationTitle("血糖紀錄列表")
             .toolbar {

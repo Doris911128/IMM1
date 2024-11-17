@@ -146,7 +146,7 @@ struct BMIView: View {
             VStack {
                 HStack {
                     Text("BMI紀錄")
-                        .foregroundColor(Color.black)
+                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
                         .frame(width: 300, height: 50)
                         .font(.system(size: 33, weight: .bold))
                         .offset(x: -60)
@@ -339,7 +339,7 @@ struct BMIView: View {
 struct BMIRecordsListView: View {
     @Binding var records: [BMIRecord]
     @ObservedObject var temperatureSensorViewModel: TemperatureSensorViewModel
-    
+    @Environment(\.colorScheme) var colorScheme
     @State private var selectedIndex: Int = 0  // 新增選中的索引
     
     init(records: Binding<[BMIRecord]>, temperatureSensorViewModel: TemperatureSensorViewModel) {
@@ -375,6 +375,7 @@ struct BMIRecordsListView: View {
                     }
                 }
                 .onDelete(perform: deleteRecord)
+                .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
             }
             .navigationTitle("BMI紀錄列表")
             .toolbar {
@@ -383,6 +384,7 @@ struct BMIRecordsListView: View {
                 }
             }
         }
+        .foregroundColor(.orange)
     }
     
     private func deleteRecord(at offsets: IndexSet) {
