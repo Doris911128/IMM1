@@ -166,7 +166,7 @@ struct AIRecipeBlock: View, AIRecipeP
     // 包括所需食材、AI 生成的烹飪方法和小技巧
     func AICookbookView(safeArea: EdgeInsets) -> AnyView {
         return AnyView(
-            VStack(spacing: 18) {
+            VStack(spacing: 10) {
                 // 食譜顯示內容，直接使用 record.output
                 let foodSteps = extractFoodSteps(from: aiRecipe.output)
                 let cookingSteps = extractCookingSteps(from: aiRecipe.output)

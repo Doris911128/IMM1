@@ -115,7 +115,7 @@ struct AIphotoView: View {
                     Button(action: {
                         if UIImagePickerController.isSourceTypeAvailable(.camera) {
                             sourceType = .camera
-                            showImagePicker = true // 開啟圖片選擇器
+                            showImagePicker = true // 確保觸發圖片選擇器
                         } else {
                             alertMessage = "此設備不支持相機。"
                             showAlert = true

@@ -106,11 +106,11 @@ struct MyView: View
             }
             
             // 清除本地会话中的用户信息
-            //            DispatchQueue.main.async {
-            //                self.signin = false
-            //                // 清除存储的用户 ID
-            //                UserDefaults.standard.removeObject(forKey: "userID")
-            //            }
+                        DispatchQueue.main.async {
+                            self.signin = false
+                            // 清除存储的用户 ID
+                            UserDefaults.standard.removeObject(forKey: "userID")
+                        }
         }.resume()
     }
     
