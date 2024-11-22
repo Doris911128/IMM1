@@ -350,10 +350,10 @@ struct BMIRecordsListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(records.indices.reversed(), id: \.self) { index in
-                    NavigationLink(destination: BMIRecordDetailViewPager(records: records, selectedIndex: index)) {
+                ForEach(Array(records.reversed()), id: \.id) { record in
+                    NavigationLink(destination: BMIRecordDetailViewPager(records: records, selectedIndex: records.firstIndex(where: { $0.id == record.id })!)) {
                         HStack {
-                            bmiImage(for: records[index])
+                            bmiImage(for: record)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 30, height: 30)
@@ -366,8 +366,8 @@ struct BMIRecordsListView: View {
                                 )
                                 .padding(.trailing, 8)
                             VStack(alignment: .leading) {
-                                Text(BMIRecordDetailView.bmiCategory(for: records[index]))
-                                Text("\(formattedDate(records[index].date)): \(records[index].bmi, specifier: "%.2f")")
+                                Text(BMIRecordDetailView.bmiCategory(for: record))
+                                Text("\(formattedDate(record.date)): \(record.bmi, specifier: "%.2f")")
                                     .foregroundColor(.gray)
                                     .font(.system(size: 14))
                             }
@@ -387,14 +387,54 @@ struct BMIRecordsListView: View {
         .foregroundColor(.orange)
     }
     
-    private func deleteRecord(at offsets: IndexSet) {
-        records.remove(atOffsets: offsets)
-        
-        if let sensorIndex = temperatureSensorViewModel.allSensors.firstIndex(where: { $0.id == "BMI" }) {
-            temperatureSensorViewModel.allSensors[sensorIndex].records = records
+    func deleteRecord(at offsets: IndexSet) {
+        offsets.forEach { index in
+            // 根據顯示順序反轉索引
+            let recordToDelete = records.reversed()[index]
+
+            // 刪除資料請求伺服器
+            guard let url = URL(string: "http://163.17.9.107/food/php/deleteBMI.php") else { return }
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            
+            let formattedDate: String = {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd"
+                return formatter.string(from: recordToDelete.date)
+            }()
+            
+            let postData = "H=\(recordToDelete.H)&W=\(recordToDelete.W)&BMI_DT=\(formattedDate)"
+            print("Deleting record with data: \(postData)") // 调试用日志
+            request.httpBody = postData.data(using: .utf8)
+            request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+            
+            URLSession.shared.dataTask(with: request) { data, _, error in
+                guard let data = data, error == nil else {
+                    print("删除请求出错: \(error?.localizedDescription ?? "未知错误")")
+                    return
+                }
+                do {
+                    if let response = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                       let status = response["status"] as? String, status == "success" {
+                        // 成功刪除資料，更新本地陣列
+                        DispatchQueue.main.async {
+                            // 注意：這裡需要根據反轉後的資料索引進行刪除
+                            if let indexToDelete = records.firstIndex(where: { $0.id == recordToDelete.id }) {
+                                records.remove(at: indexToDelete)
+                            }
+                        }
+                    } else {
+                        print("删除失败: \(String(data: data, encoding: .utf8) ?? "无法解析的响应")")
+                    }
+                } catch {
+                    print("解析响应失败: \(error)")
+                }
+            }.resume()
         }
     }
-    
+
+
+
     private func bmiImage(for record: BMIRecord) -> Image {
         switch BMIRecordDetailView.bmiCategory(for: record) {
         case "過瘦": return Image("too_thin")

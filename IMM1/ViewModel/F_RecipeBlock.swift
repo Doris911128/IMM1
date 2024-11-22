@@ -52,8 +52,12 @@ struct F_RecipeBlock: View
                                 .cornerRadius(10)
                         case .failure:
                             Color.gray
+                                .frame(width: UIScreen.main.bounds.width - 40, height: 250)
+                                .cornerRadius(10)
                         @unknown default:
                             Color.gray
+                                .frame(width: UIScreen.main.bounds.width - 40, height: 250)
+                                .cornerRadius(10)
                         }
                     }
                     .padding(.top, 50)

@@ -378,8 +378,40 @@ struct HypertensionRecordsListView: View {
     }
     
     private func deleteRecord(at offsets: IndexSet) {
-        records.remove(atOffsets: offsets)
+        // 获取要删除的血压值
+        if let index = offsets.first {
+            let bpToDelete = records[index].hypertension
+            // 从本地数组中移除
+            records.remove(atOffsets: offsets)
+            // 调用删除函数从数据库中删除
+            deleteBPRecord(bp: bpToDelete)
+        }
     }
+    func deleteBPRecord(bp: Double) {
+        let url = URL(string: "http://163.17.9.107/food/php/BP.php")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let postData = "BP=\(bp)&action=delete"
+        request.httpBody = postData.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { (data, response, error) in
+            guard let data = data, error == nil else {
+                print("网络请求出错: \(error?.localizedDescription ?? "未知错误")")
+                return
+            }
+            do {
+                if let jsonObject = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    print("服务器响应: \(jsonObject)")
+                    // 处理响应（可选）
+                } else {
+                    print("收到非字典格式的 JSON 响应")
+                }
+            } catch {
+                print("解码 JSON 失败: \(error)")
+            }
+        }.resume()
+    }
+
     
     private func hypertensionImage(for record: HypertensionRecord) -> Image {
         switch record.category {

@@ -393,9 +393,51 @@ struct HyperlipidemiaRecordsListView: View {
     }
     
     private func deleteRecord(at offsets: IndexSet) {
-        records.remove(atOffsets: offsets)
+        offsets.forEach { index in
+            let recordToDelete = records[index]
+            deleteRecordFromServer(recordToDelete) { success in
+                if success {
+                    DispatchQueue.main.async {
+                        records.remove(at: index)
+                    }
+                } else {
+                    print("Failed to delete record on server")
+                }
+            }
+        }
     }
-    
+    private func deleteRecordFromServer(_ record: HyperlipidemiaRecord, completion: @escaping (Bool) -> Void) {
+        let url = URL(string: "http://163.17.9.107/food/php/BL.php")! // 确保替换为正确的后端URL
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        let postData = "action=delete&BL=\(record.hyperlipidemia)&BL_DT=\(formattedDateForServer(record.date))"
+        request.httpBody = postData.data(using: .utf8)
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Failed to delete record: \(error)")
+                completion(false)
+                return
+            }
+            guard let data = data else {
+                print("No data received for deletion request")
+                completion(false)
+                return
+            }
+            if let responseString = String(data: data, encoding: .utf8), responseString.contains("success") {
+                completion(true)
+            } else {
+                completion(false)
+            }
+        }.resume()
+    }
+    private func formattedDateForServer(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd" // 确保格式与后端一致
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: date)
+    }
+
     private func hyperlipidemiaImage(for record: HyperlipidemiaRecord) -> Image {
         switch record.category {
         case "正常": return Image(systemName: "drop.circle")

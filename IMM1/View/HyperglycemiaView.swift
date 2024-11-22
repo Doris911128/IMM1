@@ -384,10 +384,43 @@ struct HyperglycemiaRecordsListView: View {
         }
         .foregroundColor(.orange)
     }
-    
-    private func deleteRecord(at offsets: IndexSet) {
-        records.remove(atOffsets: offsets)
+    func deleteRecord(at offsets: IndexSet) {
+        offsets.forEach { index in
+            let recordToDelete = records[index]
+            let formattedDate = DateFormatter()
+            formattedDate.dateFormat = "yyyy-MM-dd"
+            let dateToDelete = formattedDate.string(from: recordToDelete.date)
+
+            // 呼叫刪除 API
+            let url = URL(string: "http://163.17.9.107/food/php/BS.php")!
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            let postData = "BS_DT=\(dateToDelete)&action=delete"
+            request.httpBody = postData.data(using: .utf8)
+
+            URLSession.shared.dataTask(with: request) { data, _, error in
+                guard let data = data, error == nil else {
+                    print("刪除請求出錯: \(error?.localizedDescription ?? "未知錯誤")")
+                    return
+                }
+                do {
+                    if let response = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                       let status = response["status"] as? String, status == "success" {
+                        // 從前端刪除數據
+                        DispatchQueue.main.async {
+                            records.remove(at: index)
+                        }
+                    } else {
+                        print("刪除失敗: \(String(data: data, encoding: .utf8) ?? "無法解析的回應")")
+                    }
+                } catch {
+                    print("解析回應失敗: \(error)")
+                }
+            }.resume()
+        }
     }
+
+
     
     private func hyperglycemiaImage(for record: HyperglycemiaRecord) -> Image {
         return Image(systemName: "medical.thermometer")
