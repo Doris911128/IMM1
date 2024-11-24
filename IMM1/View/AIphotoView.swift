@@ -2,7 +2,7 @@ import SwiftUI
 
 struct AIphotoView: View {
     @Binding var messageText: String
-    
+    @State private var showActionSheet = false
     @State private var image: UIImage?
     @State private var showImagePicker = false
     @State private var sourceType: UIImagePickerController.SourceType = .photoLibrary
@@ -86,40 +86,13 @@ struct AIphotoView: View {
                 }
             }
             
-            // 相簿按鈕
-            VStack {
-                Spacer()
-                HStack {
-                    Button(action: {
-                        sourceType = .photoLibrary
-                        showImagePicker = true
-                    }) {
-                        Image(systemName: "photo.on.rectangle.angled")
-                            .resizable()
-                            .frame(width: 35, height: 35)
-                            .padding()
-                            .background(Color.white)
-                            .foregroundColor(.black)
-                            .cornerRadius(60)
-                    }
-                    .padding(.leading, 20)
-                    Spacer()
-                }
-            }
-            
-            // 相機按鈕
             VStack {
                 Spacer()
                 HStack {
                     Spacer()
                     Button(action: {
-                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                            sourceType = .camera
-                            showImagePicker = true // 確保觸發圖片選擇器
-                        } else {
-                            alertMessage = "此設備不支持相機。"
-                            showAlert = true
-                        }
+                        // 顯示操作選單
+                        showActionSheet = true
                     }) {
                         Image(systemName: "camera")
                             .resizable()
@@ -130,6 +103,28 @@ struct AIphotoView: View {
                             .cornerRadius(60)
                     }
                     .padding(.trailing, 20)
+                    .actionSheet(isPresented: $showActionSheet) {
+                        ActionSheet(
+                            title: Text("選擇圖片來源"),
+                            message: nil,
+                            buttons: [
+                                .default(Text("相機")) {
+                                    if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                                        sourceType = .camera
+                                        showImagePicker = true
+                                    } else {
+                                        alertMessage = "此設備不支持相機。"
+                                        showAlert = true
+                                    }
+                                },
+                                .default(Text("相簿")) {
+                                    sourceType = .photoLibrary
+                                    showImagePicker = true
+                                },
+                                .cancel(Text("取消"))
+                            ]
+                        )
+                    }
                 }
             }
         }

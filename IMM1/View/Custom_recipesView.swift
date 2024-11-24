@@ -524,7 +524,7 @@ private func deleteCRecipeOnServer(recipeID: Int, completion: @escaping (Bool) -
                                    .font(.headline)
                                    .padding()
                                    .frame(maxWidth: .infinity,maxHeight:50)
-                                   .background(Color.blue) // 按鈕背景
+                                   .background(Color.orange) // 按鈕背景
                                    .foregroundColor(.white)
                                    .cornerRadius(10)
                            }
