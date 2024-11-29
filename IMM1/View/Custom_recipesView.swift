@@ -91,42 +91,64 @@
                        isEditing.toggle() // 切換編輯狀態
                    }) {
                        Text(isEditing ? "完成" : "刪除")
-                                  .font(.headline)
-                                  .foregroundColor(colorScheme == .dark ? Color(red: 255/255, green: 212/255, blue: 161/255) : Color(red: 246/255, green: 143/255, blue: 28/255)) // 根据颜色模式调整文本颜色
+                           .font(.headline)
+                           .foregroundColor(colorScheme == .dark ? Color(red: 255/255, green: 212/255, blue: 161/255) : Color(red: 246/255, green: 143/255, blue: 28/255)) // 根据颜色模式调整文本颜色
                    }
                    .padding(.leading, 318)
                    .padding(.horizontal, 20)
                    .padding(.top, -40) // 使用 .top 調整向上移動的距離
+                   .opacity(Crecipes.isEmpty ? 0 : 1) // 如果 Crecipes 為空，隱藏按鈕
+                   .animation(.easeInOut, value: Crecipes.isEmpty) // 平滑動畫
 
-                   
-                   ScrollView {
-                                      LazyVGrid(columns: [GridItem(.flexible())]) {
-                                          ForEach(Crecipes.indices, id: \.self) { index in
-                                              HStack(spacing: 10) {
-                                                  NavigationLink(
-                                                      destination: CRecipeDetailBlock(
-                                                          U_ID: U_ID, Crecipe: $Crecipes[index]
-                                                      )
-                                                  ) {
-                                                      CR_Block(recipeName: Crecipes[index].f_name)
-                                                  }
-                                                  if isEditing {
-                                                      Button(action: {
-                                                          deleteRecipe(at: index)
-                                                      }) {
-                                                          Image(systemName: "minus.circle.fill")
-                                                              .foregroundColor(.red)
+                   if Crecipes.isEmpty
+                                      {
+                                          Spacer()
+                                          VStack
+                                          {
+                                              Image("自訂食材預設圖片") // 替換為您的圖片名稱
+                                                  .resizable()
+                                                  .scaledToFit()
+                                                  .frame(width: 200, height: 200)
+                                                  .padding()
+
+                                              Text("暫無新增任何自訂食譜")
+                                                  .foregroundColor(.gray)
+                                                  .font(.title2)
+                                                  .padding(.bottom, 20)
+
+                                          }
+
+                                          Spacer()
+                                      } else
+                   {
+                                          ScrollView {
+                                              LazyVGrid(columns: [GridItem(.flexible())]) {
+                                                  ForEach(Crecipes.indices, id: \.self) { index in
+                                                      HStack(spacing: 10) {
+                                                          NavigationLink(
+                                                            destination: CRecipeDetailBlock(
+                                                                U_ID: U_ID, Crecipe: $Crecipes[index]
+                                                            )
+                                                          ) {
+                                                              CR_Block(recipeName: Crecipes[index].f_name)
+                                                          }
+                                                          if isEditing {
+                                                              Button(action: {
+                                                                  deleteRecipe(at: index)
+                                                              }) {
+                                                                  Image(systemName: "minus.circle.fill")
+                                                                      .foregroundColor(.red)
+                                                              }
+                                                              .padding(.leading, 8)
+                                                          }
                                                       }
-                                                      .padding(.leading, 8)
+                                                      .offset(x: isEditing ? -20 : 0)
+                                                      .animation(.easeInOut, value: isEditing)
                                                   }
                                               }
-                                              .offset(x: isEditing ? -20 : 0)
-                                              .animation(.easeInOut, value: isEditing)
+                                              .padding()
                                           }
                                       }
-                                      .padding()
-                                  }
-
                    
                    Button(action: {
                        showingAddRecipeView.toggle()
@@ -144,10 +166,10 @@
                    }
                }
                
-               .sheet(isPresented: $showingAddRecipeView)
-               {
-                   AddRecipeView(Crecipes: $Crecipes, U_ID: U_ID)
+               .sheet(isPresented: $showingAddRecipeView) {
+                   AddRecipeView(Crecipes: $Crecipes, isEditing: $isEditing, U_ID: U_ID)
                }
+
                .onAppear{
                    fetchCRecipes()
                }
@@ -243,7 +265,8 @@ private func deleteCRecipeOnServer(recipeID: Int, completion: @escaping (Bool) -
    {
        @Environment(\.dismiss) var dismiss
        @Binding var Crecipes: [CRecipe] //讓新增的食譜可以同步到主視圖中
-       
+       @Binding var isEditing: Bool // 新增這行，綁定刪除狀態
+
        let U_ID: String // 添加這一行
        
        @State private var f_name = ""
@@ -267,28 +290,28 @@ private func deleteCRecipeOnServer(recipeID: Int, completion: @escaping (Bool) -
            let customRecipes: [CRecipe]
        }
 
-       private func saveRecipe()
-       {
+       private func saveRecipe() {
            // 檢查空值
            if f_name.isEmpty || ingredientsList.contains(where: { $0.isEmpty }) || stepsList.contains(where: { $0.isEmpty }) {
                alertMessage = "請確保食譜名稱、所需食材和製作方法都已填寫！"
                showAlert = true
                return
            }
-           
+
            let newRecipeID = (Crecipes.map { $0.CR_ID }.max() ?? 0) + 1
            let ingredients = ingredientsList.joined(separator: "\n")
            let method = stepsList.joined(separator: "\n")
            let UTips = UTipsList.joined(separator: "\n")
-           
+
            let newRecipe = CRecipe(CR_ID: newRecipeID, f_name: f_name, ingredients: ingredients, method: method, UTips: UTips, c_image_url: c_image_url)
-           
+
            // 呼叫 addCRecipe
            addCRecipe(recipe: newRecipe, U_ID: U_ID) { success in
                DispatchQueue.main.async {
                    if success {
                        fetchCRecipes() // 新增成功後從後端重新獲取資料
                        Crecipes.append(newRecipe)
+                       isEditing = false // 確保刪除模式不會自動開啟
                        dismiss()
                    } else {
                        alertMessage = "儲存失敗，請稍後再試。"
@@ -297,6 +320,7 @@ private func deleteCRecipeOnServer(recipeID: Int, completion: @escaping (Bool) -
                }
            }
        }
+
        func fetchCRecipes() {
            guard let url = URL(string: "http://163.17.9.107/food/php/GetCC_Recipe.php") else { return }
 
