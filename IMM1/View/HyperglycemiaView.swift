@@ -133,11 +133,13 @@ struct HyperglycemiaView: View {
         
         URLSession.shared.dataTask(with: request) { (data, _, error) in
             if let data = data {
-                print(String(decoding: data, as: UTF8.self))
+                print(String(decoding: data, as: UTF8.self))  // 打印原始 JSON 数据
                 do {
-                    let responseArray = try JSONDecoder().decode([HyperglycemiaRecord].self, from: data)
+                    var responseArray = try JSONDecoder().decode([HyperglycemiaRecord].self, from: data)
+                    // 按日期从最近到最远排序
+                    responseArray.sort { $0.date > $1.date }
                     DispatchQueue.main.async {
-                        self.chartData = responseArray.reversed()
+                        self.chartData = responseArray
                         print("成功解码并更新了 chartData，包含 \(responseArray.count) 条记录。")
                     }
                 } catch {
